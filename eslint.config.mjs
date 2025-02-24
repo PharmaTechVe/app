@@ -8,7 +8,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ["metro.config.js", "tailwind.config.js"]
+    ignores: ["metro.config.js", "tailwind.config.js", "node_modules", "assets"]
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
