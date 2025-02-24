@@ -7,7 +7,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint ."
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint --fix . --ext .js,.jsx,.ts,.tsx",
+    "check-format": "prettier -c .",
+    "format": "prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "expo": "~52.0.37",
@@ -29,9 +33,20 @@
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-native": "^5.0.0",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
     "prettier": "^3.5.2",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.24.1"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "**/*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "private": true
 }
