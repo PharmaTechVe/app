@@ -8,12 +8,17 @@ import eslintConfigPrettier from "eslint-config-prettier";
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
-    ignores: ["metro.config.js", "tailwind.config.js", "node_modules", "assets"]
+    ignores: [
+      "metro.config.js",
+      "tailwind.config.js",
+      "node_modules",
+      "assets",
+    ],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"]
+    files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
   },
   {
     files: ["**/*.{js,jsx,mjs,cjs}"],
@@ -21,15 +26,15 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.serviceworker,
-        ...pluginReactNative.environments["react-native"].globals
+        ...pluginReactNative.environments["react-native"].globals,
       },
       parserOptions: {
         ecmaFeatures: {
-          jsx: true
+          jsx: true,
         },
-        sourceType: "module"
-      }
-    }
+        sourceType: "module",
+      },
+    },
   },
   {
     files: ["**/*.{ts,tsx}"],
@@ -38,35 +43,35 @@ export default [
       parserOptions: {
         project: "./tsconfig.json",
         ecmaFeatures: {
-          jsx: true
-        }
-      }
-    }
+          jsx: true,
+        },
+      },
+    },
   },
   pluginReact.configs.flat.recommended,
   {
     // Configuración específica de React Native
     plugins: {
-      "react-native": pluginReactNative
+      "react-native": pluginReactNative,
     },
     rules: {
       ...pluginReactNative.configs.rules,
       "react-native/no-raw-text": "off",
       "react-native/no-inline-styles": "warn",
       "react/react-in-jsx-scope": "off",
-      "react/jsx-uses-react": "off"
-    }
+      "react/jsx-uses-react": "off",
+    },
   },
   {
     // Configuración adicional para TypeScript y React
     settings: {
       react: {
-        version: "detect"
+        version: "detect",
       },
       "import/resolver": {
-        typescript: {}
-      }
-    }
+        typescript: {},
+      },
+    },
   },
-  eslintConfigPrettier
+  eslintConfigPrettier,
 ];
