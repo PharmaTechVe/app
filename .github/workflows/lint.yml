@@ -1,5 +1,6 @@
 name: Expo CI
 
+# Linting and type-checking on push and pull request events on main and dev branches.
 on:
   push:
   pull_request:
@@ -25,8 +26,8 @@ jobs:
       - name: Run ESLint
         run: npm run lint
         env:
-          CI: true  # Para que ESLint muestre errores en formato CI
+          CI: true
 
       - name: Run TypeScript Check (opcional)
-        if: contains(json(package.json), 'typescript')  # Solo si usa TypeScript
+        if: contains(json(package.json), 'typescript')
         run: npm run type-check

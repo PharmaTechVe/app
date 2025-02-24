@@ -1,5 +1,6 @@
 name: Expo Tests
 
+# Run Jest test on push and pull request events on main and dev branches.
 on:
   push:
   pull_request:

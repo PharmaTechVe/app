@@ -1,3 +1,5 @@
+# PharmaTech Mobile APP
+
 ## Installation
 
 To get started with the PharmaTech Mobile APP, follow these steps:
@@ -16,6 +18,7 @@ To get started with the PharmaTech Mobile APP, follow these steps:
    ```
 
 3. **Start the development server:**
+
    ```bash
    npm start
    ```
@@ -26,9 +29,11 @@ Before you begin, ensure you have met the following requirements:
 
 - **Node.js**: Install the latest LTS version of Node.js from [Node.js official website](https://nodejs.org/).
 - **Expo CLI**: Install Expo CLI globally by running:
+
   ```bash
   npm install -g expo-cli
   ```
+
 - **Git**: Ensure Git is installed and properly configured on your machine. You can download it from [Git official website](https://git-scm.com/).
 - **Android/iOS Emulator or Physical Device**: You need an Android or iOS emulator, or a physical device to run the app.
 
