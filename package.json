@@ -15,7 +15,8 @@
     "test": "jest --watch --coverage=false --changedSince=origin/main",
     "testDebug": "jest -o --watch --coverage=false",
     "testFinal": "jest",
-    "updateSnapshots": "jest -u --coverage=false"
+    "updateSnapshots": "jest -u --coverage=false",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "expo": "~52.0.37",

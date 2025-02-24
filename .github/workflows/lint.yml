@@ -1,0 +1,32 @@
+name: Expo CI
+
+on:
+  push:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  lint-and-test:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+        env:
+          CI: true  # Para que ESLint muestre errores en formato CI
+
+      - name: Run TypeScript Check (opcional)
+        if: contains(json(package.json), 'typescript')  # Solo si usa TypeScript
+        run: npm run type-check
