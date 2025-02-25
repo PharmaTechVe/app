@@ -29,5 +29,4 @@ jobs:
           CI: true
 
       - name: Run TypeScript Check (opcional)
-        if: contains(json(package.json), 'typescript')
         run: npm run type-check
