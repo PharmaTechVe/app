@@ -33,6 +33,6 @@ jobs:
         run: npm run type-check
 
       - name: Run tests
-        run: npm run testFinal
+        run: npm run test
         env:
           CI: true
