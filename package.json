@@ -12,9 +12,8 @@
     "check-format": "prettier -c .",
     "format": "prettier --write .",
     "prepare": "husky",
-    "test": "jest --watch --coverage=false --changedSince=origin/main",
-    "testDebug": "jest -o --watch --coverage=false",
-    "testFinal": "jest",
+    "test:watch": "jest --watch --coverage=false --changedSince=origin/main",
+    "test": "jest",
     "updateSnapshots": "jest -u --coverage=false",
     "type-check": "tsc --noEmit"
   },
@@ -44,20 +43,10 @@
     "eslint-plugin-react-native": "^5.0.0",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3",
     "prettier": "^3.5.2",
     "react-test-renderer": "^18.3.1",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.24.1"
-  },
-  "lint-staged": {
-    "**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ],
-    "**/*.{json,md}": [
-      "prettier --write"
-    ]
   },
   "private": true
 }

@@ -10,6 +10,7 @@ jobs:
   lint-and-test:
     name: Lint
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,3 +31,8 @@ jobs:
 
       - name: Run TypeScript Check (opcional)
         run: npm run type-check
+
+      - name: Run tests
+        run: npm run testFinal
+        env:
+          CI: true
