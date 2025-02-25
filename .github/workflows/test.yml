@@ -28,9 +28,9 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run tests
-        run: npm test
+        run: npm run testFinal
         env:
           CI: true
