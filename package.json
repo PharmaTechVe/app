@@ -14,7 +14,7 @@
     "prepare": "husky",
     "test:watch": "jest --watch --coverage=false --changedSince=origin/main",
     "test": "jest",
-    "updateSnapshots": "jest -u --coverage=false",
+    "test:snapshot": "jest -u --coverage=false",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

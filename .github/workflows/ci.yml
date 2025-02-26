@@ -1,14 +1,11 @@
-name: Expo CI
+name: CI
 
-# Linting and type-checking on push and pull request events on main and dev branches.
 on:
-  push:
   pull_request:
     branches: [main, dev]
 
 jobs:
-  lint-and-test:
-    name: Lint
+  ci:
     runs-on: ubuntu-latest
 
     steps:

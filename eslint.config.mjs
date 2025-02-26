@@ -1,47 +1,47 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
-import pluginReact from "eslint-plugin-react";
-import pluginReactNative from "eslint-plugin-react-native";
-import eslintConfigPrettier from "eslint-config-prettier";
+import globals from 'globals';
+import pluginJs from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import pluginReact from 'eslint-plugin-react';
+import pluginReactNative from 'eslint-plugin-react-native';
+import eslintConfigPrettier from 'eslint-config-prettier';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   {
     ignores: [
-      "metro.config.js",
-      "tailwind.config.js",
-      "node_modules",
-      "assets",
+      'metro.config.js',
+      'tailwind.config.js',
+      'node_modules',
+      'assets',
     ],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
+    files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
   },
   {
-    files: ["**/*.{js,jsx,mjs,cjs}"],
+    files: ['**/*.{js,jsx,mjs,cjs}'],
     languageOptions: {
       globals: {
         ...globals.browser,
         ...globals.serviceworker,
-        ...pluginReactNative.environments["react-native"].globals,
+        ...pluginReactNative.environments['react-native'].globals,
       },
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
         },
-        sourceType: "module",
+        sourceType: 'module',
       },
     },
   },
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: "./tsconfig.json",
+        project: './tsconfig.json',
         ecmaFeatures: {
           jsx: true,
         },
@@ -52,23 +52,23 @@ export default [
   {
     // Configuración específica de React Native
     plugins: {
-      "react-native": pluginReactNative,
+      'react-native': pluginReactNative,
     },
     rules: {
       ...pluginReactNative.configs.rules,
-      "react-native/no-raw-text": "off",
-      "react-native/no-inline-styles": "warn",
-      "react/react-in-jsx-scope": "off",
-      "react/jsx-uses-react": "off",
+      'react-native/no-raw-text': 'off',
+      'react-native/no-inline-styles': 'warn',
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
     },
   },
   {
     // Configuración adicional para TypeScript y React
     settings: {
       react: {
-        version: "detect",
+        version: 'detect',
       },
-      "import/resolver": {
+      'import/resolver': {
         typescript: {},
       },
     },

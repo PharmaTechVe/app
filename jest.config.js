@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 
 const config = {
-  preset: "jest-expo",
+  preset: 'jest-expo',
 };
 
 module.exports = config;
