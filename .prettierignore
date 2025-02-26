@@ -1,0 +1,27 @@
+# Ignore artifacts:
+build
+coverage
+node_modules
+
+# Ignore all log files:
+*.log
+
+# Ignore all lock files:
+*.lock
+
+# Ignore all environment files:
+*.env
+
+# Ignore all Android and iOS build folders:
+android
+ios
+
+# Ignore Expo folders:
+.expo
+.expo-shared
+
+# Ignore folders:
+assets
+
+# Ignore github folders:
+.github
