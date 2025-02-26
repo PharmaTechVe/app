@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "app",
-    "slug": "app",
+    "slug": "pharmatech",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -33,6 +33,12 @@
         "projectId": "3b8bad5d-7426-4881-aebd-cfb1ccf0795d"
       }
     },
-    "owner": "pharmatech"
+    "owner": "pharmatech",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3b8bad5d-7426-4881-aebd-cfb1ccf0795d"
+    }
   }
 }
