@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { TextInput, View, Text } from 'react-native';
 
 type fieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
+type borderType = 'none' | 'default' | 'parcial' | 'double';
 
 interface InputProps {
   label?: string;
@@ -10,9 +11,17 @@ interface InputProps {
   fieldType?: fieldType;
   helperText?: string;
   useDefaultValidation?: boolean;
+  border?: borderType;
   validation?: (input: string) => boolean;
   getValue?: (input: string) => void;
 }
+
+const colors = {
+  primary: '#1c2143',
+  success: '#00c814',
+  danger: '#e10000',
+  lowContrast: '#666666',
+};
 
 const Input: React.FC<InputProps> = ({
   label,
@@ -21,9 +30,12 @@ const Input: React.FC<InputProps> = ({
   helperText,
   fieldType,
   useDefaultValidation,
+  border = 'default',
   validation,
   getValue,
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [hasBlurred, setHasBlurred] = useState(false);
   const [Ivalue, setIvalue] = useState(value);
   const [isValid, setIsValid] = useState(false);
 
@@ -58,6 +70,18 @@ const Input: React.FC<InputProps> = ({
     }
   };
 
+  const getBorderColor = () => {
+    if (hasBlurred && !isValid) {
+      return colors.danger;
+    } else if (isValid) {
+      return colors.success;
+    } else if (isFocused) {
+      return colors.primary;
+    } else {
+      return border === 'parcial' ? '#fff' : colors.lowContrast;
+    }
+  };
+
   const validatePassword = (input: string) => {
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -76,10 +100,20 @@ const Input: React.FC<InputProps> = ({
           value={Ivalue}
           placeholder={placeholder}
           onChangeText={validateInput}
+          onFocus={() => {
+            setIsFocused(true);
+            setHasBlurred(false);
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            setHasBlurred(true);
+          }}
         />
       </View>
       {isValid}
-      <Text className="text-xs mt-2">{helperText}</Text>
+      <Text className="text-xs mt-2" style={[{ color: getBorderColor() }]}>
+        {helperText}
+      </Text>
     </View>
   );
 };
