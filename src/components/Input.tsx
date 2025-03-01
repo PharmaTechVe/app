@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { TextInput, View, Text } from 'react-native';
+import { TextInput, View, Text, TouchableOpacity } from 'react-native';
+import { EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline';
 
 type fieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
 type borderType = 'none' | 'default' | 'parcial' | 'double';
@@ -100,7 +101,6 @@ const Input: React.FC<InputProps> = ({
 
   useEffect(() => {
     getBorderColor();
-    showPass();
   }, [isFocused, hasBlurred]);
 
   return (
@@ -125,6 +125,16 @@ const Input: React.FC<InputProps> = ({
             setHasBlurred(true);
           }}
         />
+
+        {fieldType == 'password' ? (
+          <TouchableOpacity onPress={showPass}>
+            {showPassword ? (
+              <EyeSlashIcon color="gray" size={20} />
+            ) : (
+              <EyeIcon color="gray" size={20} />
+            )}
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <Text className="text-xs mt-2" style={[{ color: getBorderColor() }]}>
