@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { TextInput, View, Text, TouchableOpacity } from 'react-native';
-import { EyeIcon, EyeSlashIcon } from 'react-native-heroicons/outline';
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon,
+} from 'react-native-heroicons/outline';
 
 type fieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
 type borderType = 'none' | 'default' | 'parcial' | 'double';
@@ -12,6 +17,7 @@ interface InputProps {
   fieldType?: fieldType;
   helperText?: string;
   useDefaultValidation?: boolean;
+  showIcon?: boolean;
   border?: borderType;
   validation?: (input: string) => boolean;
   getValue?: (input: string) => void;
@@ -30,7 +36,8 @@ const Input: React.FC<InputProps> = ({
   placeholder,
   helperText,
   fieldType,
-  useDefaultValidation,
+  useDefaultValidation = true,
+  showIcon = false,
   border = 'default',
   validation,
   getValue,
@@ -138,7 +145,21 @@ const Input: React.FC<InputProps> = ({
           className="flex-1"
         />
 
-        {fieldType == 'password' ? (
+        {showIcon == true ? (
+          !isValid && hasBlurred ? (
+            <ExclamationCircleIcon
+              color={border !== 'none' ? colors.danger : 'gray'}
+              size={20}
+            />
+          ) : (
+            Ivalue && (
+              <CheckCircleIcon
+                color={border !== 'none' ? colors.success : 'gray'}
+                size={20}
+              />
+            )
+          )
+        ) : fieldType == 'password' ? (
           <TouchableOpacity onPress={showPass}>
             {showPassword ? (
               <EyeSlashIcon color="gray" size={20} />
