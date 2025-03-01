@@ -3,9 +3,11 @@ import App from '../src/App';
 
 jest.mock('../global.css', () => '');
 describe('<App />', () => {
-  test('Text renders correctly on App', () => {
-    const { getByText } = render(<App />);
+  test('Text renders correctly on App', async () => {
+    // 👈 Agrega async
+    const { findByText } = render(<App />); // 👈 Usa findByText (async)
 
-    getByText('Open up App.tsx to start working on your app!');
+    // Espera a que aparezca el texto
+    await findByText('¡La fuente Poppins se aplica globalmente!'); // 👈 await
   });
 });
