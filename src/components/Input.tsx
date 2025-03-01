@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TextInput, View, Text } from 'react-native';
 
 type fieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
@@ -38,6 +38,7 @@ const Input: React.FC<InputProps> = ({
   const [hasBlurred, setHasBlurred] = useState(false);
   const [Ivalue, setIvalue] = useState(value);
   const [isValid, setIsValid] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const validateInput = (input: string) => {
     setIvalue(input);
@@ -92,13 +93,28 @@ const Input: React.FC<InputProps> = ({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(input);
   };
+
+  const showPass = () => {
+    setShowPassword(!showPassword);
+  };
+
+  useEffect(() => {
+    getBorderColor();
+    showPass();
+  }, [isFocused, hasBlurred]);
+
   return (
     <View className="my-2 w-full px-6">
       {label && <Text className="text-md mb-2">{label}</Text>}
-      <View className="flex-row items-center border rounded-xl p-4 py-2 w-lg text-md">
+      <View
+        className="flex-row items-center border rounded-xl p-4 py-2 w-lg text-md"
+        style={[{ borderColor: getBorderColor() }]}
+      >
         <TextInput
           value={Ivalue}
           placeholder={placeholder}
+          secureTextEntry={fieldType == 'password' && !showPassword}
+          keyboardType={fieldType == 'number' ? 'numeric' : 'default'}
           onChangeText={validateInput}
           onFocus={() => {
             setIsFocused(true);
@@ -110,7 +126,7 @@ const Input: React.FC<InputProps> = ({
           }}
         />
       </View>
-      {isValid}
+
       <Text className="text-xs mt-2" style={[{ color: getBorderColor() }]}>
         {helperText}
       </Text>
