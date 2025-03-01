@@ -34,8 +34,8 @@ const Input: React.FC<InputProps> = ({
   label,
   value,
   placeholder,
-  helperText,
   fieldType,
+  helperText,
   useDefaultValidation = true,
   showIcon = false,
   border = 'default',
@@ -79,6 +79,7 @@ const Input: React.FC<InputProps> = ({
     }
   };
 
+  // Determina el color del borde
   const getBorderColor = () => {
     if (hasBlurred && !isValid) {
       return colors.danger;
@@ -133,6 +134,7 @@ const Input: React.FC<InputProps> = ({
           placeholder={placeholder}
           secureTextEntry={fieldType == 'password' && !showPassword}
           keyboardType={fieldType == 'number' ? 'numeric' : 'default'}
+          multiline={fieldType == 'textarea'}
           onChangeText={validateInput}
           onFocus={() => {
             setIsFocused(true);
