@@ -1,0 +1,179 @@
+// src/components/Button.tsx
+import React from 'react';
+import {
+  TouchableOpacity,
+  View,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import { Colors, FontSizes } from '../styles/theme';
+import PoppinsText from './PoppinsText';
+
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'secondaryLight'
+  | 'secondaryWhite'
+  | 'disabled';
+
+export type ButtonMode = 'filled' | 'outline';
+
+export type ButtonSize = 'giant' | 'large' | 'medium' | 'small' | 'tiny';
+
+interface ButtonProps {
+  title: string;
+  onPress?: () => void;
+  variant?: ButtonVariant;
+  mode?: ButtonMode;
+  size?: ButtonSize;
+  icon?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+}
+
+const getButtonStyles = (
+  variant: ButtonVariant,
+  mode: ButtonMode,
+): ViewStyle => {
+  let backgroundColor: string = Colors.primary;
+  let borderColor: string = Colors.primary;
+
+  switch (variant) {
+    case 'primary':
+      backgroundColor = Colors.primary;
+      borderColor = Colors.primary;
+      break;
+    case 'secondary':
+      backgroundColor = Colors.secondary;
+      borderColor = Colors.secondary;
+      break;
+    case 'secondaryLight':
+      backgroundColor = Colors.secondaryLight;
+      borderColor = Colors.secondaryLight;
+      break;
+    case 'secondaryWhite':
+      backgroundColor = Colors.secondaryWhite;
+      borderColor = Colors.secondaryWhite;
+      break;
+    case 'disabled':
+      backgroundColor = Colors.stroke;
+      borderColor = Colors.stroke;
+      break;
+    default:
+      backgroundColor = Colors.primary;
+      borderColor = Colors.primary;
+  }
+
+  return mode === 'outline'
+    ? {
+        backgroundColor: 'transparent',
+        borderColor: borderColor,
+        borderWidth: 1,
+      }
+    : {
+        backgroundColor: backgroundColor,
+      };
+};
+
+const getTextColor = (variant: ButtonVariant, mode: ButtonMode): string => {
+  if (mode === 'outline') {
+    switch (variant) {
+      case 'primary':
+        return Colors.primary;
+      case 'secondary':
+        return Colors.secondary;
+      case 'secondaryLight':
+        return Colors.secondaryLight;
+      case 'secondaryWhite':
+        return Colors.secondaryWhite;
+      case 'disabled':
+        return Colors.disableText;
+      default:
+        return Colors.primary;
+    }
+  }
+  return variant === 'secondaryWhite'
+    ? Colors.textHighContrast
+    : variant === 'secondary'
+      ? Colors.textHighContrast
+      : variant === 'secondaryLight'
+        ? Colors.textHighContrast
+        : variant === 'disabled'
+          ? Colors.disableText
+          : Colors.textWhite;
+};
+
+const getFontSizeStyle = (size: ButtonSize): TextStyle => {
+  const sizes = {
+    giant: FontSizes.btnGiant,
+    large: FontSizes.btnLarge,
+    medium: FontSizes.btnMedium,
+    small: FontSizes.btnSmall,
+    tiny: FontSizes.btnTiny,
+  };
+
+  return {
+    fontSize: sizes[size].size,
+    lineHeight: sizes[size].lineHeight,
+  };
+};
+
+const Button: React.FC<ButtonProps> = ({
+  title,
+  onPress,
+  variant = 'primary',
+  mode = 'filled',
+  size = 'large',
+  icon,
+  style,
+  textStyle,
+}) => {
+  const buttonStyle = getButtonStyles(variant, mode);
+  const textColor = getTextColor(variant, mode);
+  const fontSizeStyle = getFontSizeStyle(size);
+
+  return (
+    <TouchableOpacity
+      style={[styles.buttonBase, buttonStyle, style]}
+      onPress={variant === 'disabled' ? undefined : onPress}
+      disabled={variant === 'disabled'}
+      activeOpacity={0.9}
+    >
+      {icon && <View style={styles.iconContainer}>{icon}</View>}
+      <PoppinsText
+        weight="medium"
+        style={[
+          styles.textBase,
+          fontSizeStyle,
+          { color: textColor },
+          textStyle,
+        ]}
+      >
+        {title}
+      </PoppinsText>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  buttonBase: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+    minWidth: 80,
+    minHeight: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  textBase: {
+    textAlign: 'center',
+  },
+  iconContainer: {
+    marginRight: 4,
+  },
+});
+
+export default Button;
