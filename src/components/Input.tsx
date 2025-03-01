@@ -84,6 +84,17 @@ const Input: React.FC<InputProps> = ({
     }
   };
 
+  const borderWidth = () => {
+    switch (border) {
+      case 'none':
+        return 'border-1';
+      case 'double':
+        return 'border-2';
+      default:
+        return 'border';
+    }
+  };
+
   const validatePassword = (input: string) => {
     const passwordRegex =
       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -107,7 +118,7 @@ const Input: React.FC<InputProps> = ({
     <View className="my-2 w-full px-6">
       {label && <Text className="text-md mb-2">{label}</Text>}
       <View
-        className="flex-row items-center border rounded-xl p-4 py-2 w-lg text-md"
+        className={`flex-row items-center ${borderWidth()} rounded-xl p-4 py-2 w-lg text-md`}
         style={[{ borderColor: getBorderColor() }]}
       >
         <TextInput
@@ -124,6 +135,7 @@ const Input: React.FC<InputProps> = ({
             setIsFocused(false);
             setHasBlurred(true);
           }}
+          className="flex-1"
         />
 
         {fieldType == 'password' ? (
@@ -136,10 +148,11 @@ const Input: React.FC<InputProps> = ({
           </TouchableOpacity>
         ) : null}
       </View>
-
-      <Text className="text-xs mt-2" style={[{ color: getBorderColor() }]}>
-        {helperText}
-      </Text>
+      {helperText && (
+        <Text style={[{ color: getBorderColor() }]} className="text-xs mt-2">
+          {helperText}
+        </Text>
+      )}
     </View>
   );
 };
