@@ -16,16 +16,16 @@ const Input: React.FC<InputProps> = ({
   getValue,
 }) => {
   return (
-    <View>
-      {label && <Text>{label}</Text>}
-      <View>
+    <View className="my-2 w-full px-6">
+      {label && <Text className="text-md mb-2">{label}</Text>}
+      <View className="flex-row items-center border rounded-xl p-4 py-2 w-lg text-md">
         <TextInput
           value={value}
           placeholder={placeholder}
           onChangeText={getValue}
         />
       </View>
-      <Text>{helperText}</Text>
+      <Text className="text-xs mt-2">{helperText}</Text>
     </View>
   );
 };
