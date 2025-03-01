@@ -34,7 +34,7 @@ export default function App() {
         weight="regular"
         style={{ fontSize: 20, color: Colors.secondary }}
       >
-        ¡La fuente Poppins se aplica globalmente!
+        Open up App.tsx to start working on your app!
       </PoppinsText>
       <PoppinsText weight="semibold" style={{ fontSize: 20, color: 'black' }}>
         Esto es Poppins semibold.
