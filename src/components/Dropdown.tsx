@@ -10,7 +10,7 @@ interface DropdownProps {
   label?: string;
   placeholder?: string;
   options: string[];
-  border: borderType;
+  border?: borderType;
   onSelect: (option: string) => void;
 }
 
@@ -18,7 +18,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   label,
   placeholder,
   options,
-  border,
+  border = 'default',
   onSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,13 +48,13 @@ const Dropdown: React.FC<DropdownProps> = ({
         onPress={() => setIsOpen(!isOpen)}
         style={[{ borderWidth: getBorderWidth() }, styles.Selectbtn]}
       >
-        <PoppinsText style={styles.selectedText}>
+        <PoppinsText style={[styles.selectedText]}>
           {selectedOption || placeholder}
         </PoppinsText>
         <ChevronDownIcon color={Colors.iconMainDefault} size={20} />
       </TouchableOpacity>
       {isOpen && (
-        <View style={styles.optionsContainer}>
+        <View style={[styles.optionsContainer]}>
           {options.map((option, index) => (
             <TouchableOpacity
               key={index}
