@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { TextInput, View, Text, TouchableOpacity } from 'react-native';
+import { TextInput, View, TouchableOpacity, StyleSheet } from 'react-native';
 import {
   EyeIcon,
   EyeSlashIcon,
   ExclamationCircleIcon,
   CheckCircleIcon,
 } from 'react-native-heroicons/outline';
+import { Colors, FontSizes } from '../styles/theme';
+import PoppinsText from './PoppinsText';
 
 type fieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
 type borderType = 'none' | 'default' | 'parcial' | 'double';
@@ -19,26 +21,21 @@ interface InputProps {
   useDefaultValidation?: boolean;
   showIcon?: boolean;
   border?: borderType;
+  isEditable?: boolean;
   validation?: (input: string) => boolean;
   getValue?: (input: string) => void;
 }
-
-const colors = {
-  primary: '#1c2143',
-  success: '#00c814',
-  danger: '#e10000',
-  lowContrast: '#666666',
-};
 
 const Input: React.FC<InputProps> = ({
   label,
   value,
   placeholder,
-  fieldType,
+  fieldType = 'text',
   helperText,
   useDefaultValidation = true,
   showIcon = false,
   border = 'default',
+  isEditable = true,
   validation,
   getValue,
 }) => {
@@ -82,24 +79,24 @@ const Input: React.FC<InputProps> = ({
   // Determina el color del borde
   const getBorderColor = () => {
     if (hasBlurred && !isValid) {
-      return colors.danger;
+      return Colors.semanticDanger;
     } else if (isValid) {
-      return colors.success;
+      return Colors.semanticSuccess;
     } else if (isFocused) {
-      return colors.primary;
+      return Colors.primary;
     } else {
-      return border === 'parcial' ? '#fff' : colors.lowContrast;
+      return border === 'parcial' ? '#fff' : Colors.placeholder;
     }
   };
 
-  const borderWidth = () => {
+  const getBorderWidth = () => {
     switch (border) {
       case 'none':
-        return 'border-1';
+        return 0;
       case 'double':
-        return 'border-2';
+        return 2;
       default:
-        return 'border';
+        return 1;
     }
   };
 
@@ -123,11 +120,21 @@ const Input: React.FC<InputProps> = ({
   }, [isFocused, hasBlurred]);
 
   return (
-    <View className="my-2 w-full px-6">
-      {label && <Text className="text-md mb-2">{label}</Text>}
+    <View style={styles.container}>
+      {label && (
+        <PoppinsText weight="medium" style={styles.label}>
+          {label}
+        </PoppinsText>
+      )}
       <View
-        className={`flex-row items-center ${borderWidth()} rounded-xl p-4 py-2 w-lg text-md`}
-        style={[{ borderColor: getBorderColor() }]}
+        style={[
+          {
+            borderColor: getBorderColor(),
+            borderWidth: getBorderWidth(),
+            backgroundColor: !isEditable ? Colors.disableText : '',
+          },
+          styles.inputContainer,
+        ]}
       >
         <TextInput
           value={Ivalue}
@@ -135,6 +142,7 @@ const Input: React.FC<InputProps> = ({
           secureTextEntry={fieldType == 'password' && !showPassword}
           keyboardType={fieldType == 'number' ? 'numeric' : 'default'}
           multiline={fieldType == 'textarea'}
+          editable={isEditable}
           onChangeText={validateInput}
           onFocus={() => {
             setIsFocused(true);
@@ -144,19 +152,27 @@ const Input: React.FC<InputProps> = ({
             setIsFocused(false);
             setHasBlurred(true);
           }}
-          className="flex-1"
+          style={{ flex: 1 }}
         />
 
         {showIcon == true ? (
           !isValid && hasBlurred ? (
             <ExclamationCircleIcon
-              color={border !== 'none' ? colors.danger : 'gray'}
+              color={
+                border !== 'none'
+                  ? Colors.semanticDanger
+                  : Colors.iconMainDefault
+              }
               size={20}
             />
           ) : (
-            Ivalue && (
+            isValid && (
               <CheckCircleIcon
-                color={border !== 'none' ? colors.success : 'gray'}
+                color={
+                  border !== 'none'
+                    ? Colors.semanticSuccess
+                    : Colors.iconMainDefault
+                }
                 size={20}
               />
             )
@@ -164,20 +180,44 @@ const Input: React.FC<InputProps> = ({
         ) : fieldType == 'password' ? (
           <TouchableOpacity onPress={showPass}>
             {showPassword ? (
-              <EyeSlashIcon color="gray" size={20} />
+              <EyeSlashIcon color={Colors.iconMainDefault} size={20} />
             ) : (
-              <EyeIcon color="gray" size={20} />
+              <EyeIcon color={Colors.iconMainDefault} size={20} />
             )}
           </TouchableOpacity>
         ) : null}
       </View>
       {helperText && (
-        <Text style={[{ color: getBorderColor() }]} className="text-xs mt-2">
+        <PoppinsText style={[{ color: getBorderColor() }, styles.helperText]}>
           {helperText}
-        </Text>
+        </PoppinsText>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginVertical: 4,
+    paddingHorizontal: 25,
+    width: '100%',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    paddingVertical: 2,
+    borderRadius: 10,
+    fontSize: FontSizes.label.size,
+  },
+  label: {
+    fontSize: FontSizes.label.size,
+    marginBottom: 4,
+  },
+  helperText: {
+    fontSize: FontSizes.label.size,
+    marginTop: 4,
+  },
+});
 
 export default Input;
