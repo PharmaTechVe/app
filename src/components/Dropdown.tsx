@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronDownIcon } from 'react-native-heroicons/outline';
+import PoppinsText from './PoppinsText';
+import { Colors, FontSizes } from '../styles/theme';
+
+type borderType = 'none' | 'default' | 'double';
 
 interface DropdownProps {
+  label?: string;
+  placeholder?: string;
   options: string[];
+  border: borderType;
   onSelect: (option: string) => void;
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ options, onSelect }) => {
+const Dropdown: React.FC<DropdownProps> = ({
+  label,
+  placeholder,
+  options,
+  border,
+  onSelect,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
@@ -17,17 +30,28 @@ const Dropdown: React.FC<DropdownProps> = ({ options, onSelect }) => {
     setIsOpen(false);
   };
 
+  const getBorderWidth = () => {
+    switch (border) {
+      case 'none':
+        return 0;
+      case 'double':
+        return 2;
+      default:
+        return 1;
+    }
+  };
+
   return (
-    <View className="my-2 w-full px-6">
-      <Text className="text-md mb-2">Dropdown</Text>
+    <View style={styles.container}>
+      {label && <PoppinsText style={styles.label}>{label}</PoppinsText>}
       <TouchableOpacity
         onPress={() => setIsOpen(!isOpen)}
-        className="flex-row items-center border-2 rounded-xl p-4 w-lg text-md"
+        style={[{ borderWidth: getBorderWidth() }, styles.Selectbtn]}
       >
-        <Text style={styles.selectedText} className="flex-1">
-          {selectedOption || 'Select an option'}
-        </Text>
-        <ChevronDownIcon color="gray" size={20} />
+        <PoppinsText style={styles.selectedText}>
+          {selectedOption || placeholder}
+        </PoppinsText>
+        <ChevronDownIcon color={Colors.iconMainDefault} size={20} />
       </TouchableOpacity>
       {isOpen && (
         <View style={styles.optionsContainer}>
@@ -35,9 +59,23 @@ const Dropdown: React.FC<DropdownProps> = ({ options, onSelect }) => {
             <TouchableOpacity
               key={index}
               onPress={() => handleSelect(option)}
-              style={styles.option}
+              style={[
+                {
+                  backgroundColor:
+                    option === selectedOption ? Colors.primary : '',
+                },
+                styles.option,
+              ]}
+              activeOpacity={1}
             >
-              <Text style={styles.optionText}>{option}</Text>
+              <PoppinsText
+                style={[
+                  { color: option === selectedOption ? Colors.textWhite : '' },
+                  styles.optionText,
+                ]}
+              >
+                {option}
+              </PoppinsText>
             </TouchableOpacity>
           ))}
         </View>
@@ -47,15 +85,34 @@ const Dropdown: React.FC<DropdownProps> = ({ options, onSelect }) => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  label: {
+    fontSize: FontSizes.label.size,
+    marginBottom: 8,
+  },
+  Selectbtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: Colors.primary,
+    borderRadius: 10,
+    padding: 10,
+    paddingHorizontal: 15,
+    fontSize: FontSizes.label.size,
+  },
   selectedText: {
     fontSize: 16,
-    color: 'gray',
+    color: Colors.textLowContrast,
+    flex: 1,
   },
   optionsContainer: {
-    marginTop: 5,
-    borderWidth: 1,
+    marginTop: 15,
     borderColor: '#ccc',
     borderRadius: 5,
+    borderWidth: 1,
   },
   option: {
     padding: 10,
