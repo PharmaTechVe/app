@@ -1,21 +1,22 @@
 import { render } from '@testing-library/react-native';
-import App from '../src/App';
+import RootLayout from '../app/_layout';
 
-// App-test.tsx
-jest.mock('../global.css', () => ({}));
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(),
   hideAsync: jest.fn(),
 }));
-jest.mock('@expo-google-fonts/poppins', () => ({
-  useFonts: jest.fn().mockImplementation(() => [true]), // 👈 Fuentes cargadas
-}));
-describe('<App />', () => {
-  test('Text renders correctly on App', async () => {
-    // 👈 Agrega async
-    const { findByText } = render(<App />); // 👈 Usa findByText (async)
 
-    // Espera a que aparezca el texto
-    await findByText('¡La fuente Poppins se aplica globalmente!'); // 👈 await
+jest.mock('@expo-google-fonts/poppins', () => ({
+  useFonts: () => [true],
+}));
+
+// (Opcional) Si deseas testear el componente real de tabs, no mocks este módulo.
+// En cambio, podrías dejarlo sin mock para que se use la implementación real.
+
+describe('<RootLayout />', () => {
+  test('renders the main screen after fonts are loaded', async () => {
+    const { findByText } = render(<RootLayout />);
+    // Ahora esperamos el texto "Pantalla Home"
+    expect(await findByText('Pantalla Home')).toBeTruthy();
   });
 });
