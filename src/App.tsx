@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -10,12 +10,10 @@ import {
 } from '@expo-google-fonts/poppins';
 import PoppinsText from './components/PoppinsText';
 import { Colors, FontSizes } from './styles/theme';
-import RadioButton from './components/RadioButton';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [selectedValue, setSelectedValue] = useState('option1');
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
@@ -55,30 +53,6 @@ export default function App() {
       <PoppinsText weight="semibold" style={styles.title}>
         Esto es una prueba
       </PoppinsText>
-      <RadioButton
-        label="Caliente"
-        value="option1"
-        selectedValue={selectedValue}
-        onValueChange={setSelectedValue}
-      />
-      <RadioButton
-        label="Frio"
-        value="option2"
-        selectedValue={selectedValue}
-        onValueChange={setSelectedValue}
-      />
-      <RadioButton
-        label="Tibio"
-        value="option3"
-        selectedValue={selectedValue}
-        onValueChange={setSelectedValue}
-      />
-      <RadioButton
-        label="Helado"
-        value="option4"
-        selectedValue={selectedValue}
-        onValueChange={setSelectedValue}
-      />
     </View>
   );
 }
