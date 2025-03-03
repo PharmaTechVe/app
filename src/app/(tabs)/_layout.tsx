@@ -1,8 +1,8 @@
 // app/(tabs)/_layout.tsx
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-import { Colors } from '../../src/styles/theme';
-import PoppinsText from '../../src/components/PoppinsText';
+import { Colors } from '../../styles/theme';
+import PoppinsText from '../../components/PoppinsText';
 
 export default function TabLayout() {
   return (
@@ -29,7 +29,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="categorias"
+        name="categories"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
@@ -44,7 +44,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="sucursales"
+        name="branches"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
@@ -59,7 +59,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="ofertas"
+        name="offers"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
@@ -74,7 +74,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="soporte"
+        name="support"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>

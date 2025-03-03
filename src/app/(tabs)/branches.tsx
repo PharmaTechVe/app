@@ -1,11 +1,11 @@
-// app/(tabs)/categorias.tsx
+// app/(tabs)/branches.tsx
 import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../src/components/PoppinsText';
+import PoppinsText from '../../components/PoppinsText';
 
-export default function CategoriasScreen() {
+export default function BranchesScreen() {
   return (
     <View style={styles.container}>
-      <PoppinsText>Pantalla Categorías</PoppinsText>
+      <PoppinsText>Pantalla Sucursales</PoppinsText>
     </View>
   );
 }

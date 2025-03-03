@@ -6,7 +6,7 @@ const config = {
     'node_modules/(?!(react-native|@react-native|expo|expo-router|react-native-css-interop|expo-modules-core)/)',
   ],
   moduleNameMapper: {
-    '^app/(.*)$': '<rootDir>/app/$1',
+    '^src/(.*)$': '<rootDir>/src/$1',
     '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/__mocks__/fileMock.js',
   },
 };

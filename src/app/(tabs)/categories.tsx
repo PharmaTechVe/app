@@ -1,11 +1,11 @@
-// app/(tabs)/ofertas.tsx
+// app/(tabs)/categories.tsx
 import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../src/components/PoppinsText';
+import PoppinsText from '../../components/PoppinsText';
 
-export default function OfertasScreen() {
+export default function CategoriesScreen() {
   return (
     <View style={styles.container}>
-      <PoppinsText>Pantalla Ofertas</PoppinsText>
+      <PoppinsText>Pantalla Categorías</PoppinsText>
     </View>
   );
 }
