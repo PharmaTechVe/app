@@ -16,6 +16,7 @@ export type ButtonVariant =
   | 'secondary'
   | 'secondaryLight'
   | 'secondaryWhite'
+  | 'secondaryGray'
   | 'disabled';
 
 export type ButtonMode = 'filled' | 'outline';
@@ -57,6 +58,10 @@ const getButtonStyles = (
       backgroundColor = Colors.secondaryWhite;
       borderColor = Colors.secondaryWhite;
       break;
+    case 'secondaryGray':
+      backgroundColor = Colors.secondaryGray;
+      borderColor = Colors.secondaryGray;
+      break;
     case 'disabled':
       backgroundColor = Colors.stroke;
       borderColor = Colors.stroke;
@@ -88,6 +93,8 @@ const getTextColor = (variant: ButtonVariant, mode: ButtonMode): string => {
         return Colors.secondaryLight;
       case 'secondaryWhite':
         return Colors.secondaryWhite;
+      case 'secondaryGray':
+        return Colors.secondaryGray;
       case 'disabled':
         return Colors.disableText;
       default:
