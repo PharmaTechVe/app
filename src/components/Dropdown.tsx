@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  TouchableHighlight,
+  StyleSheet,
+} from 'react-native';
 import { ChevronDownIcon } from 'react-native-heroicons/outline';
 import PoppinsText from './PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
@@ -56,7 +61,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       {isOpen && (
         <View style={[styles.optionsContainer]}>
           {options.map((option, index) => (
-            <TouchableOpacity
+            <TouchableHighlight
               key={index}
               onPress={() => handleSelect(option)}
               style={[
@@ -67,6 +72,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 styles.option,
               ]}
               activeOpacity={1}
+              underlayColor={Colors.primary}
             >
               <PoppinsText
                 style={[
@@ -76,7 +82,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               >
                 {option}
               </PoppinsText>
-            </TouchableOpacity>
+            </TouchableHighlight>
           ))}
         </View>
       )}
