@@ -9,10 +9,10 @@ import {
 } from 'react-native';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import PoppinsText from './PoppinsText';
-import Button from './Button'; // Asegúrate de que la ruta sea correcta
+import Button from './Button';
 import { Colors } from '../styles/theme';
 
-// Configuración en español
+// Spanish setting
 LocaleConfig.locales['es'] = {
   monthNames: [
     'Enero',
@@ -71,11 +71,10 @@ const CustomCalendar: React.FC<{
 }> = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1); // Meses de 1 a 12
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
-  // Usamos una constante para generar siempre los años desde 1900 hasta el año actual real
   const startingYear = new Date().getFullYear();
   const years = useMemo(
     () =>
@@ -83,11 +82,10 @@ const CustomCalendar: React.FC<{
         { length: startingYear - 1900 + 1 },
         (_, i) => 1900 + i,
       ).reverse(),
-    [], // No depende de currentYear, para que siempre muestre el rango completo
+    [],
   );
   const months = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
 
-  // Al seleccionar un día, actualizamos la fecha y sincronizamos currentYear y currentMonth
   const handleDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
     const [year, month] = day.dateString.split('-');
@@ -95,19 +93,15 @@ const CustomCalendar: React.FC<{
     setCurrentMonth(parseInt(month, 10));
   };
 
-  // Fechas marcadas: el día seleccionado y un ejemplo fijo
+  // Marked dates (just in case we need it)
   const markedDates: MarkedDates = {
     [selectedDate]: {
       selected: true,
       selectedColor: Colors.primary,
     },
-    '2023-10-15': {
-      marked: true,
-      dotColor: '#EF4444',
-    },
   };
 
-  // Header personalizado: mes y año alineados horizontalmente usando PoppinsText
+  // Header of the calendar
   const CustomHeader = useCallback(() => {
     const monthName = LocaleConfig.locales['es'].monthNames[currentMonth - 1];
     return (
@@ -132,7 +126,6 @@ const CustomCalendar: React.FC<{
     );
   }, [currentYear, currentMonth]);
 
-  // Actualiza el estado del calendario al cambiar año o mes desde los modales
   const updateCalendarDate = useCallback((year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
@@ -142,7 +135,6 @@ const CustomCalendar: React.FC<{
   return (
     <View style={styles.container}>
       <Calendar
-        // Forzamos el re-montaje del Calendar con la propiedad key para que se actualice la disposición
         key={`${currentYear}-${currentMonth}`}
         current={`${currentYear}-${currentMonth.toString().padStart(2, '0')}-01`}
         onDayPress={handleDayPress}
@@ -168,14 +160,14 @@ const CustomCalendar: React.FC<{
         minDate={'1900-01-01'}
         maxDate={'2100-12-31'}
         enableSwipeMonths={false}
-        showSixWeeks={true} // Forzar que siempre se muestren 6 filas
+        showSixWeeks={true}
         renderHeader={CustomHeader}
         onMonthChange={(monthData: { year: number; month: number }) =>
           updateCalendarDate(monthData.year, monthData.month)
         }
       />
 
-      {/* Modal para seleccionar año */}
+      {/* Year Modal */}
       <Modal visible={showYearPicker} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -199,7 +191,7 @@ const CustomCalendar: React.FC<{
         </View>
       </Modal>
 
-      {/* Modal para seleccionar mes */}
+      {/* Month modal */}
       <Modal visible={showMonthPicker} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -223,7 +215,7 @@ const CustomCalendar: React.FC<{
         </View>
       </Modal>
 
-      {/* Reemplazar el texto de fecha seleccionada por dos botones */}
+      {/* Buttons */}
       <View style={styles.buttonContainer}>
         <Button
           title="Cancelar"
@@ -232,9 +224,7 @@ const CustomCalendar: React.FC<{
           size="medium"
           style={{ width: 136, height: 50 }}
           onPress={() => {
-            // Lógica para cancelar: se puede reiniciar la selección o cerrar el componente
             console.log('Cancelado');
-            // Ejemplo: reiniciar fecha seleccionada (o llamar a un callback onCancel)
             setSelectedDate('');
           }}
         />
@@ -245,7 +235,6 @@ const CustomCalendar: React.FC<{
           size="medium"
           onPress={() => {
             console.log('Fecha aceptada:', selectedDate);
-            // Llamar a un callback onAccept(selectedDate) si se requiere
           }}
           style={{ marginLeft: 12, width: 136, height: 50 }}
         />
@@ -263,7 +252,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-    // Fijamos un ancho máximo para que el calendario mantenga dimensiones constantes
     width: 350 - 16,
     alignSelf: 'center',
   },

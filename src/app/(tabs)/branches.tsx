@@ -1,11 +1,11 @@
-// app/(tabs)/soporte.tsx
+// app/(tabs)/branches.tsx
 import { View, StyleSheet } from 'react-native';
 import PoppinsText from '../../components/PoppinsText';
 
-export default function SoporteScreen() {
+export default function BranchesScreen() {
   return (
     <View style={styles.container}>
-      <PoppinsText>Pantalla Soporte</PoppinsText>
+      <PoppinsText>Pantalla Sucursales</PoppinsText>
     </View>
   );
 }

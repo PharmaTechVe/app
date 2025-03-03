@@ -29,7 +29,7 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="categorias"
+        name="categories"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
@@ -44,7 +44,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="sucursales"
+        name="branches"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
@@ -59,7 +59,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="ofertas"
+        name="offers"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
@@ -74,7 +74,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="soporte"
+        name="support"
         options={{
           tabBarLabel: ({ color }) => (
             <PoppinsText style={{ color: color, fontSize: 10 }}>
