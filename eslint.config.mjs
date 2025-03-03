@@ -75,4 +75,22 @@ export default [
     },
   },
   eslintConfigPrettier,
+
+  // Override específico para jest.setup.js
+  {
+    files: ['jest.setup.js', '**/jest.setup.js'],
+    languageOptions: {
+      globals: {
+        jest: 'readonly',
+      },
+      parserOptions: {
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'react/display-name': 'off',
+      'react/prop-types': 'off',
+    },
+  },
 ];
