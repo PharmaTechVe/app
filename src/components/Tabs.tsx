@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import PagerView from 'react-native-pager-view';
 import { Colors } from '../styles/theme';
+import PoppinsText from '../../src/components/PoppinsText';
 
 type tabStyle = 'default' | 'buttons' | 'inverted';
 
@@ -16,7 +17,7 @@ interface TabsComponentProps {
   tabStyle?: tabStyle;
 }
 
-const Tabs: React.FC<TabsComponentProps> = ({ tabs, tabStyle = 'buttons' }) => {
+const Tabs: React.FC<TabsComponentProps> = ({ tabs, tabStyle = 'default' }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const pagerRef = useRef<PagerView>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -59,7 +60,7 @@ const Tabs: React.FC<TabsComponentProps> = ({ tabs, tabStyle = 'buttons' }) => {
                 activeIndex === index && {
                   borderBottomWidth: 2,
                   borderRadius: 0,
-                  backgroundColor: '',
+                  backgroundColor: 'transparent',
                 },
               tabStyle === 'inverted' &&
                 activeIndex === index && {
@@ -69,16 +70,20 @@ const Tabs: React.FC<TabsComponentProps> = ({ tabs, tabStyle = 'buttons' }) => {
                 },
             ]}
           >
-            <Text
+            <PoppinsText
+              weight="medium"
               style={[
                 styles.tabText,
                 activeIndex === index && styles.activeTabText,
                 tabStyle === 'default' && { color: Colors.textMain },
+                tabStyle === 'buttons' && { color: Colors.textMain },
+                tabStyle === 'buttons' &&
+                  activeIndex === index && { color: Colors.textWhite },
                 tabStyle === 'inverted' && { color: Colors.textWhite },
               ]}
             >
               {tab.title}
-            </Text>
+            </PoppinsText>
           </Pressable>
         ))}
       </ScrollView>
@@ -108,7 +113,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 10,
     paddingVertical: 10,
-    height: '30%',
+    height: '20%',
   },
   tabButton: {
     paddingHorizontal: 20,
@@ -126,7 +131,6 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: Colors.textWhite,
-    fontWeight: 'bold',
   },
   pagerView: {
     flex: 1,
