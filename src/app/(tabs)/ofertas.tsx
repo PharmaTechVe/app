@@ -1,6 +1,6 @@
 // app/(tabs)/ofertas.tsx
 import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../src/components/PoppinsText';
+import PoppinsText from '../../components/PoppinsText';
 
 export default function OfertasScreen() {
   return (

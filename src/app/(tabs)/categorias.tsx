@@ -1,11 +1,11 @@
-// app/(tabs)/soporte.tsx
+// app/(tabs)/categorias.tsx
 import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../src/components/PoppinsText';
+import PoppinsText from '../../components/PoppinsText';
 
-export default function SoporteScreen() {
+export default function CategoriasScreen() {
   return (
     <View style={styles.container}>
-      <PoppinsText>Pantalla Soporte</PoppinsText>
+      <PoppinsText>Pantalla Categorías</PoppinsText>
     </View>
   );
 }

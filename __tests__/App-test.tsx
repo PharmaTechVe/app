@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react-native';
-import RootLayout from '../app/_layout';
+import RootLayout from '../src/app/_layout';
 
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(),

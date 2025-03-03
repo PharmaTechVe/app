@@ -53,7 +53,7 @@ jest.mock('expo-router/stack', () => {
   DummyStack.Screen = (props) => {
     if (props.name === '(tabs)') {
       // Usamos el alias definido en moduleNameMapper para resolver la ruta
-      const Tabs = require('app/(tabs)/index').default;
+      const Tabs = require('src/app/(tabs)/index').default;
       // Invocamos el componente mockeado; para mayor seguridad lo envolvemos en un fragmento
       const result = Tabs(props);
       return <>{result}</>;
