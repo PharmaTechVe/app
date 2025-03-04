@@ -86,7 +86,7 @@ const getTextColor = (variant: ButtonVariant, mode: ButtonMode): string => {
   if (mode === 'outline') {
     switch (variant) {
       case 'primary':
-        return Colors.primary;
+        return Colors.textMain;
       case 'secondary':
         return Colors.secondary;
       case 'secondaryLight':

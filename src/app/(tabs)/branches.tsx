@@ -1,15 +1,7 @@
 // app/(tabs)/branches.tsx
-import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../components/PoppinsText';
+import React from 'react';
+import BranchesScreen from '../../screens/tab_screens/BranchesScreen';
 
-export default function BranchesScreen() {
-  return (
-    <View style={styles.container}>
-      <PoppinsText>Pantalla Sucursales</PoppinsText>
-    </View>
-  );
+export default function TabsHome() {
+  return <BranchesScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});

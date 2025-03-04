@@ -22,6 +22,7 @@ interface InputProps {
   showIcon?: boolean;
   border?: borderType;
   isEditable?: boolean;
+  backgroundColor?: string;
   validation?: (input: string) => boolean;
   getValue?: (input: string) => void;
 }
@@ -36,6 +37,7 @@ const Input: React.FC<InputProps> = ({
   showIcon = false,
   border = 'default',
   isEditable = true,
+  backgroundColor,
   validation,
   getValue,
 }) => {
@@ -101,9 +103,7 @@ const Input: React.FC<InputProps> = ({
   };
 
   const validatePassword = (input: string) => {
-    const passwordRegex =
-      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(input);
+    return input.length >= 8;
   };
 
   const validateEmail = (input: string) => {
@@ -131,7 +131,11 @@ const Input: React.FC<InputProps> = ({
           {
             borderColor: getBorderColor(),
             borderWidth: getBorderWidth(),
-            backgroundColor: !isEditable ? Colors.disableText : '',
+            backgroundColor: backgroundColor
+              ? backgroundColor // Prioriza el color personalizado
+              : !isEditable
+                ? Colors.disableText // Color si está deshabilitado
+                : 'transparent', // Fondo transparente por defecto
           },
           styles.inputContainer,
         ]}
@@ -199,7 +203,6 @@ const Input: React.FC<InputProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
-    paddingHorizontal: 25,
     width: '100%',
   },
   inputContainer: {

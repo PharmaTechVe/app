@@ -1,15 +1,7 @@
 // app/(tabs)/support.tsx
-import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../components/PoppinsText';
+import React from 'react';
+import SupportScreen from '../../screens/tab_screens/SupportScreen';
 
-export default function SupportScreen() {
-  return (
-    <View style={styles.container}>
-      <PoppinsText>Pantalla Soporte</PoppinsText>
-    </View>
-  );
+export default function TabsHome() {
+  return <SupportScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});
