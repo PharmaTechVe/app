@@ -6,21 +6,23 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import PoppinsText from '../components/PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
-import Logo from '../assets/app_images/PharmaTech_Logo.svg';
+import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import { PharmaTech } from '@pharmatech/sdk';
-import GoogleLogo from '../assets/images/Google_Logo.png';
+import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const api = new PharmaTech(true);
 
   const handleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
     try {
       const response = await api.auth.login({ email, password });
       console.log('Token de acceso:', response.accessToken);
-      // Succes alert
       Alert.alert('Éxito', 'Inicio de sesión exitoso', [
         {
           text: 'OK',
@@ -35,6 +37,8 @@ export default function LoginScreen() {
         'Error',
         'Error al iniciar sesión, por favor verifica tus credenciales.',
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -74,6 +78,7 @@ export default function LoginScreen() {
           fieldType="email"
           getValue={setEmail}
           backgroundColor={Colors.menuWhite}
+          errorText="El correo ingresado no es válido"
         />
         <Input
           label="Contraseña"
@@ -82,6 +87,7 @@ export default function LoginScreen() {
           fieldType="password"
           getValue={setPassword}
           backgroundColor={Colors.menuWhite}
+          errorText="La contraseña debe tener al menos 8 caracteres"
         />
       </View>
 
@@ -101,6 +107,7 @@ export default function LoginScreen() {
         onPress={handleLogin}
         style={styles.loginButton}
         size="medium"
+        loading={loading}
       />
 
       {/* Google button */}

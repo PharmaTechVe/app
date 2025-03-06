@@ -1,7 +1,7 @@
 // __tests__/HomeScreen.test.tsx
 import React from 'react';
 import { render, waitFor } from '@testing-library/react-native';
-import HomeScreen from '../src/screens/tab_screens/HomeScreen';
+import HomeScreen from '../src/screens/tab/HomeScreen';
 
 describe('<HomeScreen />', () => {
   test('renders "Pantalla Home" text', async () => {
