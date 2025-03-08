@@ -41,6 +41,10 @@ export default function RootLayout() {
         options={{ headerTitle: '', headerTransparent: true }}
       />
       <Stack.Screen
+        name="register"
+        options={{ headerTitle: '', headerTransparent: true }}
+      />
+      <Stack.Screen
         name="success"
         options={{ headerTitle: '', headerTransparent: true }}
       />

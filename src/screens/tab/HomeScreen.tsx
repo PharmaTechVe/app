@@ -19,6 +19,13 @@ export default function HomeScreen() {
         mode="filled"
         size="large"
       />
+      <Button
+        title="Go to register"
+        onPress={() => router.push('/register')}
+        variant="secondary"
+        mode="filled"
+        size="large"
+      />
     </View>
   );
 }
