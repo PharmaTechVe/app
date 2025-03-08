@@ -1,15 +1,7 @@
-// app/(tabs)/index.tsx
-import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../components/PoppinsText';
+// src/app/(tabs)/index.tsx
+import React from 'react';
+import HomeScreen from '../../screens/tab/HomeScreen';
 
-export default function HomeScreen() {
-  return (
-    <View testID="home-screen" style={styles.container}>
-      <PoppinsText>Pantalla Home</PoppinsText>
-    </View>
-  );
+export default function TabsHome() {
+  return <HomeScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});

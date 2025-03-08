@@ -1,3 +1,4 @@
+// src/components/Input.tsx
 import { useEffect, useState } from 'react';
 import { TextInput, View, TouchableOpacity, StyleSheet } from 'react-native';
 import {
@@ -9,19 +10,21 @@ import {
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 
-type fieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
-type borderType = 'none' | 'default' | 'parcial' | 'double';
+type FieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
+type BorderType = 'none' | 'default' | 'parcial' | 'double';
 
 interface InputProps {
   label?: string;
   value?: string;
   placeholder?: string;
-  fieldType?: fieldType;
+  fieldType?: FieldType;
   helperText?: string;
+  errorText?: string;
   useDefaultValidation?: boolean;
   showIcon?: boolean;
-  border?: borderType;
+  border?: BorderType;
   isEditable?: boolean;
+  backgroundColor?: string;
   validation?: (input: string) => boolean;
   getValue?: (input: string) => void;
 }
@@ -32,17 +35,19 @@ const Input: React.FC<InputProps> = ({
   placeholder,
   fieldType = 'text',
   helperText,
+  errorText,
   useDefaultValidation = true,
   showIcon = false,
   border = 'default',
   isEditable = true,
+  backgroundColor,
   validation,
   getValue,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [hasBlurred, setHasBlurred] = useState(false);
   const [Ivalue, setIvalue] = useState(value);
-  const [isValid, setIsValid] = useState(false);
+  const [isValid, setIsValid] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
   const validateInput = (input: string) => {
@@ -59,9 +64,7 @@ const Input: React.FC<InputProps> = ({
           setIsValid(validateEmail(input));
           break;
         case 'number':
-          if (!isNaN(Number(input))) {
-            return setIsValid(true);
-          } else setIsValid(false);
+          setIsValid(!isNaN(Number(input)));
           break;
         case 'password':
           setIsValid(validatePassword(input));
@@ -76,11 +79,10 @@ const Input: React.FC<InputProps> = ({
     }
   };
 
-  // Determina el color del borde
   const getBorderColor = () => {
     if (hasBlurred && !isValid) {
       return Colors.semanticDanger;
-    } else if (isValid) {
+    } else if (isValid && hasBlurred) {
       return Colors.semanticSuccess;
     } else if (isFocused) {
       return Colors.primary;
@@ -101,9 +103,7 @@ const Input: React.FC<InputProps> = ({
   };
 
   const validatePassword = (input: string) => {
-    const passwordRegex =
-      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(input);
+    return input.length >= 8;
   };
 
   const validateEmail = (input: string) => {
@@ -115,9 +115,7 @@ const Input: React.FC<InputProps> = ({
     setShowPassword(!showPassword);
   };
 
-  useEffect(() => {
-    getBorderColor();
-  }, [isFocused, hasBlurred]);
+  useEffect(() => {}, [isFocused, hasBlurred]);
 
   return (
     <View style={styles.container}>
@@ -128,20 +126,24 @@ const Input: React.FC<InputProps> = ({
       )}
       <View
         style={[
+          styles.inputContainer,
           {
             borderColor: getBorderColor(),
             borderWidth: getBorderWidth(),
-            backgroundColor: !isEditable ? Colors.disableText : '',
+            backgroundColor: backgroundColor
+              ? backgroundColor
+              : !isEditable
+                ? Colors.disableText
+                : 'transparent',
           },
-          styles.inputContainer,
         ]}
       >
         <TextInput
           value={Ivalue}
           placeholder={placeholder}
-          secureTextEntry={fieldType == 'password' && !showPassword}
-          keyboardType={fieldType == 'number' ? 'numeric' : 'default'}
-          multiline={fieldType == 'textarea'}
+          secureTextEntry={fieldType === 'password' && !showPassword}
+          keyboardType={fieldType === 'number' ? 'numeric' : 'default'}
+          multiline={fieldType === 'textarea'}
           editable={isEditable}
           onChangeText={validateInput}
           onFocus={() => {
@@ -152,10 +154,10 @@ const Input: React.FC<InputProps> = ({
             setIsFocused(false);
             setHasBlurred(true);
           }}
-          style={{ flex: 1 }}
+          style={{ flex: 1, height: 44 }}
         />
 
-        {showIcon == true ? (
+        {showIcon ? (
           !isValid && hasBlurred ? (
             <ExclamationCircleIcon
               color={
@@ -177,7 +179,7 @@ const Input: React.FC<InputProps> = ({
               />
             )
           )
-        ) : fieldType == 'password' ? (
+        ) : fieldType === 'password' ? (
           <TouchableOpacity onPress={showPass}>
             {showPassword ? (
               <EyeSlashIcon color={Colors.iconMainDefault} size={20} />
@@ -187,8 +189,17 @@ const Input: React.FC<InputProps> = ({
           </TouchableOpacity>
         ) : null}
       </View>
-      {helperText && (
-        <PoppinsText style={[{ color: getBorderColor() }, styles.helperText]}>
+
+      {hasBlurred && !isValid && errorText && (
+        <PoppinsText
+          style={[styles.errorText, { color: Colors.semanticDanger }]}
+        >
+          {errorText}
+        </PoppinsText>
+      )}
+
+      {helperText && isValid && (
+        <PoppinsText style={[styles.helperText, { color: getBorderColor() }]}>
           {helperText}
         </PoppinsText>
       )}
@@ -199,7 +210,6 @@ const Input: React.FC<InputProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginVertical: 4,
-    paddingHorizontal: 25,
     width: '100%',
   },
   inputContainer: {
@@ -215,6 +225,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   helperText: {
+    fontSize: FontSizes.label.size,
+    marginTop: 4,
+  },
+  errorText: {
     fontSize: FontSizes.label.size,
     marginTop: 4,
   },

@@ -1,15 +1,7 @@
 // app/(tabs)/categories.tsx
-import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../components/PoppinsText';
+import React from 'react';
+import CategoriesScreen from '../../screens/tab/CategoriesScreen';
 
-export default function CategoriesScreen() {
-  return (
-    <View style={styles.container}>
-      <PoppinsText>Pantalla Categorías</PoppinsText>
-    </View>
-  );
+export default function TabsHome() {
+  return <CategoriesScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});

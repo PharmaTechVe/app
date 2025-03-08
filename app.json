@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.pharmatech.pharmatech"
     },
     "web": {
       "bundler": "metro",

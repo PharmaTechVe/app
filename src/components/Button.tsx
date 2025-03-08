@@ -4,6 +4,7 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
+  ActivityIndicator,
   StyleProp,
   ViewStyle,
   TextStyle,
@@ -32,6 +33,7 @@ interface ButtonProps {
   icon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  loading?: boolean;
 }
 
 const getButtonStyles = (
@@ -86,7 +88,7 @@ const getTextColor = (variant: ButtonVariant, mode: ButtonMode): string => {
   if (mode === 'outline') {
     switch (variant) {
       case 'primary':
-        return Colors.primary;
+        return Colors.textMain;
       case 'secondary':
         return Colors.secondary;
       case 'secondaryLight':
@@ -136,6 +138,7 @@ const Button: React.FC<ButtonProps> = ({
   icon,
   style,
   textStyle,
+  loading = false,
 }) => {
   const buttonStyle = getButtonStyles(variant, mode);
   const textColor = getTextColor(variant, mode);
@@ -144,22 +147,30 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <TouchableOpacity
       style={[styles.buttonBase, buttonStyle, style]}
-      onPress={variant === 'disabled' ? undefined : onPress}
-      disabled={variant === 'disabled'}
+      onPress={!loading && variant !== 'disabled' ? onPress : undefined}
+      disabled={loading || variant === 'disabled'}
       activeOpacity={0.9}
     >
-      {icon && <View style={styles.iconContainer}>{icon}</View>}
-      <PoppinsText
-        weight="medium"
-        style={[
-          styles.textBase,
-          fontSizeStyle,
-          { color: textColor },
-          textStyle,
-        ]}
-      >
-        {title}
-      </PoppinsText>
+      <View style={styles.contentContainer}>
+        {loading && (
+          <ActivityIndicator
+            color={textColor}
+            style={styles.activityIndicator}
+          />
+        )}
+        {icon && <View style={styles.iconContainer}>{icon}</View>}
+        <PoppinsText
+          weight="medium"
+          style={[
+            styles.textBase,
+            fontSizeStyle,
+            { color: textColor },
+            textStyle,
+          ]}
+        >
+          {title}
+        </PoppinsText>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -175,11 +186,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   textBase: {
     textAlign: 'center',
   },
   iconContainer: {
     marginRight: 4,
+  },
+  activityIndicator: {
+    marginRight: 8,
   },
 });
 

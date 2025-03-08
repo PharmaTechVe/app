@@ -36,6 +36,14 @@ export default function RootLayout() {
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="login"
+        options={{ headerTitle: '', headerTransparent: true }}
+      />
+      <Stack.Screen
+        name="success"
+        options={{ headerTitle: '', headerTransparent: true }}
+      />
     </Stack>
   );
 }

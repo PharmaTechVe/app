@@ -1,15 +1,7 @@
 // app/(tabs)/offers.tsx
-import { View, StyleSheet } from 'react-native';
-import PoppinsText from '../../components/PoppinsText';
+import React from 'react';
+import OffersScreen from '../../screens/tab/OffersScreen';
 
-export default function OffersScreen() {
-  return (
-    <View style={styles.container}>
-      <PoppinsText>Pantalla Ofertas</PoppinsText>
-    </View>
-  );
+export default function TabsHome() {
+  return <OffersScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});
