@@ -5,28 +5,32 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  Modal,
   TouchableOpacity,
+  Image,
 } from 'react-native';
-//import { useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import PoppinsText from '../components/PoppinsText';
-import CustomCalendar from '../components/Calendar';
 import Steps from '../components/Steps';
 import RadioButton from '../components/RadioButton';
 import { Colors, FontSizes } from '../styles/theme';
 //import { PharmaTech } from '@pharmatech/sdk';
+import GoogleLogo from '../assets/images/logos/Google_Logo.png';
+import DatePickerInput from '../components/DatePickerInput';
 
 export default function RegisterScreen() {
-  //const router = useRouter();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [showCalendar, setShowCalendar] = useState(false);
 
   // Paso 1: Credenciales
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const handleGoogleLogin = () => {
+    console.log('Iniciar sesión con Google');
+    // Google login logic
+  };
 
   // Paso 2: Datos personales
   const [firstName, setFirstName] = useState('');
@@ -56,15 +60,19 @@ export default function RegisterScreen() {
     //Register logic
   };
 
+  const handleLogin = () => {
+    router.push('/login');
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Encabezado */}
       {currentStep === 1 && (
         <View style={styles.headerContainer}>
-          <PoppinsText weight="regular" style={styles.mainHeader}>
+          <PoppinsText weight="medium" style={styles.mainHeader}>
             Crea tu cuenta
           </PoppinsText>
-          <PoppinsText style={styles.subHeader}>
+          <PoppinsText weight="regular" style={styles.subHeader}>
             Por favor introduce tus datos para iniciar sesión
           </PoppinsText>
         </View>
@@ -73,7 +81,7 @@ export default function RegisterScreen() {
       {currentStep === 2 && (
         <PoppinsText
           weight="regular"
-          style={[styles.mainHeader, { marginBottom: 20 }]}
+          style={[styles.mainHeader2, { marginBottom: 20 }]}
         >
           Completa tus datos para crear tu cuenta
         </PoppinsText>
@@ -106,7 +114,7 @@ export default function RegisterScreen() {
           />
           <Input
             label="Confirmar Contraseña"
-            placeholder="Reingresa tu contraseña"
+            placeholder="Repite tu contraseña"
             value={confirmPassword}
             fieldType="password"
             getValue={setConfirmPassword}
@@ -118,6 +126,29 @@ export default function RegisterScreen() {
             style={styles.nextButton}
             size="medium"
           />
+          {/* Google button */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleLogin}
+          >
+            <Image
+              source={GoogleLogo}
+              style={styles.googleIcon}
+              resizeMode="contain"
+            />
+            <PoppinsText weight="medium" style={styles.googleButtonText}>
+              Iniciar sesión con Google
+            </PoppinsText>
+          </TouchableOpacity>
+          {/* Register link */}
+          <TouchableOpacity onPress={handleLogin} style={styles.loginContainer}>
+            <PoppinsText weight="regular" style={styles.loginText}>
+              ¿Ya tienes cuenta?{' '}
+              <PoppinsText weight="regular" style={styles.loginLink}>
+                Inicia sesión
+              </PoppinsText>
+            </PoppinsText>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -155,47 +186,40 @@ export default function RegisterScreen() {
           />
 
           <View style={styles.genderContainer}>
-            <PoppinsText style={styles.label}>Género</PoppinsText>
-            <RadioButton
-              label="Hombre"
-              value="male"
-              selectedValue={gender}
-              onValueChange={setGender}
-            />
-            <RadioButton
-              label="Mujer"
-              value="female"
-              selectedValue={gender}
-              onValueChange={setGender}
-            />
-            <RadioButton
-              label="Otro"
-              value="other"
-              selectedValue={gender}
-              onValueChange={setGender}
-            />
-          </View>
-
-          <TouchableOpacity onPress={() => setShowCalendar(true)}>
-            <Input
-              label="Fecha de Nacimiento"
-              placeholder="Selecciona tu fecha"
-              value={dateOfBirth}
-              backgroundColor={Colors.menuWhite}
-            />
-          </TouchableOpacity>
-
-          <Modal visible={showCalendar} transparent animationType="slide">
-            <View style={styles.calendarModal}>
-              <CustomCalendar
-                onAccept={(date) => {
-                  setDateOfBirth(date);
-                  setShowCalendar(false);
-                }}
-                onCancel={() => setShowCalendar(false)}
+            <PoppinsText weight="medium" style={styles.label}>
+              Género
+            </PoppinsText>
+            <View style={styles.radioGroup}>
+              <RadioButton
+                label="Hombre"
+                value="male"
+                selectedValue={gender}
+                onValueChange={setGender}
+                style={styles.radioButton}
+              />
+              <RadioButton
+                label="Mujer"
+                value="female"
+                selectedValue={gender}
+                onValueChange={setGender}
+                style={styles.radioButton}
+              />
+              <RadioButton
+                label="Otro"
+                value="other"
+                selectedValue={gender}
+                onValueChange={setGender}
+                style={styles.radioButton}
               />
             </View>
-          </Modal>
+          </View>
+
+          <DatePickerInput
+            label="Fecha de Nacimiento"
+            placeholder="Selecciona tu fecha"
+            value={dateOfBirth}
+            getValue={setDateOfBirth}
+          />
 
           <View style={styles.navigationButtons}>
             <Button
@@ -220,19 +244,29 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: Colors.bgColor,
-    padding: 20,
+    justifyContent: 'flex-start',
+    paddingTop: 56,
+    paddingHorizontal: 20,
   },
   headerContainer: {
     marginBottom: 20,
     alignItems: 'center',
   },
   mainHeader: {
-    fontSize: FontSizes.h2.size,
+    fontSize: FontSizes.h4.size,
+    lineHeight: FontSizes.h4.lineHeight,
     color: Colors.textMain,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
+  },
+  mainHeader2: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.textMain,
+    textAlign: 'center',
+    marginBottom: 20,
   },
   subHeader: {
     fontSize: FontSizes.b1.size,
@@ -244,7 +278,8 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   nextButton: {
-    marginTop: 20,
+    marginTop: 16,
+    width: '100%',
     height: 50,
   },
   navigationButtons: {
@@ -263,6 +298,7 @@ const styles = StyleSheet.create({
   },
   genderContainer: {
     marginVertical: 10,
+    width: '80%',
   },
   label: {
     fontSize: FontSizes.label.size,
@@ -273,5 +309,51 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 16,
+    width: '100%',
+    height: 50,
+    backgroundColor: Colors.menuWhite,
+  },
+  googleIcon: {
+    width: 24 + 12,
+    height: 24 + 12,
+    marginRight: 4,
+  },
+  googleButtonText: {
+    fontSize: FontSizes.btnMedium.size,
+    lineHeight: FontSizes.btnMedium.lineHeight,
+    color: Colors.textMain,
+    backgroundColor: Colors.menuWhite,
+  },
+  loginContainer: {
+    alignSelf: 'flex-start',
+    marginTop: 16,
+  },
+  loginText: {
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
+    color: Colors.textMain,
+  },
+  loginLink: {
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
+    color: Colors.secondary,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  radioButton: {
+    flex: 1,
+    marginHorizontal: 4,
   },
 });

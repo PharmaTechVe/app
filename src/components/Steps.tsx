@@ -1,7 +1,7 @@
 // src/components/Steps.tsx
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Colors, Fonts } from '../styles/theme';
+import { Colors, Fonts, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 
 interface StepsProps {
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
   },
   // Estilos para los labels
   labelText: {
-    fontSize: 12,
+    fontSize: FontSizes.label.size,
+    lineHeight: FontSizes.label.lineHeight,
     color: Colors.textLowContrast,
     textAlign: 'center',
     marginTop: 8,
@@ -127,7 +128,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 28, // Ajusta este valor según la alineación vertical
     height: 2,
-    backgroundColor: Colors.textLowContrast,
     zIndex: -1, // Asegura que esté detrás de los steps
   },
   lineForeground: {
