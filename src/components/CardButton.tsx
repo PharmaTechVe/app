@@ -4,7 +4,11 @@ import { PlusIcon, MinusIcon } from 'react-native-heroicons/outline';
 import PoppinsText from './PoppinsText';
 import { Colors } from '../styles/theme';
 
-const CardButton = () => {
+interface CardButtonProps {
+  getValue?: (count: number) => void;
+}
+
+const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
   const [count, setCount] = useState(0);
   const [showCounter, setShowCounter] = useState(false);
 
@@ -12,7 +16,9 @@ const CardButton = () => {
     if (count == 0) setShowCounter(false);
     else {
       setShowCounter(true);
-      incrementCount();
+    }
+    if (getValue) {
+      getValue(count);
     }
   }, [count]);
 
@@ -26,13 +32,18 @@ const CardButton = () => {
     }
   };
 
+  const showCounterIncrement = () => {
+    setShowCounter(true);
+    incrementCount();
+  };
+
   return (
     <View style={styles.container}>
       {!showCounter ? (
         <TouchableOpacity
           style={styles.mainButton}
           onPress={() => {
-            setShowCounter(true);
+            showCounterIncrement();
           }}
         >
           <PoppinsText style={styles.buttonText}>
