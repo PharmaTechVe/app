@@ -75,7 +75,6 @@ const CustomCalendar: React.FC<{
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
 
-  // Modificar el onPress del botón Aceptar
   const handleAccept = () => {
     if (selectedDate) {
       onAccept?.(selectedDate);
@@ -83,7 +82,6 @@ const CustomCalendar: React.FC<{
     }
   };
 
-  // Modificar el onPress del botón Cancelar
   const handleCancel = () => {
     setSelectedDate('');
     onCancel?.();

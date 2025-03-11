@@ -22,7 +22,7 @@ interface InputProps {
   errorText?: string;
   useDefaultValidation?: boolean;
   showIcon?: boolean;
-  icon?: React.ReactNode; // <-- Nuevo prop para ícono personalizado
+  icon?: React.ReactNode;
   border?: BorderType;
   isEditable?: boolean;
   backgroundColor?: string;
@@ -163,7 +163,6 @@ const Input: React.FC<InputProps> = ({
           style={{ flex: 1, height: 44 }}
         />
 
-        {/* Si se pasa un ícono personalizado, se muestra ese en lugar de la lógica por defecto */}
         {icon ? (
           icon
         ) : showIcon ? (

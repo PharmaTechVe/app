@@ -13,11 +13,11 @@ interface StepsProps {
 const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
   return (
     <View style={styles.container}>
-      {/* Contenedor que agrupa cada step y su label */}
+      {/* Label and step container */}
       <View style={styles.stepsAndLabelsContainer}>
         {Array.from({ length: totalSteps }, (_, index) => (
           <View key={index} style={styles.stepColumn}>
-            {/* Contenedor para el step */}
+            {/* Step container */}
             <View
               style={[
                 styles.step,
@@ -34,7 +34,7 @@ const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
                 {index + 1}
               </PoppinsText>
             </View>
-            {/* Renderizamos el label, si existe */}
+            {/* Label render */}
             {labels && labels[index] && (
               <PoppinsText
                 style={[
@@ -49,7 +49,7 @@ const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
         ))}
       </View>
 
-      {/* Línea de progreso (puedes ajustarla para que se ubique detrás de los steps) */}
+      {/* Progress bar */}
       <View
         style={[
           styles.progressLineContainer,
@@ -76,18 +76,15 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 8,
   },
-  // Contenedor principal que agrupa las columnas (step + label)
   stepsAndLabelsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  // Cada columna contiene el step y su label centrado
   stepColumn: {
     alignItems: 'center',
     flex: 1,
   },
-  // Estilos del círculo (step)
   step: {
     width: 40,
     height: 40,
@@ -111,7 +108,6 @@ const styles = StyleSheet.create({
   activeStepText: {
     color: Colors.textWhite,
   },
-  // Estilos para los labels
   labelText: {
     fontSize: FontSizes.label.size,
     lineHeight: FontSizes.label.lineHeight,
@@ -123,12 +119,11 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: '600',
   },
-  // Contenedor para la línea de progreso
   progressLineContainer: {
     position: 'absolute',
-    top: 28, // Ajusta este valor según la alineación vertical
+    top: 28,
     height: 2,
-    zIndex: -1, // Asegura que esté detrás de los steps
+    zIndex: -1,
   },
   lineForeground: {
     height: 2,

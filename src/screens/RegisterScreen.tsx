@@ -27,16 +27,17 @@ export default function RegisterScreen() {
   const [currentStep, setCurrentStep] = useState(1);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  // Paso 1: Credenciales
+  // Step 1: Credentials
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
   const handleGoogleLogin = () => {
     console.log('Iniciar sesión con Google');
     // Google login logic
   };
 
-  // Paso 2: Datos personales
+  // Step 2: Personal Data
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [cedula, setCedula] = useState('');
@@ -104,7 +105,7 @@ export default function RegisterScreen() {
   return (
     <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Encabezado */}
+        {/* Header */}
         {currentStep === 1 && (
           <View style={styles.headerContainer}>
             <PoppinsText weight="medium" style={styles.mainHeader}>
