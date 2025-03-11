@@ -1,6 +1,11 @@
 // app/_layout.tsx
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
@@ -9,6 +14,7 @@ import {
   Poppins_600SemiBold,
 } from '@expo-google-fonts/poppins';
 import { Stack } from 'expo-router/stack';
+import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,7 +40,18 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={({ navigation }) => ({
+        headerBackVisible: false,
+        headerLeft: () =>
+          navigation.canGoBack() ? (
+            <TouchableOpacity onPress={navigation.goBack}>
+              <ChevronLeftIcon width={24} height={24} color="#000" />
+            </TouchableOpacity>
+          ) : null,
+        headerBackTitleVisible: false,
+      })}
+    >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="login"

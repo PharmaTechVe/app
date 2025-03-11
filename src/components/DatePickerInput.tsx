@@ -1,6 +1,12 @@
 // src/components/DatePickerInput.tsx
 import React, { useState } from 'react';
-import { View, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import Input from './Input';
 import CustomCalendar from './Calendar';
 import { CalendarDaysIcon } from 'react-native-heroicons/outline';
@@ -23,6 +29,10 @@ const DatePickerInput: React.FC<{
     setShowCalendar(false);
   };
 
+  const handleCloseModal = () => {
+    setShowCalendar(false);
+  };
+
   return (
     <View>
       <TouchableOpacity onPress={() => setShowCalendar(true)}>
@@ -31,19 +41,24 @@ const DatePickerInput: React.FC<{
           placeholder={placeholder}
           value={selectedDate}
           isEditable={false}
-          // Se pasa el ícono de calendario personalizado
           icon={<CalendarDaysIcon color={Colors.iconMainDefault} size={20} />}
           backgroundColor={Colors.menuWhite}
         />
       </TouchableOpacity>
 
       <Modal visible={showCalendar} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <CustomCalendar
-            onAccept={handleDateSelect}
-            onCancel={() => setShowCalendar(false)}
-          />
-        </View>
+        <TouchableWithoutFeedback onPress={handleCloseModal}>
+          <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback>
+              <View>
+                <CustomCalendar
+                  onAccept={handleDateSelect}
+                  onCancel={handleCloseModal}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
