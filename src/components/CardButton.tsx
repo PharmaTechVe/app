@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { PlusIcon } from 'react-native-heroicons/outline';
+import { PlusIcon, MinusIcon } from 'react-native-heroicons/outline';
 import PoppinsText from './PoppinsText';
 import { Colors } from '../styles/theme';
 
-const CounterButton = () => {
+const CardButton = () => {
   const [count, setCount] = useState(0);
   const [showCounter, setShowCounter] = useState(false);
+
+  useEffect(() => {
+    if (count == 0) setShowCounter(false);
+    else {
+      setShowCounter(true);
+      incrementCount();
+    }
+  }, [count]);
 
   const incrementCount = () => {
     setCount((prev) => prev + 1);
@@ -23,7 +31,9 @@ const CounterButton = () => {
       {!showCounter ? (
         <TouchableOpacity
           style={styles.mainButton}
-          onPress={() => setShowCounter(true)}
+          onPress={() => {
+            setShowCounter(true);
+          }}
         >
           <PoppinsText style={styles.buttonText}>
             <PlusIcon size={20} color={Colors.textWhite} />
@@ -35,7 +45,9 @@ const CounterButton = () => {
             style={[styles.counterButton]}
             onPress={decrementCount}
           >
-            <PoppinsText style={styles.buttonText}>-</PoppinsText>
+            <PoppinsText style={[styles.buttonText]}>
+              <MinusIcon size={30} color={Colors.textWhite} />
+            </PoppinsText>
           </TouchableOpacity>
 
           <PoppinsText style={styles.countText}>{count}</PoppinsText>
@@ -44,7 +56,9 @@ const CounterButton = () => {
             style={[styles.counterButton]}
             onPress={incrementCount}
           >
-            <PoppinsText style={styles.buttonText}>+</PoppinsText>
+            <PoppinsText style={styles.buttonText}>
+              <PlusIcon size={30} color={Colors.textWhite} />
+            </PoppinsText>
           </TouchableOpacity>
         </View>
       )}
@@ -56,6 +70,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    margin: 10,
   },
   mainButton: {
     backgroundColor: Colors.primary,
@@ -68,6 +83,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 20,
+    backgroundColor: Colors.primary,
+    borderRadius: 50,
+    padding: 5,
   },
   counterButton: {
     width: 40,
@@ -85,11 +103,11 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+
+    color: Colors.textWhite,
     minWidth: 40,
     textAlign: 'center',
   },
 });
 
-export default CounterButton;
+export default CardButton;
