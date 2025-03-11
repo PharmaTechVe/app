@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import {
   ExclamationCircleIcon,
   CheckCircleIcon,
@@ -56,11 +56,46 @@ const Alert: React.FC<AlertProps> = ({
     }
   };
 
+  const translateY = useRef(new Animated.Value(-100)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -100,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose?.();
+    });
+  };
+
   return (
-    <TouchableOpacity onPress={onClose} style={{ width: '100%' }}>
-      <View
+    <TouchableOpacity onPress={handleClose} style={{ width: '100%' }}>
+      <Animated.View
         style={[
           styles.container,
+          { transform: [{ translateY }], opacity },
           (alertStyle == 'regular' || alertStyle == 'other-big') && {
             borderRadius: 6,
             borderStartWidth: 6,
@@ -101,13 +136,14 @@ const Alert: React.FC<AlertProps> = ({
           )}
         </View>
         {alertStyle == 'regular' && <XMarkIcon size={30} color={'#000'} />}
-      </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    position: 'absolute',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
@@ -115,6 +151,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     marginHorizontal: 16,
     backgroundColor: '#fff',
+    elevation: 5,
   },
   messageContainer: {
     padding: 2,
