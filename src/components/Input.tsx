@@ -160,7 +160,13 @@ const Input: React.FC<InputProps> = ({
             setIsFocused(false);
             setHasBlurred(true);
           }}
-          style={{ flex: 1, height: 44 }}
+          style={{
+            flex: 1,
+            height: 44,
+            fontFamily: 'Poppins_400Regular',
+            fontSize: FontSizes.label.size,
+            lineHeight: FontSizes.label.lineHeight,
+          }}
         />
 
         {icon ? (
