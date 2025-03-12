@@ -68,12 +68,24 @@ interface MarkedDates {
 const CustomCalendar: React.FC<{
   onAccept?: (date: string) => void;
   onCancel?: () => void;
-}> = () => {
+}> = ({ onAccept, onCancel }) => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+
+  const handleAccept = () => {
+    if (selectedDate) {
+      onAccept?.(selectedDate);
+      onCancel?.();
+    }
+  };
+
+  const handleCancel = () => {
+    setSelectedDate('');
+    onCancel?.();
+  };
 
   const startingYear = new Date().getFullYear();
   const years = useMemo(
@@ -223,19 +235,14 @@ const CustomCalendar: React.FC<{
           mode="filled"
           size="medium"
           style={{ width: 136, height: 50 }}
-          onPress={() => {
-            console.log('Cancelado');
-            setSelectedDate('');
-          }}
+          onPress={handleCancel}
         />
         <Button
           title="Aceptar"
           variant="primary"
           mode="filled"
           size="medium"
-          onPress={() => {
-            console.log('Fecha aceptada:', selectedDate);
-          }}
+          onPress={handleAccept}
           style={{ marginLeft: 12, width: 136, height: 50 }}
         />
       </View>
