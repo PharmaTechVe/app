@@ -1,54 +1,71 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Fonts } from '../styles/theme';
+// src/components/Steps.tsx
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Colors, Fonts, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 
 interface StepsProps {
   totalSteps: number;
+  currentStep: number;
+  labels?: string[];
 }
 
-const Steps: React.FC<StepsProps> = ({ totalSteps }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [pressedStep, setPressedStep] = useState<number | null>(null);
-
-  const handleStepPress = (step: number) => {
-    setCurrentStep(step);
-    setPressedStep(step);
-    setTimeout(() => setPressedStep(null), 200);
-  };
-
+const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.stepsContainer}>
+      {/* Label and step container */}
+      <View style={styles.stepsAndLabelsContainer}>
+        {Array.from({ length: totalSteps }, (_, index) => (
+          <View key={index} style={styles.stepColumn}>
+            {/* Step container */}
+            <View
+              style={[
+                styles.step,
+                index > 0 && styles.stepBorder,
+                currentStep >= index + 1 && styles.activeStep,
+              ]}
+            >
+              <PoppinsText
+                style={[
+                  styles.stepText,
+                  currentStep >= index + 1 && styles.activeStepText,
+                ]}
+              >
+                {index + 1}
+              </PoppinsText>
+            </View>
+            {/* Label render */}
+            {labels && labels[index] && (
+              <PoppinsText
+                style={[
+                  styles.labelText,
+                  currentStep >= index + 1 && styles.activeLabel,
+                ]}
+              >
+                {labels[index]}
+              </PoppinsText>
+            )}
+          </View>
+        ))}
+      </View>
+
+      {/* Progress bar */}
+      <View
+        style={[
+          styles.progressLineContainer,
+          {
+            left: `${50 / totalSteps}%`,
+            right: `${50 / totalSteps}%`,
+          },
+        ]}
+      >
         <View
           style={[
             styles.lineForeground,
-            { width: `${(currentStep - 1) * (100 / (totalSteps - 1))}%` },
+            { width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` },
             currentStep > 1 && styles.activeLine,
           ]}
-        ></View>
-        {Array.from({ length: totalSteps }, (_, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.step,
-              index > 0 && styles.stepBorder,
-              currentStep >= index + 1 && styles.activeStep,
-            ]}
-            onPress={() => handleStepPress(index + 1)}
-            activeOpacity={1}
-          >
-            <PoppinsText
-              style={[
-                styles.stepText,
-                currentStep >= index + 1 && styles.activeStepText,
-                pressedStep === index + 1 && styles.pressedStepText,
-              ]}
-            >
-              {index + 1}
-            </PoppinsText>
-          </TouchableOpacity>
-        ))}
+        />
       </View>
     </View>
   );
@@ -57,32 +74,24 @@ const Steps: React.FC<StepsProps> = ({ totalSteps }) => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  stepsContainer: {
-    position: 'relative',
+  stepsAndLabelsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
+    alignItems: 'center',
   },
-  lineForeground: {
-    position: 'absolute',
-    left: 0,
-    top: '50%',
-    height: 2,
-    backgroundColor: Colors.primary,
-    transform: [{ translateY: -1 }],
+  stepColumn: {
+    alignItems: 'center',
+    flex: 1,
   },
   step: {
-    position: 'relative',
-    zIndex: 10,
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   stepBorder: {
     borderWidth: 2,
@@ -99,11 +108,29 @@ const styles = StyleSheet.create({
   activeStepText: {
     color: Colors.textWhite,
   },
-  activeLine: {
+  labelText: {
+    fontSize: FontSizes.label.size,
+    lineHeight: FontSizes.label.lineHeight,
+    color: Colors.textLowContrast,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  activeLabel: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  progressLineContainer: {
+    position: 'absolute',
+    top: 28,
+    height: 2,
+    zIndex: -1,
+  },
+  lineForeground: {
+    height: 2,
     backgroundColor: Colors.primary,
   },
-  pressedStepText: {
-    color: Colors.textLowContrast,
+  activeLine: {
+    backgroundColor: Colors.primary,
   },
 });
 
