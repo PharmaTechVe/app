@@ -22,6 +22,7 @@ interface InputProps {
   errorText?: string;
   useDefaultValidation?: boolean;
   showIcon?: boolean;
+  icon?: React.ReactNode;
   border?: BorderType;
   isEditable?: boolean;
   backgroundColor?: string;
@@ -38,6 +39,7 @@ const Input: React.FC<InputProps> = ({
   errorText,
   useDefaultValidation = true,
   showIcon = false,
+  icon,
   border = 'default',
   isEditable = true,
   backgroundColor,
@@ -49,6 +51,10 @@ const Input: React.FC<InputProps> = ({
   const [Ivalue, setIvalue] = useState(value);
   const [isValid, setIsValid] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    setIvalue(value);
+  }, [value]);
 
   const validateInput = (input: string) => {
     setIvalue(input);
@@ -157,7 +163,9 @@ const Input: React.FC<InputProps> = ({
           style={{ flex: 1, height: 44 }}
         />
 
-        {showIcon ? (
+        {icon ? (
+          icon
+        ) : showIcon ? (
           !isValid && hasBlurred ? (
             <ExclamationCircleIcon
               color={
@@ -223,6 +231,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FontSizes.label.size,
     marginBottom: 4,
+    color: Colors.textMain,
   },
   helperText: {
     fontSize: FontSizes.label.size,

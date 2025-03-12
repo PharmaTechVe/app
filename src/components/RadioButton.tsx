@@ -1,13 +1,20 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import PoppinsText from './PoppinsText';
-import { Colors } from '../styles/theme';
+import { Colors, FontSizes } from '../styles/theme';
 
 interface RadioButtonProps {
   label: string;
   value: string;
   selectedValue: string;
   onValueChange: (value: string) => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 const RadioButton: React.FC<RadioButtonProps> = ({
@@ -29,7 +36,9 @@ const RadioButton: React.FC<RadioButtonProps> = ({
       >
         {selectedValue === value && <View style={styles.innerCircle} />}
       </View>
-      <PoppinsText style={styles.label}>{label}</PoppinsText>
+      <PoppinsText weight="regular" style={styles.label}>
+        {label}
+      </PoppinsText>
     </TouchableOpacity>
   );
 };
@@ -61,6 +70,8 @@ const styles = StyleSheet.create({
   label: {
     marginLeft: 8,
     color: Colors.textMain,
+    fontSize: FontSizes.label.size,
+    lineHeight: FontSizes.label.lineHeight,
   },
 });
 
