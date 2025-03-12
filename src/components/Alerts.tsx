@@ -7,17 +7,18 @@ import {
   InformationCircleIcon,
   XMarkIcon,
 } from 'react-native-heroicons/outline';
-import { Colors } from '../styles/theme';
+import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 
 type AlertType = 'success' | 'error' | 'warning' | 'info';
-type AlertStyle = 'big' | 'other-big' | 'regular' | 'small';
+type AlertStyle = 'big' | 'regular' | 'small';
 
 interface AlertProps {
-  title?: string;
-  message: string;
+  title: string;
+  message?: string;
   type?: AlertType;
   alertStyle?: AlertStyle;
+  borderColor?: boolean;
   onClose?: () => void;
 }
 
@@ -26,6 +27,7 @@ const Alert: React.FC<AlertProps> = ({
   message,
   type = 'info',
   alertStyle = 'regular',
+  borderColor = false,
   onClose,
 }) => {
   const getAlertColors = () => {
@@ -96,12 +98,12 @@ const Alert: React.FC<AlertProps> = ({
         style={[
           styles.container,
           { transform: [{ translateY }], opacity },
-          (alertStyle == 'regular' || alertStyle == 'other-big') && {
+          borderColor && {
             borderRadius: 6,
             borderStartWidth: 6,
             borderStartColor: getAlertColors(),
           },
-          (alertStyle == 'other-big' || alertStyle == 'big') && {
+          alertStyle == 'big' && {
             padding: 20,
             borderRadius: 6,
           },
@@ -111,7 +113,7 @@ const Alert: React.FC<AlertProps> = ({
           style={[
             styles.icon,
             { backgroundColor: getAlertColors() },
-            (alertStyle == 'other-big' || alertStyle == 'big') && {
+            alertStyle == 'big' && {
               borderRadius: 6,
             },
           ]}
@@ -123,7 +125,7 @@ const Alert: React.FC<AlertProps> = ({
             <PoppinsText
               style={[
                 styles.title,
-                (alertStyle == 'other-big' || alertStyle == 'big') && {
+                alertStyle == 'big' && {
                   paddingBottom: 10,
                 },
               ]}
@@ -168,7 +170,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   message: {
-    fontSize: 14,
+    fontSize: FontSizes.b3.size,
   },
 });
 
