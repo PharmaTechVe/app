@@ -11,7 +11,6 @@ import Input from './Input';
 import CustomCalendar from './Calendar';
 import { CalendarDaysIcon } from 'react-native-heroicons/outline';
 import { Colors } from '../styles/theme';
-import { format } from 'date-fns';
 
 const DatePickerInput: React.FC<{
   label?: string;
@@ -23,7 +22,8 @@ const DatePickerInput: React.FC<{
   const [selectedDate, setSelectedDate] = useState(value || '');
 
   const handleDateSelect = (date: string) => {
-    const formattedDate = format(new Date(date), 'dd/MM/yyyy');
+    const [year, month, day] = date.split('-');
+    const formattedDate = `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
     setSelectedDate(formattedDate);
     getValue?.(date);
     setShowCalendar(false);
