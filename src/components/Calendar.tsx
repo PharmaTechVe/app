@@ -1,4 +1,3 @@
-// src/components/CustomCalendar.tsx
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,

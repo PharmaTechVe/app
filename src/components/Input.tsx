@@ -1,4 +1,3 @@
-// src/components/Input.tsx
 import { useEffect, useState } from 'react';
 import { TextInput, View, TouchableOpacity, StyleSheet } from 'react-native';
 import {
