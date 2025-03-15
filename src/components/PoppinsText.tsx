@@ -1,4 +1,3 @@
-// src/components/PoppinsText.tsx
 import React, { forwardRef } from 'react';
 import { Text, TextProps } from 'react-native';
 
