@@ -5,6 +5,7 @@ import PoppinsText from '../../components/PoppinsText';
 import Button from '../../components/Button';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../styles/theme';
+import ProductCard from '../../components/Card';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -25,6 +26,12 @@ export default function HomeScreen() {
         variant="secondary"
         mode="filled"
         size="large"
+      />
+      <ProductCard
+        name="Otro Medicamento"
+        originalPrice="50.00"
+        discount="20"
+        finalPrice="40.00"
       />
     </View>
   );
