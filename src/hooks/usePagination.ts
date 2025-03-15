@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 
 export interface PaginationResult<T> {
   data: T[];
-  hasMore: boolean;
+  next: string | null;
 }
 
 type FetchFunction<T> = (page: number) => Promise<PaginationResult<T>>;
@@ -18,9 +18,9 @@ export function usePagination<T>(fetchFn: FetchFunction<T>) {
     setLoading(true);
     try {
       const result = await fetchFn(page);
-      setData((prev) => [...prev, ...result.data]);
-      setHasMore(result.hasMore);
-      setPage((prev) => prev + 1);
+      setData((prevData) => [...prevData, ...result.data]);
+      setHasMore(result.next !== null);
+      setPage((prevPage) => prevPage + 1);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
