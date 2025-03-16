@@ -1,4 +1,3 @@
-// src/screens/HomeScreen.tsx
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import PoppinsText from '../../components/PoppinsText';
@@ -16,6 +15,13 @@ export default function HomeScreen() {
         title="Go to login"
         onPress={() => router.push('/login')}
         variant="primary"
+        mode="filled"
+        size="large"
+      />
+      <Button
+        title="Go to register"
+        onPress={() => router.push('/register')}
+        variant="secondary"
         mode="filled"
         size="large"
       />

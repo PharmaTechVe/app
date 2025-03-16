@@ -1,4 +1,3 @@
-// src/components/Input.tsx
 import { useEffect, useState } from 'react';
 import { TextInput, View, TouchableOpacity, StyleSheet } from 'react-native';
 import {
@@ -22,6 +21,7 @@ interface InputProps {
   errorText?: string;
   useDefaultValidation?: boolean;
   showIcon?: boolean;
+  icon?: React.ReactNode;
   border?: BorderType;
   isEditable?: boolean;
   backgroundColor?: string;
@@ -38,6 +38,7 @@ const Input: React.FC<InputProps> = ({
   errorText,
   useDefaultValidation = true,
   showIcon = false,
+  icon,
   border = 'default',
   isEditable = true,
   backgroundColor,
@@ -49,6 +50,10 @@ const Input: React.FC<InputProps> = ({
   const [Ivalue, setIvalue] = useState(value);
   const [isValid, setIsValid] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    setIvalue(value);
+  }, [value]);
 
   const validateInput = (input: string) => {
     setIvalue(input);
@@ -154,10 +159,18 @@ const Input: React.FC<InputProps> = ({
             setIsFocused(false);
             setHasBlurred(true);
           }}
-          style={{ flex: 1, height: 44 }}
+          style={{
+            flex: 1,
+            height: 44,
+            fontFamily: 'Poppins_400Regular',
+            fontSize: FontSizes.label.size,
+            lineHeight: FontSizes.label.lineHeight,
+          }}
         />
 
-        {showIcon ? (
+        {icon ? (
+          icon
+        ) : showIcon ? (
           !isValid && hasBlurred ? (
             <ExclamationCircleIcon
               color={
@@ -223,6 +236,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FontSizes.label.size,
     marginBottom: 4,
+    color: Colors.textMain,
   },
   helperText: {
     fontSize: FontSizes.label.size,
