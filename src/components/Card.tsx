@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
+import CardButton from './CardButton';
 
 interface ProductCardProps {
   name: string;
@@ -54,6 +55,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           }}
         >
           <PoppinsText>d</PoppinsText>
+          <CardButton />
         </View>
       </View>
       <View style={styles.description}>

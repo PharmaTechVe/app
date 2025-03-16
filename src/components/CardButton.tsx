@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { PlusIcon, MinusIcon } from 'react-native-heroicons/outline';
 import PoppinsText from './PoppinsText';
-import { Colors } from '../styles/theme';
+import { Colors, FontSizes } from '../styles/theme';
 
 interface CardButtonProps {
   getValue?: (count: number) => void;
@@ -57,7 +57,7 @@ const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
             onPress={decrementCount}
           >
             <PoppinsText style={[styles.buttonText]}>
-              <MinusIcon size={30} color={Colors.textWhite} />
+              <MinusIcon size={20} color={Colors.textWhite} />
             </PoppinsText>
           </TouchableOpacity>
 
@@ -68,7 +68,7 @@ const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
             onPress={incrementCount}
           >
             <PoppinsText style={styles.buttonText}>
-              <PlusIcon size={30} color={Colors.textWhite} />
+              <PlusIcon size={20} color={Colors.textWhite} />
             </PoppinsText>
           </TouchableOpacity>
         </View>
@@ -85,8 +85,8 @@ const styles = StyleSheet.create({
   },
   mainButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
     borderRadius: 50,
     elevation: 3,
   },
@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   counterButton: {
-    width: 40,
-    height: 40,
+    width: 20,
+    height: 20,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -109,14 +109,13 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: FontSizes.b3.size,
     fontWeight: 'bold',
   },
   countText: {
-    fontSize: 24,
-
+    fontSize: FontSizes.b3.size,
     color: Colors.textWhite,
-    minWidth: 40,
+    minWidth: 20,
     textAlign: 'center',
   },
 });
