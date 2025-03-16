@@ -30,6 +30,7 @@ export default function HomeScreen() {
       <View style={{ width: '100%', flexDirection: 'row' }}>
         <ProductCard
           name="Acetaminofén 500mg x 10"
+          category="Medicamentos"
           originalPrice="50.00"
           discount="-20"
           finalPrice="40.00"

@@ -5,13 +5,15 @@ import PoppinsText from './PoppinsText';
 
 interface ProductCardProps {
   name: string;
+  category?: string;
   originalPrice: string;
-  discount: string;
+  discount?: string;
   finalPrice: string;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
   name,
+  category,
   originalPrice,
   discount,
   finalPrice,
@@ -25,7 +27,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
           marginBottom: 20,
         }}
       >
-        <View style={{}}>
+        <View
+          style={{
+            width: '100%',
+            justifyContent: 'flex-end',
+          }}
+        >
           <PoppinsText
             style={{
               backgroundColor: Colors.semanticInfo,
@@ -33,9 +40,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
               paddingHorizontal: 9,
               color: Colors.textWhite,
               fontSize: FontSizes.c2.size,
+              maxWidth: '70%',
             }}
           >
-            Medicamentos
+            {category}
           </PoppinsText>
         </View>
         <View
@@ -68,6 +76,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 15,
     padding: 16,
+    paddingBottom: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -78,7 +87,7 @@ const styles = StyleSheet.create({
     minWidth: 190,
   },
   description: {
-    marginHorizontal: 8,
+    marginHorizontal: 4,
   },
   name: {
     fontSize: 18,
@@ -87,13 +96,12 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 0,
   },
   originalPrice: {
     fontSize: 16,
     color: Colors.disableText,
     textDecorationLine: 'line-through',
-    marginRight: 15,
+    marginRight: 18,
   },
   discount: {
     fontSize: FontSizes.c1.size,
