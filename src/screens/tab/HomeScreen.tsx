@@ -38,7 +38,6 @@ export default function HomeScreen() {
         <ProductCard
           name="Otro Medicamento"
           originalPrice="50.00"
-          discount="-20"
           finalPrice="40.00"
         />
       </View>

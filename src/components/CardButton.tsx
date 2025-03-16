@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   counterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
+    gap: 15,
     backgroundColor: Colors.primary,
     borderRadius: 50,
     padding: 5,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: FontSizes.b3.size,
     color: Colors.textWhite,
-    minWidth: 20,
+    minWidth: 10,
     textAlign: 'center',
   },
 });

@@ -9,7 +9,8 @@ interface ProductCardProps {
   category?: string;
   originalPrice: string;
   discount?: string;
-  finalPrice: string;
+  finalPrice?: string;
+  getQuantity?: (count: number) => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -18,6 +19,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   originalPrice,
   discount,
   finalPrice,
+  getQuantity,
 }) => {
   return (
     <View style={styles.card}>
@@ -31,7 +33,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <View
           style={{
             width: '100%',
-            justifyContent: 'flex-end',
+            flexDirection: 'row-reverse',
           }}
         >
           <PoppinsText
@@ -41,7 +43,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               paddingHorizontal: 9,
               color: Colors.textWhite,
               fontSize: FontSizes.c2.size,
-              maxWidth: '70%',
+              maxWidth: '65%',
             }}
           >
             {category}
@@ -50,23 +52,44 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <View
           style={{
             backgroundColor: Colors.secondaryGray,
+            minHeight: 140,
+            maxHeight: 140,
             borderRadius: 15,
             marginVertical: 8,
           }}
         >
-          <PoppinsText>d</PoppinsText>
-          <CardButton />
+          <View
+            style={{
+              position: 'relative',
+              top: 105,
+              left: 70,
+              backgroundColor: 'red',
+              maxWidth: '60%',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <CardButton getValue={getQuantity} />
+          </View>
         </View>
       </View>
       <View style={styles.description}>
         <PoppinsText style={styles.name}>{name}</PoppinsText>
-        <View style={styles.priceContainer}>
-          <PoppinsText style={styles.originalPrice}>
-            ${originalPrice}
-          </PoppinsText>
-          <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
-        </View>
-        <PoppinsText style={styles.finalPrice}>${finalPrice}</PoppinsText>
+        {discount && (
+          <View style={styles.priceContainer}>
+            <PoppinsText style={styles.originalPrice}>
+              ${originalPrice}
+            </PoppinsText>
+            <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
+          </View>
+        )}
+        <PoppinsText
+          style={[
+            styles.finalPrice,
+            !discount && { color: Colors.semanticInfo },
+          ]}
+        >
+          ${finalPrice}
+        </PoppinsText>
       </View>
     </View>
   );
