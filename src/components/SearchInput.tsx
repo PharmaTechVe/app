@@ -1,4 +1,3 @@
-// src/components/SearchInput.tsx
 import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 import { MagnifyingGlassIcon, XMarkIcon } from 'react-native-heroicons/outline';
