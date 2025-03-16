@@ -1,4 +1,3 @@
-// src/screens/ChangePasswordScreen.tsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
@@ -50,13 +49,13 @@ export default function ChangePasswordScreen() {
   const alertTimeout = useRef<NodeJS.Timeout | null>(null);
   const codeRefs = useRef<Array<TextInput>>([]);
 
-  // Estados
+  // States
   const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Validar email
+  // Email validation
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -77,7 +76,7 @@ export default function ChangePasswordScreen() {
     });
   };
 
-  // Manejar envío de correo
+  // Send email
   const handleSendEmail = () => {
     if (!validateEmail(email)) {
       setErrorMessage('Por favor ingresa un correo electrónico válido');
@@ -89,11 +88,11 @@ export default function ChangePasswordScreen() {
     if (alertTimeout.current) clearTimeout(alertTimeout.current);
     alertTimeout.current = setTimeout(() => {
       setShowAlert(false);
-      handleStepChange(2); // Cambiado a handleStepChange
+      handleStepChange(2);
     }, 3000);
   };
 
-  // Manejar verificación de código
+  // Code verification
   const handleVerifyCode = () => {
     const enteredCode = code.join('');
     if (enteredCode.length !== 6) {
@@ -101,10 +100,10 @@ export default function ChangePasswordScreen() {
       setShowErrorAlert(true);
       return;
     }
-    handleStepChange(3); // Cambiado a handleStepChange
+    handleStepChange(3);
   };
 
-  // Manejar cambio de contraseña
+  // Change password
   const handleChangePassword = () => {
     if (!newPassword || !confirmPassword) {
       setErrorMessage('Por favor completa ambos campos');
@@ -125,7 +124,7 @@ export default function ChangePasswordScreen() {
     }, 2000);
   };
 
-  // Renderizar inputs de código
+  // Code inputs
   const renderCodeInputs = useCallback(() => {
     return (
       <View style={styles.codeContainer}>
@@ -145,8 +144,6 @@ export default function ChangePasswordScreen() {
               const cleanedText = text.replace(/[^0-9]/g, '');
               newCode[index] = cleanedText;
               setCode(newCode);
-
-              // Lógica para avanzar
               if (cleanedText && index < 5) {
                 codeRefs.current[index + 1]?.focus();
               }
@@ -165,7 +162,7 @@ export default function ChangePasswordScreen() {
     );
   }, [code]);
 
-  // Renderizar contenido del paso actual
+  // Current step render
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -258,7 +255,7 @@ export default function ChangePasswordScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Alertas personalizadas */}
+      {/* Alerts */}
       <View style={styles.alertsContainer}>
         {showAlert && (
           <Alert
@@ -310,17 +307,16 @@ export default function ChangePasswordScreen() {
   );
 }
 
-// Estilos actualizados para coincidir con RegisterScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bgColor,
     justifyContent: 'flex-start',
-    paddingTop: 56, // Igual que en RegisterScreen
-    paddingHorizontal: 20, // Igual que en RegisterScreen
+    paddingTop: 56,
+    paddingHorizontal: 20,
   },
   stepsWrapper: {
-    marginBottom: 12, // Espaciado consistente
+    marginBottom: 12,
     paddingHorizontal: 16,
   },
   stepContainer: {
@@ -330,7 +326,7 @@ const styles = StyleSheet.create({
   alertsContainer: {
     position: 'absolute',
     width: 328,
-    left: '50%', // Centrado inicial
+    left: '50%',
     marginLeft: -164,
     top: 20,
     right: 0,
