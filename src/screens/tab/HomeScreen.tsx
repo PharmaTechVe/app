@@ -27,19 +27,13 @@ export default function HomeScreen() {
         mode="filled"
         size="large"
       />
-      <View style={{ width: '100%', flexDirection: 'row' }}>
+      <View style={{ justifyContent: 'center' }}>
         <ProductCard
-          imageUrl="https://www.hola.com/horizon/landscape/ec878ddab16b-cuidardgatito-t.jpg?im=Resize=(640),type=downsize"
-          name="Acetaminofén 500mg x 10..."
+          imageUrl="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6N0Pe0JtQr0ipKeXQZu2qCnv0-RyjTtUHrw&s"
+          name="Acetaminofén 500mg x 10"
           category="Medicamento"
           originalPrice="50.00"
           discount="-20"
-          finalPrice="40.00"
-        />
-        <ProductCard
-          imageUrl="https://www.hola.com/horizon/landscape/ec878ddab16b-cuidardgatito-t.jpg?im=Resize=(640),type=downsize"
-          name="Otro Medicamento"
-          originalPrice="50.00"
           finalPrice="40.00"
         />
       </View>

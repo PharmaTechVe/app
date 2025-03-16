@@ -4,6 +4,13 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
 
+const truncateString = (text: string, maxLength: number = 27): string => {
+  if (text.length > maxLength) {
+    return text.substring(0, maxLength) + '...';
+  }
+  return text;
+};
+
 interface ProductCardProps {
   imageUrl?: string;
   name: string;
@@ -29,7 +36,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         style={{
           width: '100%',
           height: 160,
-          marginBottom: 20,
+          marginBottom: 30,
         }}
       >
         <View
@@ -53,7 +60,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </View>
       </View>
       <View style={styles.description}>
-        <PoppinsText style={styles.name}>{name}</PoppinsText>
+        <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
         {discount && (
           <View style={styles.priceContainer}>
             <PoppinsText style={styles.originalPrice}>
@@ -118,7 +125,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   name: {
-    fontSize: 18,
+    fontSize: FontSizes.s1.size,
     marginBottom: 8,
   },
   priceContainer: {
@@ -126,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   originalPrice: {
-    fontSize: 16,
+    fontSize: FontSizes.b1.size,
     color: Colors.disableText,
     textDecorationLine: 'line-through',
     marginRight: 18,
