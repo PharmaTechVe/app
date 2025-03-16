@@ -16,7 +16,7 @@ import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 
-export default function ChangePasswordScreen() {
+export default function PasswordRecoveryScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(1);

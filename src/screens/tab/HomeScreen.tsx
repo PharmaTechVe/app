@@ -26,8 +26,8 @@ export default function HomeScreen() {
         size="large"
       />
       <Button
-        title="Change password"
-        onPress={() => router.push('/changePassword')}
+        title="Password recovery"
+        onPress={() => router.push('/passwordRecovery')}
         variant="secondaryLight"
         mode="filled"
         size="large"
