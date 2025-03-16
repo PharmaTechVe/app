@@ -25,6 +25,13 @@ export default function HomeScreen() {
         mode="filled"
         size="large"
       />
+      <Button
+        title="Change password"
+        onPress={() => router.push('/changePassword')}
+        variant="secondaryLight"
+        mode="filled"
+        size="large"
+      />
     </View>
   );
 }
