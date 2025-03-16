@@ -4,7 +4,6 @@ import PoppinsText from '../../components/PoppinsText';
 import Button from '../../components/Button';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../styles/theme';
-import ProductCard from '../../components/Card';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -26,16 +25,6 @@ export default function HomeScreen() {
         mode="filled"
         size="large"
       />
-      <View style={{ justifyContent: 'center' }}>
-        <ProductCard
-          imageUrl="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6N0Pe0JtQr0ipKeXQZu2qCnv0-RyjTtUHrw&s"
-          name="Acetaminofén 500mg x 10"
-          category="Medicamento"
-          originalPrice="50.00"
-          discount="-20"
-          finalPrice="40.00"
-        />
-      </View>
     </View>
   );
 }
