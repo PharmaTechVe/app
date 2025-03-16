@@ -27,12 +27,20 @@ export default function HomeScreen() {
         mode="filled"
         size="large"
       />
-      <ProductCard
-        name="Otro Medicamento"
-        originalPrice="50.00"
-        discount="20"
-        finalPrice="40.00"
-      />
+      <View style={{ width: '100%', flexDirection: 'row' }}>
+        <ProductCard
+          name="Acetaminofén 500mg x 10"
+          originalPrice="50.00"
+          discount="-20"
+          finalPrice="40.00"
+        />
+        <ProductCard
+          name="Otro Medicamento"
+          originalPrice="50.00"
+          discount="-20"
+          finalPrice="40.00"
+        />
+      </View>
     </View>
   );
 }

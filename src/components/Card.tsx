@@ -22,15 +22,42 @@ const ProductCard: React.FC<ProductCardProps> = ({
         style={{
           width: '100%',
           height: 160,
-          backgroundColor: Colors.secondaryGray,
+          marginBottom: 20,
         }}
-      ></View>
-      <PoppinsText style={styles.name}>{name}</PoppinsText>
-      <View style={styles.priceContainer}>
-        <PoppinsText style={styles.originalPrice}>${originalPrice}</PoppinsText>
-        <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
+      >
+        <View style={{}}>
+          <PoppinsText
+            style={{
+              backgroundColor: Colors.semanticInfo,
+              borderRadius: 50,
+              paddingHorizontal: 9,
+              color: Colors.textWhite,
+              fontSize: FontSizes.c2.size,
+            }}
+          >
+            Medicamentos
+          </PoppinsText>
+        </View>
+        <View
+          style={{
+            backgroundColor: Colors.secondaryGray,
+            borderRadius: 15,
+            marginVertical: 8,
+          }}
+        >
+          <PoppinsText>d</PoppinsText>
+        </View>
       </View>
-      <PoppinsText style={styles.finalPrice}>${finalPrice}</PoppinsText>
+      <View style={styles.description}>
+        <PoppinsText style={styles.name}>{name}</PoppinsText>
+        <View style={styles.priceContainer}>
+          <PoppinsText style={styles.originalPrice}>
+            ${originalPrice}
+          </PoppinsText>
+          <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
+        </View>
+        <PoppinsText style={styles.finalPrice}>${finalPrice}</PoppinsText>
+      </View>
     </View>
   );
 };
@@ -39,7 +66,7 @@ const styles = StyleSheet.create({
   card: {
     margin: 10,
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 15,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -47,27 +74,32 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     marginBottom: 16,
+    maxWidth: 190,
+    minWidth: 190,
+  },
+  description: {
+    marginHorizontal: 8,
   },
   name: {
     fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 0,
   },
   originalPrice: {
     fontSize: 16,
+    color: Colors.disableText,
     textDecorationLine: 'line-through',
-    marginRight: 8,
+    marginRight: 15,
   },
   discount: {
     fontSize: FontSizes.c1.size,
     backgroundColor: Colors.semanticInfo,
     borderRadius: 5,
-    padding: 3,
+    padding: 5,
   },
   finalPrice: {
     fontSize: 20,
