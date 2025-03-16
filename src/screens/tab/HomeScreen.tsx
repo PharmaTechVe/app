@@ -29,13 +29,15 @@ export default function HomeScreen() {
       />
       <View style={{ width: '100%', flexDirection: 'row' }}>
         <ProductCard
-          name="Acetaminofén 500mg x 10"
+          imageUrl="https://www.hola.com/horizon/landscape/ec878ddab16b-cuidardgatito-t.jpg?im=Resize=(640),type=downsize"
+          name="Acetaminofén 500mg x 10..."
           category="Medicamento"
           originalPrice="50.00"
           discount="-20"
           finalPrice="40.00"
         />
         <ProductCard
+          imageUrl="https://www.hola.com/horizon/landscape/ec878ddab16b-cuidardgatito-t.jpg?im=Resize=(640),type=downsize"
           name="Otro Medicamento"
           originalPrice="50.00"
           finalPrice="40.00"

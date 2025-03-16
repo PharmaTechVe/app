@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
 
 interface ProductCardProps {
+  imageUrl?: string;
   name: string;
   category?: string;
   originalPrice: string;
@@ -14,6 +15,7 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
+  imageUrl,
   name,
   category,
   originalPrice,
@@ -36,38 +38,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
             flexDirection: 'row-reverse',
           }}
         >
-          <PoppinsText
-            style={{
-              backgroundColor: Colors.semanticInfo,
-              borderRadius: 50,
-              paddingHorizontal: 9,
-              color: Colors.textWhite,
-              fontSize: FontSizes.c2.size,
-              maxWidth: '65%',
-            }}
-          >
-            {category}
-          </PoppinsText>
+          <PoppinsText style={styles.tag}>{category}</PoppinsText>
         </View>
-        <View
-          style={{
-            backgroundColor: Colors.secondaryGray,
-            minHeight: 140,
-            maxHeight: 140,
-            borderRadius: 15,
-            marginVertical: 8,
-          }}
-        >
-          <View
-            style={{
-              position: 'relative',
-              top: 105,
-              left: 70,
-              backgroundColor: 'red',
-              maxWidth: '60%',
-              justifyContent: 'flex-end',
-            }}
-          >
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: imageUrl }}
+            width={158}
+            height={140}
+            style={{ borderRadius: 15 }}
+          />
+          <View style={styles.cardButtonContainer}>
             <CardButton getValue={getQuantity} />
           </View>
         </View>
@@ -110,6 +90,29 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 190,
     minWidth: 190,
+  },
+  tag: {
+    backgroundColor: Colors.semanticInfo,
+    borderRadius: 50,
+    paddingHorizontal: 9,
+    color: Colors.textWhite,
+    fontSize: FontSizes.c2.size,
+    maxWidth: '65%',
+  },
+  imageContainer: {
+    backgroundColor: Colors.secondaryGray,
+    minHeight: 140,
+    maxHeight: 140,
+    borderRadius: 15,
+    marginVertical: 8,
+  },
+  cardButtonContainer: {
+    position: 'relative',
+    top: -30,
+    left: 70,
+    maxWidth: '65%',
+    alignItems: 'flex-end',
+    zIndex: 999,
   },
   description: {
     marginHorizontal: 4,
