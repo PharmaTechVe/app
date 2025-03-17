@@ -15,12 +15,15 @@ import Steps from '../components/Steps';
 import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
+import { AuthService } from '../services/auth';
 
 export default function PasswordRecoveryScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(1);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [loading, setLoading] = useState(false);
+  const [, setAccessToken] = useState('');
 
   useEffect(() => {
     if (currentStep === 1) {
@@ -46,7 +49,6 @@ export default function PasswordRecoveryScreen() {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const alertTimeout = useRef<NodeJS.Timeout | null>(null);
   const codeRefs = useRef<Array<TextInput>>([]);
 
   // States
@@ -76,52 +78,68 @@ export default function PasswordRecoveryScreen() {
     });
   };
 
-  // Send email
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
     if (!validateEmail(email)) {
       setErrorMessage('Por favor ingresa un correo electrónico válido');
       setShowErrorAlert(true);
       return;
     }
 
-    setShowAlert(true);
-    if (alertTimeout.current) clearTimeout(alertTimeout.current);
-    alertTimeout.current = setTimeout(() => {
-      setShowAlert(false);
-      handleStepChange(2);
-    }, 3000);
+    setLoading(true);
+    const result = await AuthService.forgotPassword(email);
+    setLoading(false);
+
+    if (result.success) {
+      setShowAlert(true);
+      setTimeout(() => handleStepChange(2), 2000);
+    } else {
+      setErrorMessage(result.error);
+      setShowErrorAlert(true);
+    }
   };
 
-  // Code verification
-  const handleVerifyCode = () => {
+  const handleVerifyCode = async () => {
     const enteredCode = code.join('');
     if (enteredCode.length !== 6) {
-      setErrorMessage('Por favor ingresa el código de 6 dígitos');
+      setErrorMessage('El código debe tener 6 dígitos');
       setShowErrorAlert(true);
       return;
     }
-    handleStepChange(3);
+
+    setLoading(true);
+    const result = await AuthService.resetPassword(enteredCode);
+    setLoading(false);
+
+    if (result.success) {
+      setAccessToken(result.data);
+      handleStepChange(3);
+    } else {
+      setErrorMessage(result.error);
+      setShowErrorAlert(true);
+    }
   };
 
-  // Change password
-  const handleChangePassword = () => {
-    if (!newPassword || !confirmPassword) {
-      setErrorMessage('Por favor completa ambos campos');
-      setShowErrorAlert(true);
-      return;
-    }
+  const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       setErrorMessage('Las contraseñas no coinciden');
       setShowErrorAlert(true);
       return;
     }
 
-    setShowSuccessAlert(true);
-    if (alertTimeout.current) clearTimeout(alertTimeout.current);
-    alertTimeout.current = setTimeout(() => {
-      setShowSuccessAlert(false);
-      router.replace('/login');
-    }, 2000);
+    setLoading(true);
+    const result = await AuthService.updatePassword(
+      newPassword,
+      confirmPassword,
+    );
+    setLoading(false);
+
+    if (result.success) {
+      setShowSuccessAlert(true);
+      setTimeout(() => router.replace('/login'), 2000);
+    } else {
+      setErrorMessage(result.error);
+      setShowErrorAlert(true);
+    }
   };
 
   // Code inputs
@@ -189,6 +207,7 @@ export default function PasswordRecoveryScreen() {
               onPress={handleSendEmail}
               style={styles.button}
               size="medium"
+              loading={loading}
             />
           </View>
         );
@@ -208,6 +227,7 @@ export default function PasswordRecoveryScreen() {
               onPress={handleVerifyCode}
               style={styles.button}
               size="medium"
+              loading={loading}
             />
           </View>
         );
@@ -244,6 +264,7 @@ export default function PasswordRecoveryScreen() {
               onPress={handleChangePassword}
               style={styles.button}
               size="medium"
+              loading={loading}
             />
           </View>
         );
