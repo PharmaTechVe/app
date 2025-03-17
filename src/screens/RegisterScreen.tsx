@@ -15,16 +15,17 @@ import PoppinsText from '../components/PoppinsText';
 import Steps from '../components/Steps';
 import RadioButton from '../components/RadioButton';
 import { Colors, FontSizes } from '../styles/theme';
-//import { PharmaTech } from '@pharmatech/sdk';
 import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 import DatePickerInput from '../components/DatePickerInput';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
+import { AuthService } from '../services/auth';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(1);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  //const [loading, setLoading] = useState(false);
 
   // Step 1: Credentials
   const [email, setEmail] = useState('');
@@ -41,7 +42,7 @@ export default function RegisterScreen() {
   const [lastName, setLastName] = useState('');
   const [cedula, setCedula] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState<'male' | 'female'>('male');
   const [dateOfBirth, setDateOfBirth] = useState('');
 
   useEffect(() => {
@@ -79,9 +80,11 @@ export default function RegisterScreen() {
     });
   };
 
-  //const api = new PharmaTech(true);
-
   const handleNext = () => {
+    if (password.length < 8) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
     if (!email || !password || !confirmPassword) {
       Alert.alert('Error', 'Por favor completa todos los campos.');
       return;
@@ -94,7 +97,40 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    //Register logic
+    if (!firstName || !lastName || !cedula || !phoneNumber || !dateOfBirth) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    // Date validation
+    const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth);
+    if (!isValidDate) {
+      Alert.alert('Error', 'Formato de fecha inválido (Use YYYY-MM-DD)');
+      return;
+    }
+
+    try {
+      const result = await AuthService.register(
+        firstName.trim(),
+        lastName.trim(),
+        email.trim(),
+        password.trim(),
+        cedula.trim(),
+        phoneNumber.trim(),
+        dateOfBirth,
+        gender,
+      );
+
+      if (result.success) {
+        Alert.alert('Éxito', 'Cuenta creada correctamente');
+        router.replace('/login');
+      } else {
+        Alert.alert('Error', result.error);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Error al crear la cuenta');
+    }
   };
 
   const handleLogin = () => {
@@ -252,21 +288,14 @@ export default function RegisterScreen() {
                     label="Hombre"
                     value="male"
                     selectedValue={gender}
-                    onValueChange={setGender}
+                    onValueChange={(v) => setGender(v as 'male' | 'female')}
                     style={styles.radioButton}
                   />
                   <RadioButton
                     label="Mujer"
                     value="female"
                     selectedValue={gender}
-                    onValueChange={setGender}
-                    style={styles.radioButton}
-                  />
-                  <RadioButton
-                    label="Otro"
-                    value="other"
-                    selectedValue={gender}
-                    onValueChange={setGender}
+                    onValueChange={(v) => setGender(v as 'male' | 'female')}
                     style={styles.radioButton}
                   />
                 </View>
@@ -285,6 +314,7 @@ export default function RegisterScreen() {
                   onPress={handleRegister}
                   style={styles.nextButton}
                   size="medium"
+                  //loading={loading}
                 />
 
                 <TouchableOpacity
