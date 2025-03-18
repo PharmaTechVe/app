@@ -97,6 +97,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 190,
     minWidth: 190,
+    minHeight: 340,
+    maxHeight: 340,
   },
   tag: {
     backgroundColor: Colors.semanticInfo,
