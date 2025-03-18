@@ -123,7 +123,7 @@ export default function RegisterScreen() {
 
       if (result.success) {
         Alert.alert('Éxito', 'Cuenta creada correctamente');
-        router.replace('/login');
+        router.replace('/success');
       } else {
         Alert.alert('Error', result.error);
       }

@@ -23,15 +23,14 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (result.success) {
-      router.replace('/success');
+      router.replace('/(tabs)');
     } else {
       Alert.alert('Error', result.error);
     }
   };
 
   const handleRecoverPassword = () => {
-    console.log('Recuperar contraseña');
-    // Password recovery logic
+    router.push('/passwordRecovery');
   };
 
   const handleGoogleLogin = () => {
