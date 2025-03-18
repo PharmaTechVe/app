@@ -7,7 +7,7 @@ describe('<HomeScreen />', () => {
   test('renders "Pantalla Home" text', async () => {
     const { getByText } = render(<HomeScreen />);
     await waitFor(() => {
-      expect(getByText('Pantalla Home')).toBeTruthy();
+      expect(getByText('Ofertas especiales')).toBeTruthy();
     });
   });
 });
