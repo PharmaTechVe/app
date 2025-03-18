@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import React, { useEffect } from 'react';
 import {
   View,
@@ -52,13 +51,20 @@ export default function RootLayout() {
         headerBackTitleVisible: false,
       })}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="index" redirect={true} />
+
       <Stack.Screen
         name="login"
         options={{ headerTitle: '', headerTransparent: true }}
       />
+
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="register"
+        options={{ headerTitle: '', headerTransparent: true }}
+      />
+      <Stack.Screen
+        name="passwordRecovery"
         options={{ headerTitle: '', headerTransparent: true }}
       />
       <Stack.Screen
