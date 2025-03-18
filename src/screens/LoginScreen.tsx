@@ -6,44 +6,31 @@ import Input from '../components/Input';
 import PoppinsText from '../components/PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
-import { PharmaTech } from '@pharmatech/sdk';
 import GoogleLogo from '../assets/images/logos/Google_Logo.png';
+import { AuthService } from '../services/auth';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const api = new PharmaTech(true);
 
   const handleLogin = async () => {
     if (loading) return;
+
     setLoading(true);
-    try {
-      const response = await api.auth.login({ email, password });
-      console.log('Token de acceso:', response.accessToken);
-      Alert.alert('Éxito', 'Inicio de sesión exitoso', [
-        {
-          text: 'OK',
-          onPress: () => {
-            router.replace('/success');
-          },
-        },
-      ]);
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-      Alert.alert(
-        'Error',
-        'Error al iniciar sesión, por favor verifica tus credenciales.',
-      );
-    } finally {
-      setLoading(false);
+    const result = await AuthService.login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      router.replace('/(tabs)');
+    } else {
+      Alert.alert('Error', result.error);
     }
   };
 
   const handleRecoverPassword = () => {
-    console.log('Recuperar contraseña');
-    // Password recovery logic
+    router.push('/passwordRecovery');
   };
 
   const handleGoogleLogin = () => {

@@ -12,6 +12,25 @@ interface StepsProps {
 const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
   return (
     <View style={styles.container}>
+      {/* Progress bar */}
+      <View
+        style={[
+          styles.progressLineContainer,
+          {
+            left: `${50 / totalSteps}%`,
+            right: `${50 / totalSteps}%`,
+          },
+        ]}
+      >
+        <View
+          style={[
+            styles.lineForeground,
+            { width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` },
+            currentStep > 1 && styles.activeLine,
+          ]}
+        />
+      </View>
+
       {/* Label and step container */}
       <View style={styles.stepsAndLabelsContainer}>
         {Array.from({ length: totalSteps }, (_, index) => (
@@ -36,6 +55,8 @@ const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
             {/* Label render */}
             {labels && labels[index] && (
               <PoppinsText
+                numberOfLines={2}
+                ellipsizeMode="tail"
                 style={[
                   styles.labelText,
                   currentStep >= index + 1 && styles.activeLabel,
@@ -46,25 +67,6 @@ const Steps: React.FC<StepsProps> = ({ totalSteps, currentStep, labels }) => {
             )}
           </View>
         ))}
-      </View>
-
-      {/* Progress bar */}
-      <View
-        style={[
-          styles.progressLineContainer,
-          {
-            left: `${50 / totalSteps}%`,
-            right: `${50 / totalSteps}%`,
-          },
-        ]}
-      >
-        <View
-          style={[
-            styles.lineForeground,
-            { width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` },
-            currentStep > 1 && styles.activeLine,
-          ]}
-        />
       </View>
     </View>
   );
@@ -83,6 +85,7 @@ const styles = StyleSheet.create({
   stepColumn: {
     alignItems: 'center',
     flex: 1,
+    minHeight: 80,
   },
   step: {
     width: 40,
@@ -113,6 +116,7 @@ const styles = StyleSheet.create({
     color: Colors.textLowContrast,
     textAlign: 'center',
     marginTop: 8,
+    maxWidth: '90%',
   },
   activeLabel: {
     color: Colors.primary,
