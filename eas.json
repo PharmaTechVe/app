@@ -3,8 +3,15 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "PHARMATECH_DEV_MODE": "true"
       }
     },
-    "production": {}
+    "production": {
+      "env": {
+        "PHARMATECH_DEV_MODE": "false"
+      }
+    }
   }
 }

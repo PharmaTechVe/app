@@ -1,3 +1,6 @@
 import { PharmaTech } from '@pharmatech/sdk';
+import { PHARMATECH_DEV_MODE } from '@env';
 
-export const api = new PharmaTech(true);
+const isDevelopment = PHARMATECH_DEV_MODE === 'true';
+
+export const api = new PharmaTech(isDevelopment);
