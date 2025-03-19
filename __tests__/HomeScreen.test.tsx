@@ -4,7 +4,7 @@ import HomeScreen from '../src/screens/tab/HomeScreen';
 import { ProductService } from '../src/services/products';
 
 // Mock de ProductService
-jest.mock('../../services/products', () => ({
+jest.mock('../src/services/products', () => ({
   ProductService: {
     getProducts: jest.fn(),
   },
