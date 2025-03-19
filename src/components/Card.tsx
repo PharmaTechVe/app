@@ -86,6 +86,8 @@ const styles = StyleSheet.create({
   card: {
     margin: 10,
     backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 15,
     padding: 16,
     paddingBottom: 5,
@@ -97,8 +99,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 190,
     minWidth: 190,
-    minHeight: 340,
-    maxHeight: 340,
+    minHeight: 330,
+    maxHeight: 330,
   },
   tag: {
     backgroundColor: Colors.semanticInfo,
@@ -106,7 +108,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     color: Colors.textWhite,
     fontSize: FontSizes.c2.size,
-    maxWidth: '65%',
+    maxWidth: '70%',
   },
   imageContainer: {
     backgroundColor: Colors.secondaryGray,

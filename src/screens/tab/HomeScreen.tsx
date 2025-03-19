@@ -1,95 +1,80 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import PoppinsText from '../../components/PoppinsText';
 import { Colors, FontSizes } from '../../styles/theme';
 import Carousel from '../../components/Carousel';
+import { ProductService } from '../../services/products';
+import { ProductPresentation } from '../../types/api';
 
-type ProductCardType = {
-  imageUrl: string;
-  name: string;
-  category: string;
-  originalPrice: string;
-  discount: string;
-  finalPrice: string;
-  getQuantity?: (count: number) => void;
+const productsToCarousel = (products: ProductPresentation[]) => {
+  return products.map((product) => {
+    const name = product.genericName;
+    const imageUrl = product.images.length > 0 ? product.images[0].url : '';
+    const category =
+      product.categories.length > 0 ? product.categories[0].name : '';
+    const originalPrice = 100;
+    const discount = 10;
+    const finalPrice = originalPrice - (originalPrice * discount) / 100;
+
+    return {
+      imageUrl,
+      name,
+      category,
+      originalPrice,
+      discount,
+      finalPrice,
+      getQuantity: () => console.log('producto'),
+    };
+  });
 };
 
-const products: ProductCardType[] = [
-  {
-    imageUrl: 'https://example.com/images/product1.jpg',
-    name: 'Smartphone X',
-    category: 'Electronics',
-    originalPrice: '799',
-    discount: '20',
-    finalPrice: '639',
-    getQuantity: (count: number) => console.log(`Quantity selected: ${count}`),
-  },
-  {
-    imageUrl: 'https://example.com/images/product2.jpg',
-    name: 'Wireless Headphones',
-    category: 'Audio',
-    originalPrice: '199',
-    discount: '15',
-    finalPrice: '169',
-  },
-  {
-    imageUrl: 'https://example.com/images/product3.jpg',
-    name: 'Smart Watch',
-    category: 'Wearables',
-    originalPrice: '249',
-    discount: '10',
-    finalPrice: '224',
-  },
-  {
-    imageUrl: 'https://example.com/images/product4.jpg',
-    name: 'Laptop Pro',
-    category: 'Computers',
-    originalPrice: '1499',
-    discount: '25',
-    finalPrice: '1124',
-    getQuantity: (count: number) => console.log(`Quantity selected: ${count}`),
-  },
-  {
-    imageUrl: 'https://example.com/images/product5.jpg',
-    name: 'Tablet Mini',
-    category: 'Tablets',
-    originalPrice: '399',
-    discount: '30',
-    finalPrice: '279',
-  },
-];
-import React from 'react';
-import { View, StyleSheet /* Alert */ } from 'react-native';
-import PoppinsText from '../../components/PoppinsText';
-//import Button from '../../components/Button';
-//import { useRouter } from 'expo-router';
-import { Colors } from '../../styles/theme';
-//import * as SecureStore from 'expo-secure-store';
-
 export default function HomeScreen() {
-  useEffect(() => {
-    try {
-      const k = 1;
-      console.log(k);
-    } catch (error) {
-      console.log(error);
-    }
-  }, []);
+  const [products, setProducts] = useState([{}]);
 
-  /* const handleLogout = async () => {
-    try {
-      await SecureStore.deleteItemAsync('auth_token');
-      Alert.alert('Sesión cerrada', 'Has cerrado sesión exitosamente.');
-      router.replace('/login');
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-    }
-  }; */
+  const productsss = async () => {
+    const productsData = await ProductService.getProducts(1, 20);
+    console.log(productsData);
+    if (productsData.success) {
+      const cProducts = productsToCarousel(productsData.data.results);
+      setProducts(cProducts);
+    } else console.log(productsData.error);
+  };
+
+  useEffect(() => {
+    productsss();
+
+    setProducts([
+      {
+        name: 'Medicamento 1',
+        category: 'Medicamento',
+        originalPrice: 120,
+        discount: 20,
+        finalPrice: 80,
+      },
+      {
+        name: 'Medicamento 2',
+        category: 'Medicamento',
+        originalPrice: 120,
+        discount: 20,
+        finalPrice: 80,
+      },
+    ]);
+  }, []);
 
   return (
     <View testID="home-screen" style={styles.container}>
       <View>
-        <PoppinsText style={styles.title}>Ofertas especiales</PoppinsText>
+        <PoppinsText weight="medium" style={styles.title}>
+          Ofertas especiales
+        </PoppinsText>
+        <View style={{ flexDirection: 'row', width: '100%' }}>
+          <Carousel cards={products} />
+        </View>
+      </View>
+      <View>
+        <PoppinsText weight="medium" style={styles.title}>
+          Medicamentos
+        </PoppinsText>
         <View style={{ flexDirection: 'row', width: '100%' }}>
           <Carousel cards={products} />
         </View>
@@ -106,7 +91,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FontSizes.s1.size,
-    fontWeight: 'bold',
+    color: Colors.textMain,
     paddingHorizontal: 10,
   },
 });

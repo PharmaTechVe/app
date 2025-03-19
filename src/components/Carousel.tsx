@@ -1,21 +1,12 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import ProductCard from './Card';
+import { ProductPresentation } from '../types/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-type ProductCardType = {
-  imageUrl: string;
-  name: string;
-  category: string;
-  originalPrice: string;
-  discount: string;
-  finalPrice: string;
-  getQuantity?: (count: number) => void;
-};
-
 type ProductCardProps = {
-  cards: ProductCardType[];
+  cards: ProductPresentation[];
 };
 
 const Carrusel: React.FC<ProductCardProps> = ({ cards }) => {
@@ -28,13 +19,13 @@ const Carrusel: React.FC<ProductCardProps> = ({ cards }) => {
       {cards.map((item, index) => (
         <View key={index} style={styles.card}>
           <ProductCard
-            imageUrl={item.imageUrl}
-            name={item.name}
-            category={item.category}
-            originalPrice={item.originalPrice}
-            discount={item.discount}
-            finalPrice={item.finalPrice}
-            getQuantity={item.getQuantity}
+            imageUrl={item?.imageUrl}
+            name={item?.name}
+            category={item?.category}
+            originalPrice={item?.originalPrice}
+            discount={item?.discount}
+            finalPrice={item?.finalPrice}
+            getQuantity={item?.getQuantity}
           />
         </View>
       ))}
