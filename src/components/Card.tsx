@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     marginBottom: 16,
-    maxWidth: 190,
-    minWidth: 190,
+    maxWidth: 170,
+    minWidth: 170,
     minHeight: 330,
     maxHeight: 330,
   },
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     color: Colors.textWhite,
     fontSize: FontSizes.c2.size,
-    maxWidth: '70%',
+    maxWidth: '100%',
   },
   imageContainer: {
     backgroundColor: Colors.secondaryGray,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   cardButtonContainer: {
     position: 'relative',
     top: -30,
-    left: 70,
+    left: 63,
     maxWidth: '65%',
     alignItems: 'flex-end',
     zIndex: 999,
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   name: {
-    fontSize: FontSizes.s1.size,
+    fontSize: FontSizes.s2.size,
     marginBottom: 8,
   },
   priceContainer: {

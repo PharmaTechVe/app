@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    width: screenWidth - 150, // Ancho de cada card
+    width: screenWidth - 170, // Ancho de cada card
     borderRadius: 10,
     alignItems: 'center',
   },
