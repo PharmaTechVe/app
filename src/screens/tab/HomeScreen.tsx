@@ -79,6 +79,9 @@ export default function HomeScreen() {
           <Carousel cards={products} />
         </View>
       </View>
+      <PoppinsText weight="medium" style={styles.title}>
+        Pantalla Home
+      </PoppinsText>
     </View>
   );
 }
