@@ -288,7 +288,6 @@ export default function PasswordRecoveryScreen() {
             onClose={() => setShowAlert(false)}
           />
         )}
-
         {showErrorAlert && (
           <Alert
             type="error"
@@ -299,7 +298,6 @@ export default function PasswordRecoveryScreen() {
             onClose={() => setShowErrorAlert(false)}
           />
         )}
-
         {showSuccessAlert && (
           <Alert
             type="success"
@@ -346,9 +344,9 @@ const styles = StyleSheet.create({
   },
   alertsContainer: {
     position: 'absolute',
-    width: 328,
+    width: 326,
     left: '50%',
-    marginLeft: -164,
+    marginLeft: -162,
     top: 20,
     right: 0,
     zIndex: 1000,

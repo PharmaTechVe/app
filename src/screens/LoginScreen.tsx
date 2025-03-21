@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -8,12 +8,16 @@ import { Colors, FontSizes } from '../styles/theme';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 import { AuthService } from '../services/auth';
+import Alert from '../components/Alerts';
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   const handleLogin = async () => {
     if (loading) return;
@@ -23,9 +27,14 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (result.success) {
-      router.replace('/(tabs)');
+      setShowSuccessAlert(true);
+      setTimeout(() => {
+        setShowSuccessAlert(false);
+        router.replace('/(tabs)');
+      }, 2000);
     } else {
-      Alert.alert('Error', result.error);
+      setShowErrorAlert(true);
+      setErrorMessage(result.error);
     }
   };
 
@@ -44,6 +53,27 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Alerts */}
+      <View style={styles.alertContainer}>
+        {showErrorAlert && (
+          <Alert
+            type="error"
+            title="Error"
+            message={errorMessage}
+            borderColor
+            onClose={() => setShowErrorAlert(false)}
+          />
+        )}
+        {showSuccessAlert && (
+          <Alert
+            type="success"
+            title="Login Exitoso"
+            message="Redirigiendo..."
+            borderColor
+            onClose={() => setShowSuccessAlert(false)}
+          />
+        )}
+      </View>
       {/* Logo*/}
       <Logo style={styles.logo} />
 
@@ -132,6 +162,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 56,
     paddingHorizontal: 20,
+  },
+  alertContainer: {
+    position: 'absolute',
+    top: 20,
+    width: '100%',
+    zIndex: 1000,
+    alignItems: 'center',
   },
   logo: {
     width: 192,
