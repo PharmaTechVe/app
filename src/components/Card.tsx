@@ -52,7 +52,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: imageUrl }}
-            width={158}
+            width={148}
             height={140}
             style={{ borderRadius: 15 }}
           />
