@@ -13,7 +13,7 @@ const Carrusel: React.FC<ProductCardProps> = ({ cards }) => {
   return (
     <ScrollView
       horizontal
-      showsHorizontalScrollIndicator={false}
+      showsHorizontalScrollIndicator={true}
       style={styles.carrusel}
     >
       {cards.map((item, index) => (
