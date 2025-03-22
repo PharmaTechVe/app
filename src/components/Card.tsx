@@ -3,15 +3,7 @@ import { View, StyleSheet, Image } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
-
-const truncateString = (text: string, maxLength: number = 27): string => {
-  if (text) {
-    if (text.length > maxLength) {
-      return text.substring(0, maxLength) + '...';
-    }
-  }
-  return text;
-};
+import { truncateString } from '../utils/commons';
 
 interface ProductCardProps {
   imageUrl?: string;

@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 15,
     backgroundColor: Colors.bgColor,
+    paddingLeft: 5,
   },
   title: {
     fontSize: FontSizes.s1.size,
