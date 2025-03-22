@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -52,111 +61,118 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Alerts */}
-      <View style={styles.alertContainer}>
-        {showErrorAlert && (
-          <Alert
-            type="error"
-            title="Error"
-            message={errorMessage}
-            borderColor
-            onClose={() => setShowErrorAlert(false)}
-          />
-        )}
-        {showSuccessAlert && (
-          <Alert
-            type="success"
-            title="Login Exitoso"
-            message="Redirigiendo..."
-            borderColor
-            onClose={() => setShowSuccessAlert(false)}
-          />
-        )}
-      </View>
-      {/* Logo*/}
-      <Logo style={styles.logo} />
-
-      {/* Titles */}
-      <PoppinsText weight="medium" style={styles.title}>
-        Bienvenido
-      </PoppinsText>
-      <PoppinsText weight="regular" style={styles.subtitle}>
-        Por favor introduce tus datos para iniciar sesión
-      </PoppinsText>
-
-      {/* Inputs */}
-      <View style={styles.inputsContainer}>
-        <Input
-          label="Correo electrónico"
-          placeholder="Ingresa tu correo electrónico"
-          value={email}
-          fieldType="email"
-          getValue={setEmail}
-          backgroundColor={Colors.menuWhite}
-          errorText="El correo ingresado no es válido"
-        />
-        <Input
-          label="Contraseña"
-          placeholder="Ingresa tu contraseña"
-          value={password}
-          fieldType="password"
-          getValue={setPassword}
-          backgroundColor={Colors.menuWhite}
-          errorText="La contraseña debe tener al menos 8 caracteres"
-        />
-      </View>
-
-      {/* Forgot my password */}
-      <TouchableOpacity
-        onPress={handleRecoverPassword}
-        style={styles.linkContainer}
-      >
-        <PoppinsText weight="regular" style={styles.linkText}>
-          ¿Olvidaste tu contraseña?
-        </PoppinsText>
-      </TouchableOpacity>
-
-      {/* Login button */}
-      <Button
-        title="Iniciar sesión"
-        onPress={handleLogin}
-        style={styles.loginButton}
-        size="medium"
-        loading={loading}
-      />
-
-      {/* Google button */}
-      <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
-        <Image
-          source={GoogleLogo}
-          style={styles.googleIcon}
-          resizeMode="contain"
-        />
-        <PoppinsText weight="medium" style={styles.googleButtonText}>
-          Iniciar sesión con Google
-        </PoppinsText>
-      </TouchableOpacity>
-
-      {/* Register link */}
-      <TouchableOpacity
-        onPress={handleRegister}
-        style={styles.registerContainer}
-      >
-        <PoppinsText weight="regular" style={styles.registerText}>
-          ¿No tienes cuenta?{' '}
-          <PoppinsText weight="regular" style={styles.registerLink}>
-            Regístrate
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior="height" // Configuración específica para Android
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Alerts */}
+          <View style={styles.alertContainer}>
+            {showErrorAlert && (
+              <Alert
+                type="error"
+                title="Error"
+                message={errorMessage}
+                borderColor
+                onClose={() => setShowErrorAlert(false)}
+              />
+            )}
+            {showSuccessAlert && (
+              <Alert
+                type="success"
+                title="Login Exitoso"
+                message="Redirigiendo..."
+                borderColor
+                onClose={() => setShowSuccessAlert(false)}
+              />
+            )}
+          </View>
+          {/* Logo */}
+          <Logo style={styles.logo} />
+          {/* Titles */}
+          <PoppinsText weight="medium" style={styles.title}>
+            Bienvenido
           </PoppinsText>
-        </PoppinsText>
-      </TouchableOpacity>
-    </View>
+          <PoppinsText weight="regular" style={styles.subtitle}>
+            Por favor introduce tus datos para iniciar sesión
+          </PoppinsText>
+          {/* Inputs */}
+          <View style={styles.inputsContainer}>
+            <Input
+              label="Correo electrónico"
+              placeholder="Ingresa tu correo electrónico"
+              value={email}
+              fieldType="email"
+              getValue={setEmail}
+              backgroundColor={Colors.menuWhite}
+              errorText="El correo ingresado no es válido"
+            />
+            <Input
+              label="Contraseña"
+              placeholder="Ingresa tu contraseña"
+              value={password}
+              fieldType="password"
+              getValue={setPassword}
+              backgroundColor={Colors.menuWhite}
+              errorText="La contraseña debe tener al menos 8 caracteres"
+            />
+          </View>
+          {/* Forgot my password */}
+          <TouchableOpacity
+            onPress={handleRecoverPassword}
+            style={styles.linkContainer}
+          >
+            <PoppinsText weight="regular" style={styles.linkText}>
+              ¿Olvidaste tu contraseña?
+            </PoppinsText>
+          </TouchableOpacity>
+          {/* Login button */}
+          <Button
+            title="Iniciar sesión"
+            onPress={handleLogin}
+            style={styles.loginButton}
+            size="medium"
+            loading={loading}
+          />
+          {/* Google button */}
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleLogin}
+          >
+            <Image
+              source={GoogleLogo}
+              style={styles.googleIcon}
+              resizeMode="contain"
+            />
+            <PoppinsText weight="medium" style={styles.googleButtonText}>
+              Iniciar sesión con Google
+            </PoppinsText>
+          </TouchableOpacity>
+          {/* Register link */}
+          <TouchableOpacity
+            onPress={handleRegister}
+            style={styles.registerContainer}
+          >
+            <PoppinsText weight="regular" style={styles.registerText}>
+              ¿No tienes cuenta?{' '}
+              <PoppinsText weight="regular" style={styles.registerLink}>
+                Regístrate
+              </PoppinsText>
+            </PoppinsText>
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1, // Permite que el contenido sea desplazable
     backgroundColor: Colors.bgColor,
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -220,8 +236,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.menuWhite,
   },
   googleIcon: {
-    width: 24 + 12,
-    height: 24 + 12,
+    width: 36,
+    height: 36,
     marginRight: 4,
   },
   googleButtonText: {
