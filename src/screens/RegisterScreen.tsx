@@ -28,6 +28,7 @@ export default function RegisterScreen() {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Step 1: Credentials
   const [email, setEmail] = useState('');
@@ -116,6 +117,7 @@ export default function RegisterScreen() {
       return;
     }
 
+    setLoading(true);
     try {
       const result = await AuthService.register(
         firstName.trim(),
@@ -130,6 +132,9 @@ export default function RegisterScreen() {
 
       if (result.success) {
         setShowSuccessAlert(true);
+        setTimeout(() => {
+          router.replace('/success');
+        }, 2000);
       } else {
         setShowErrorAlert(true);
         setErrorMessage(result.error);
@@ -138,6 +143,8 @@ export default function RegisterScreen() {
       console.error(error);
       setShowErrorAlert(true);
       setErrorMessage('Error al crear la cuenta');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,7 +170,10 @@ export default function RegisterScreen() {
             type="success"
             title="Éxito"
             message="Cuenta creada correctamente"
-            onClose={() => router.replace('/success')}
+            onClose={() => {
+              setShowSuccessAlert(false);
+              router.replace('/success');
+            }}
             borderColor
           />
         )}
@@ -343,6 +353,7 @@ export default function RegisterScreen() {
                   onPress={handleRegister}
                   style={styles.nextButton}
                   size="medium"
+                  loading={loading}
                 />
 
                 <TouchableOpacity

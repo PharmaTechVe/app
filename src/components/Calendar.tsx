@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import PoppinsText from './PoppinsText';
@@ -55,24 +56,33 @@ LocaleConfig.locales['es'] = {
 };
 LocaleConfig.defaultLocale = 'es';
 
-interface MarkedDates {
-  [key: string]: {
-    selected?: boolean;
-    marked?: boolean;
-    selectedColor?: string;
-    dotColor?: string;
-  };
-}
-
 const CustomCalendar: React.FC<{
   onAccept?: (date: string) => void;
   onCancel?: () => void;
-}> = ({ onAccept, onCancel }) => {
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  initialDate?: string; // Prop para inicializar el calendario con una fecha específica
+}> = ({ onAccept, onCancel, initialDate }) => {
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate || '');
+  const [currentYear, setCurrentYear] = useState(
+    initialDate
+      ? parseInt(initialDate.split('-')[0], 10)
+      : new Date().getFullYear(),
+  );
+  const [currentMonth, setCurrentMonth] = useState(
+    initialDate
+      ? parseInt(initialDate.split('-')[1], 10)
+      : new Date().getMonth() + 1,
+  );
   const [showYearPicker, setShowYearPicker] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+
+  // Actualizar el calendario al abrirlo
+  React.useEffect(() => {
+    if (initialDate) {
+      const [year, month] = initialDate.split('-');
+      setCurrentYear(parseInt(year, 10));
+      setCurrentMonth(parseInt(month, 10));
+    }
+  }, [initialDate]);
 
   const handleAccept = () => {
     if (selectedDate) {
@@ -82,7 +92,7 @@ const CustomCalendar: React.FC<{
   };
 
   const handleCancel = () => {
-    setSelectedDate('');
+    setSelectedDate(initialDate || '');
     onCancel?.();
   };
 
@@ -104,39 +114,6 @@ const CustomCalendar: React.FC<{
     setCurrentMonth(parseInt(month, 10));
   };
 
-  // Marked dates (just in case we need it)
-  const markedDates: MarkedDates = {
-    [selectedDate]: {
-      selected: true,
-      selectedColor: Colors.primary,
-    },
-  };
-
-  // Header of the calendar
-  const CustomHeader = useCallback(() => {
-    const monthName = LocaleConfig.locales['es'].monthNames[currentMonth - 1];
-    return (
-      <View style={styles.headerContainer}>
-        <TouchableOpacity
-          onPress={() => setShowMonthPicker(true)}
-          style={styles.headerButton}
-        >
-          <PoppinsText weight="medium" style={styles.headerText}>
-            {monthName}
-          </PoppinsText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setShowYearPicker(true)}
-          style={styles.headerButton}
-        >
-          <PoppinsText weight="medium" style={styles.headerText}>
-            {currentYear}
-          </PoppinsText>
-        </TouchableOpacity>
-      </View>
-    );
-  }, [currentYear, currentMonth]);
-
   const updateCalendarDate = useCallback((year: number, month: number) => {
     setCurrentYear(year);
     setCurrentMonth(month);
@@ -149,7 +126,12 @@ const CustomCalendar: React.FC<{
         key={`${currentYear}-${currentMonth}`}
         current={`${currentYear}-${currentMonth.toString().padStart(2, '0')}-01`}
         onDayPress={handleDayPress}
-        markedDates={markedDates}
+        markedDates={{
+          [selectedDate]: {
+            selected: true,
+            selectedColor: Colors.primary,
+          },
+        }}
         theme={{
           calendarBackground: Colors.menuWhite,
           todayTextColor: Colors.primary,
@@ -172,7 +154,26 @@ const CustomCalendar: React.FC<{
         maxDate={'2100-12-31'}
         enableSwipeMonths={false}
         showSixWeeks={true}
-        renderHeader={CustomHeader}
+        renderHeader={() => (
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              onPress={() => setShowMonthPicker(true)}
+              style={styles.headerButton}
+            >
+              <PoppinsText weight="medium" style={styles.headerText}>
+                {LocaleConfig.locales['es'].monthNames[currentMonth - 1]}
+              </PoppinsText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowYearPicker(true)}
+              style={styles.headerButton}
+            >
+              <PoppinsText weight="medium" style={styles.headerText}>
+                {currentYear}
+              </PoppinsText>
+            </TouchableOpacity>
+          </View>
+        )}
         onMonthChange={(monthData: { year: number; month: number }) =>
           updateCalendarDate(monthData.year, monthData.month)
         }
@@ -180,50 +181,54 @@ const CustomCalendar: React.FC<{
 
       {/* Year Modal */}
       <Modal visible={showYearPicker} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <ScrollView>
-              {years.map((year) => (
-                <TouchableOpacity
-                  key={year}
-                  onPress={() => {
-                    updateCalendarDate(year, currentMonth);
-                    setShowYearPicker(false);
-                  }}
-                  style={styles.modalItem}
-                >
-                  <PoppinsText weight="regular" style={styles.modalText}>
-                    {year}
-                  </PoppinsText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+        <TouchableWithoutFeedback onPress={() => setShowYearPicker(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <ScrollView>
+                {years.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    onPress={() => {
+                      updateCalendarDate(year, currentMonth);
+                      setShowYearPicker(false);
+                    }}
+                    style={styles.modalItem}
+                  >
+                    <PoppinsText weight="regular" style={styles.modalText}>
+                      {year}
+                    </PoppinsText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
-      {/* Month modal */}
+      {/* Month Modal */}
       <Modal visible={showMonthPicker} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <ScrollView>
-              {months.map((month) => (
-                <TouchableOpacity
-                  key={month}
-                  onPress={() => {
-                    updateCalendarDate(currentYear, month);
-                    setShowMonthPicker(false);
-                  }}
-                  style={styles.modalItem}
-                >
-                  <PoppinsText weight="regular" style={styles.modalText}>
-                    {LocaleConfig.locales['es'].monthNames[month - 1]}
-                  </PoppinsText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+        <TouchableWithoutFeedback onPress={() => setShowMonthPicker(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <ScrollView>
+                {months.map((month) => (
+                  <TouchableOpacity
+                    key={month}
+                    onPress={() => {
+                      updateCalendarDate(currentYear, month);
+                      setShowMonthPicker(false);
+                    }}
+                    style={styles.modalItem}
+                  >
+                    <PoppinsText weight="regular" style={styles.modalText}>
+                      {LocaleConfig.locales['es'].monthNames[month - 1]}
+                    </PoppinsText>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Buttons */}
@@ -301,12 +306,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 16,
-  },
-  selectedDateText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#4B5563',
-    textAlign: 'center',
   },
 });
 
