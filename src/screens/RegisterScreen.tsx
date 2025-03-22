@@ -60,7 +60,7 @@ export default function RegisterScreen() {
     } else if (currentStep === 1) {
       navigation.setOptions({
         headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => router.replace('/login')}>
             <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
           </TouchableOpacity>
         ),

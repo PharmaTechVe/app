@@ -48,7 +48,7 @@ export default function LoginScreen() {
   };
 
   const handleRecoverPassword = () => {
-    router.replace('/passwordRecovery');
+    router.push('/passwordRecovery');
   };
 
   const handleGoogleLogin = () => {
@@ -61,10 +61,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior="height" // Configuración específica para Android
-    >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
           contentContainerStyle={styles.container}
