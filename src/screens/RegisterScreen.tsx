@@ -142,7 +142,7 @@ export default function RegisterScreen() {
   };
 
   const handleLogin = () => {
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (

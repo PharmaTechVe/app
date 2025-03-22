@@ -48,7 +48,7 @@ export default function LoginScreen() {
   };
 
   const handleRecoverPassword = () => {
-    router.push('/passwordRecovery');
+    router.replace('/passwordRecovery');
   };
 
   const handleGoogleLogin = () => {
@@ -57,7 +57,7 @@ export default function LoginScreen() {
   };
 
   const handleRegister = () => {
-    router.push('/register');
+    router.replace('/register');
   };
 
   return (
