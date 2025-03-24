@@ -1,4 +1,4 @@
-import { api } from '../lib/sdkConfig';
+import { apiWithOrigin } from '../lib/sdkConfig';
 import * as SecureStore from 'expo-secure-store';
 import { ServiceResponse, UserGender, SignUpResponse } from '../types/api.d';
 import { validateEmail } from '../utils/validators';
@@ -12,7 +12,7 @@ export const AuthService = {
       }
 
       const normalizedEmail = email.toLowerCase();
-      const { accessToken } = await api.auth.login({
+      const { accessToken } = await apiWithOrigin.auth.login({
         email: normalizedEmail.trim(),
         password: password.trim(),
       });
@@ -56,7 +56,7 @@ export const AuthService = {
         };
       }
 
-      const response = await api.auth.signUp({
+      const response = await apiWithOrigin.auth.signUp({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: normalizedEmail.trim(),
@@ -83,7 +83,7 @@ export const AuthService = {
       }
 
       const normalizedEmail = email.toLowerCase();
-      await api.auth.forgotPassword(normalizedEmail.trim());
+      await apiWithOrigin.auth.forgotPassword(normalizedEmail.trim());
       return { success: true, data: undefined };
     } catch (error) {
       return {
@@ -99,7 +99,9 @@ export const AuthService = {
         return { success: false, error: 'Código debe tener 6 dígitos' };
       }
 
-      const { accessToken } = await api.auth.resetPassword(otp.trim());
+      const { accessToken } = await apiWithOrigin.auth.resetPassword(
+        otp.trim(),
+      );
       await SecureStore.setItemAsync('reset_token', accessToken);
 
       return { success: true, data: accessToken };
@@ -121,9 +123,8 @@ export const AuthService = {
       }
 
       const token = (await SecureStore.getItemAsync('reset_token')) || '';
-      await api.auth.updatePassword(newPassword.trim(), token);
+      await apiWithOrigin.auth.updatePassword(newPassword.trim(), token);
 
-      await api.auth.updatePassword(newPassword.trim(), token);
       return { success: true, data: undefined };
     } catch (error) {
       return {
