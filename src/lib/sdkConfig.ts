@@ -8,7 +8,7 @@ export const apiWithOrigin = new PharmaTech(
   isDevelopment,
   isDevelopment
     ? 'http://localhost:3000' // Origin para desarrollo
-    : 'https://tu-app.com', // Origin para producción
+    : 'https://pharmatech.site', // Origin para producción
 );
 
 // Instancia del SDK para solicitudes sin Origin
