@@ -71,6 +71,10 @@ export default function RootLayout() {
         name="success"
         options={{ headerTitle: '', headerTransparent: true }}
       />
+      <Stack.Screen
+        name="change-password"
+        options={{ headerTitle: '', headerTransparent: true }}
+      />
     </Stack>
   );
 }
