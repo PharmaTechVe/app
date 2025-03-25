@@ -1,4 +1,4 @@
-import { apiWithoutOrigin } from '../lib/sdkConfig';
+import { api } from '../lib/sdkConfig';
 import {
   ServiceResponse,
   Pagination,
@@ -12,7 +12,7 @@ export const ProductService = {
     limit: number,
   ): Promise<ServiceResponse<Pagination<ProductPresentation>>> => {
     try {
-      const products = await apiWithoutOrigin.product.getProducts({
+      const products = await api.product.getProducts({
         page: page,
         limit: limit,
       });
