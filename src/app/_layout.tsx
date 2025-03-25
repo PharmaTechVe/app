@@ -70,6 +70,10 @@ export default function RootLayout() {
           name="success"
           options={{ headerTitle: '', headerTransparent: true }}
         />
+        <Stack.Screen
+          name="cart"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
       </Stack>
     </Provider>
   );
