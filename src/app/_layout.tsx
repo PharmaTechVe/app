@@ -14,6 +14,8 @@ import {
 } from '@expo-google-fonts/poppins';
 import { Stack } from 'expo-router/stack';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
+import { Provider } from 'react-redux'; // Importa el Provider de Redux
+import { store } from '../redux/store'; // Importa el store de Redux
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,36 +41,37 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={({ navigation }) => ({
-        headerBackVisible: false,
-        headerLeft: () =>
-          navigation.canGoBack() ? (
-            <TouchableOpacity onPress={navigation.goBack}>
-              <ChevronLeftIcon width={24} height={24} color="#000" />
-            </TouchableOpacity>
-          ) : null,
-        headerBackTitleVisible: false,
-      })}
-    >
-      <Stack.Screen name="index" redirect={true} />
-
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="register"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-      <Stack.Screen
-        name="passwordRecovery"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-      <Stack.Screen
-        name="success"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-    </Stack>
+    <Provider store={store}>
+      {/* Envuelve el Stack con el Provider */}
+      <Stack
+        screenOptions={({ navigation }) => ({
+          headerBackVisible: false,
+          headerLeft: () =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={navigation.goBack}>
+                <ChevronLeftIcon width={24} height={24} color="#000" />
+              </TouchableOpacity>
+            ) : null,
+          headerBackTitleVisible: false,
+        })}
+      >
+        <Stack.Screen name="index" redirect={true} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="register"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="passwordRecovery"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="success"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+      </Stack>
+    </Provider>
   );
 }
 
