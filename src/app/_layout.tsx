@@ -53,10 +53,7 @@ export default function RootLayout() {
     >
       <Stack.Screen name="index" redirect={true} />
 
-      <Stack.Screen
-        name="login"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
 
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
@@ -69,10 +66,6 @@ export default function RootLayout() {
       />
       <Stack.Screen
         name="success"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-      <Stack.Screen
-        name="change-password"
         options={{ headerTitle: '', headerTransparent: true }}
       />
     </Stack>

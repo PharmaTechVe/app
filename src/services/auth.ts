@@ -11,8 +11,9 @@ export const AuthService = {
         return { success: false, error: 'Correo electrónico inválido' };
       }
 
+      const normalizedEmail = email.toLowerCase();
       const { accessToken } = await api.auth.login({
-        email: email.trim(),
+        email: normalizedEmail.trim(),
         password: password.trim(),
       });
 
@@ -41,6 +42,8 @@ export const AuthService = {
         return { success: false, error: 'Correo electrónico inválido' };
       }
 
+      const normalizedEmail = email.toLowerCase();
+
       let mappedGender: UserGender;
       if (gender.toLowerCase() === 'male') {
         mappedGender = UserGender.MALE;
@@ -56,7 +59,7 @@ export const AuthService = {
       const response = await api.auth.signUp({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim(),
+        email: normalizedEmail.trim(),
         password: password.trim(),
         documentId: documentId.trim(),
         phoneNumber: phoneNumber.trim(),
@@ -79,7 +82,8 @@ export const AuthService = {
         return { success: false, error: 'Correo inválido' };
       }
 
-      await api.auth.forgotPassword(email.trim());
+      const normalizedEmail = email.toLowerCase();
+      await api.auth.forgotPassword(normalizedEmail.trim());
       return { success: true, data: undefined };
     } catch (error) {
       return {
@@ -119,7 +123,6 @@ export const AuthService = {
       const token = (await SecureStore.getItemAsync('reset_token')) || '';
       await api.auth.updatePassword(newPassword.trim(), token);
 
-      await api.auth.updatePassword(newPassword.trim(), token);
       return { success: true, data: undefined };
     } catch (error) {
       return {
