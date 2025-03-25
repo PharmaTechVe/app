@@ -53,6 +53,11 @@ const DatePickerInput: React.FC<{
                 <CustomCalendar
                   onAccept={handleDateSelect}
                   onCancel={handleCloseModal}
+                  initialDate={
+                    selectedDate
+                      ? selectedDate.split('/').reverse().join('-')
+                      : undefined
+                  }
                 />
               </View>
             </TouchableWithoutFeedback>

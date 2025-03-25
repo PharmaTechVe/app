@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -19,13 +18,17 @@ import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 import DatePickerInput from '../components/DatePickerInput';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import { AuthService } from '../services/auth';
+import Alert from '../components/Alerts';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const [currentStep, setCurrentStep] = useState(1);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  //const [loading, setLoading] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Step 1: Credentials
   const [email, setEmail] = useState('');
@@ -57,7 +60,7 @@ export default function RegisterScreen() {
     } else if (currentStep === 1) {
       navigation.setOptions({
         headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => router.replace('/login')}>
             <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
           </TouchableOpacity>
         ),
@@ -82,15 +85,18 @@ export default function RegisterScreen() {
 
   const handleNext = () => {
     if (password.length < 8) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      setShowErrorAlert(true);
+      setErrorMessage('La contraseña debe tener al menos 8 caracteres');
       return;
     }
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor completa todos los campos.');
+      setShowErrorAlert(true);
+      setErrorMessage('Por favor completa todos los campos.');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden.');
+      setShowErrorAlert(true);
+      setErrorMessage('Las contraseñas no coinciden.');
       return;
     }
     handleStepChange(2);
@@ -98,17 +104,20 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!firstName || !lastName || !cedula || !phoneNumber || !dateOfBirth) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      setShowErrorAlert(true);
+      setErrorMessage('Por favor completa todos los campos');
       return;
     }
 
     // Date validation
     const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth);
     if (!isValidDate) {
-      Alert.alert('Error', 'Formato de fecha inválido (Use YYYY-MM-DD)');
+      setShowErrorAlert(true);
+      setErrorMessage('Formato de fecha inválido (Use YYYY-MM-DD)');
       return;
     }
 
+    setLoading(true);
     try {
       const result = await AuthService.register(
         firstName.trim(),
@@ -122,23 +131,53 @@ export default function RegisterScreen() {
       );
 
       if (result.success) {
-        Alert.alert('Éxito', 'Cuenta creada correctamente');
-        router.replace('/success');
+        setShowSuccessAlert(true);
+        setTimeout(() => {
+          router.replace('/success');
+        }, 2000);
       } else {
-        Alert.alert('Error', result.error);
+        setShowErrorAlert(true);
+        setErrorMessage(result.error);
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Error al crear la cuenta');
+      setShowErrorAlert(true);
+      setErrorMessage('Error al crear la cuenta');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogin = () => {
-    router.push('/login');
+    router.replace('/login');
   };
 
   return (
     <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
+      {/* Alerts */}
+      <View style={styles.alertContainer}>
+        {showErrorAlert && (
+          <Alert
+            type="error"
+            title="Error"
+            message={errorMessage}
+            onClose={() => setShowErrorAlert(false)}
+            borderColor
+          />
+        )}
+        {showSuccessAlert && (
+          <Alert
+            type="success"
+            title="Éxito"
+            message="Cuenta creada correctamente"
+            onClose={() => {
+              setShowSuccessAlert(false);
+              router.replace('/success');
+            }}
+            borderColor
+          />
+        )}
+      </View>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
         {currentStep === 1 && (
@@ -314,7 +353,7 @@ export default function RegisterScreen() {
                   onPress={handleRegister}
                   style={styles.nextButton}
                   size="medium"
-                  //loading={loading}
+                  loading={loading}
                 />
 
                 <TouchableOpacity
@@ -339,11 +378,20 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: Colors.bgColor,
     justifyContent: 'flex-start',
     paddingTop: 56,
     paddingHorizontal: 20,
+  },
+  alertContainer: {
+    position: 'absolute',
+    width: 326,
+    left: '50%',
+    marginLeft: -162,
+    top: 20,
+    right: 0,
+    zIndex: 1000,
   },
   createContainer: {
     paddingBottom: 28,
