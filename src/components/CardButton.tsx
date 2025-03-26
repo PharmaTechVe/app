@@ -18,12 +18,8 @@ const CardButton: React.FC<CardButtonProps> = ({
   const [count, setCount] = useState(initialValue);
   const [showCounter, setShowCounter] = useState(false);
 
-  useEffect(() => {
-    if (count == 0) setShowCounter(false);
-    else {
-      setShowCounter(true);
-    }
-  }, [count]);
+  const toggleCounter = () => setShowCounter(count > 0);
+  useEffect(toggleCounter, [count]);
 
   useEffect(() => {
     if (getValue) {
