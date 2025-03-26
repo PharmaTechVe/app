@@ -21,7 +21,7 @@ const CartListScreen = () => {
         <View style={styles.quantityContainer}>
           <CardButton
             getValue={(quantity) => updateCartQuantity(item.id, quantity)}
-            initialValue={item.quantity}
+            initialValue={item.quantity > 0 ? item.quantity : 0}
             syncQuantity={(quantity) => updateCartQuantity(item.id, quantity)}
           />
         </View>
@@ -37,12 +37,18 @@ const CartListScreen = () => {
       <PoppinsText style={styles.header} weight="regular">
         Carrito de compras
       </PoppinsText>
-      <FlatList
-        data={cartItems}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-      />
+      {cartItems.filter((item) => item.quantity > 0).length === 0 ? (
+        <PoppinsText style={styles.emptyCartText}>
+          Tu carrito está vacío
+        </PoppinsText>
+      ) : (
+        <FlatList
+          data={cartItems.filter((item) => item.quantity > 0)}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
       <View style={styles.footer}>
         <PoppinsText style={styles.totalText}>Total: ${total}</PoppinsText>
         <TouchableOpacity style={styles.checkoutButton}>
@@ -133,6 +139,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     fontWeight: '600',
+  },
+  emptyCartText: {
+    fontSize: 16,
+    color: Colors.textMain,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 
