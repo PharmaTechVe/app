@@ -30,6 +30,10 @@ const CardButton: React.FC<CardButtonProps> = ({
     }
   }, [count]);
 
+  useEffect(() => {
+    setCount(initialValue);
+  }, [initialValue]);
+
   const incrementCount = () => {
     setCount((prev) => prev + 1);
   };

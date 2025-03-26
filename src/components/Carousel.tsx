@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import ProductCard from './Card';
-import { ProductPresentation } from '../types/api';
+import { Product } from '../types/Product';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-type ProductCardProps = {
-  cards: ProductPresentation[];
+type CarouselProps = {
+  cards: Product[];
 };
 
-const Carrusel: React.FC<ProductCardProps> = ({ cards }) => {
+const Carousel: React.FC<CarouselProps> = ({ cards }) => {
   return (
     <ScrollView
       horizontal
@@ -18,15 +18,7 @@ const Carrusel: React.FC<ProductCardProps> = ({ cards }) => {
     >
       {cards.map((item, index) => (
         <View key={index} style={styles.card}>
-          <ProductCard
-            imageUrl={item?.imageUrl}
-            name={item?.name}
-            category={item?.category}
-            originalPrice={item?.originalPrice}
-            discount={item?.discount}
-            finalPrice={item?.finalPrice}
-            getQuantity={item?.getQuantity}
-          />
+          <ProductCard key={index} {...item} />
         </View>
       ))}
     </ScrollView>
@@ -44,4 +36,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Carrusel;
+export default Carousel;

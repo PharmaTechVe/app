@@ -5,18 +5,10 @@ import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
 import { truncateString } from '../utils/commons';
 import { useCart } from '../hooks/useCart';
+import { Product } from '../types/Product';
 
-interface ProductCardProps {
-  imageUrl?: string;
-  name: string;
-  category?: string;
-  originalPrice: string;
-  discount?: string;
-  finalPrice?: string;
-  getQuantity?: (count: number) => void;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({
+const ProductCard: React.FC<Product> = ({
+  id,
   imageUrl,
   name,
   category,
@@ -26,7 +18,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   getQuantity,
 }) => {
   const { getItemQuantity, updateCartQuantity } = useCart();
-  const initialQuantity = getItemQuantity(name);
   return (
     <View style={styles.card}>
       <View
@@ -55,11 +46,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <CardButton
               getValue={(quantity) => {
                 if (getQuantity) getQuantity(quantity);
-                if (quantity !== initialQuantity) {
-                  updateCartQuantity(name, quantity);
-                }
+                updateCartQuantity(id, quantity);
               }}
-              initialValue={initialQuantity}
+              initialValue={getItemQuantity(id)}
             />
           </View>
         </View>
