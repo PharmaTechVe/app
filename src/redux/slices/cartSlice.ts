@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Tipos para el carrito
 export type CartItem = {
   id: string;
   name: string;
@@ -14,13 +13,11 @@ type CartState = {
   total: number;
 };
 
-// Estado inicial
 const initialState: CartState = {
   items: [],
   total: 0,
 };
 
-// Slice del carrito
 const cartSlice = createSlice({
   name: 'cart',
   initialState,
@@ -30,7 +27,7 @@ const cartSlice = createSlice({
         (item) => item.id === action.payload.id,
       );
       if (existingItem) {
-        existingItem.quantity += action.payload.quantity;
+        existingItem.quantity = action.payload.quantity;
       } else {
         state.items.push(action.payload);
       }
@@ -66,7 +63,6 @@ const cartSlice = createSlice({
   },
 });
 
-// Exportar las acciones y el reducer
 export const { addItem, removeItem, updateQuantity, clearCart } =
   cartSlice.actions;
 export default cartSlice.reducer;

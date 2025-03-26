@@ -4,6 +4,7 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
 import { truncateString } from '../utils/commons';
+import { useCart } from '../hooks/useCart';
 
 interface ProductCardProps {
   imageUrl?: string;
@@ -24,6 +25,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   finalPrice,
   getQuantity,
 }) => {
+  const { getItemQuantity, updateCartQuantity } = useCart();
+  const initialQuantity = getItemQuantity(name);
   return (
     <View style={styles.card}>
       <View
@@ -49,7 +52,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
             style={{ borderRadius: 15 }}
           />
           <View style={styles.cardButtonContainer}>
-            <CardButton getValue={getQuantity} />
+            <CardButton
+              getValue={(quantity) => {
+                if (getQuantity) getQuantity(quantity);
+                if (quantity !== initialQuantity) {
+                  updateCartQuantity(name, quantity);
+                }
+              }}
+              initialValue={initialQuantity}
+            />
           </View>
         </View>
       </View>

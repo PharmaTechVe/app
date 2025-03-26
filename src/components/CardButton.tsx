@@ -6,10 +6,16 @@ import { Colors, FontSizes } from '../styles/theme';
 
 interface CardButtonProps {
   getValue?: (count: number) => void;
+  initialValue: number;
+  syncQuantity?: (count: number) => void;
 }
 
-const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
-  const [count, setCount] = useState(0);
+const CardButton: React.FC<CardButtonProps> = ({
+  getValue,
+  initialValue = 0,
+  syncQuantity,
+}) => {
+  const [count, setCount] = useState(initialValue);
   const [showCounter, setShowCounter] = useState(false);
 
   useEffect(() => {
@@ -17,8 +23,14 @@ const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
     else {
       setShowCounter(true);
     }
+  }, [count]);
+
+  useEffect(() => {
     if (getValue) {
       getValue(count);
+    }
+    if (syncQuantity) {
+      syncQuantity(count);
     }
   }, [count]);
 
@@ -42,9 +54,7 @@ const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
       {!showCounter ? (
         <TouchableOpacity
           style={styles.mainButton}
-          onPress={() => {
-            showCounterIncrement();
-          }}
+          onPress={showCounterIncrement}
         >
           <PoppinsText style={styles.buttonText}>
             <PlusIcon size={20} color={Colors.textWhite} />

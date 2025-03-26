@@ -1,25 +1,13 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../redux/store';
-import { removeItem, updateQuantity } from '../redux/slices/cartSlice';
+import { useCart } from '../hooks/useCart';
 import CardButton from '../components/CardButton';
-import { Colors } from '../styles/theme';
+import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import type { CartItem } from '../redux/slices/cartSlice';
 
 const CartListScreen = () => {
-  const dispatch = useDispatch();
-  const cartItems = useSelector((state: RootState) => state.cart.items);
-  const total = useSelector((state: RootState) => state.cart.total);
-
-  const handleRemoveItem = (id: string) => {
-    dispatch(removeItem(id));
-  };
-
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    dispatch(updateQuantity({ id, quantity }));
-  };
+  const { cartItems, total, removeFromCart, updateCartQuantity } = useCart();
 
   const renderItem = ({ item }: { item: CartItem }) => (
     <View style={styles.card}>
@@ -32,10 +20,12 @@ const CartListScreen = () => {
         <PoppinsText style={styles.productPrice}>${item.price}</PoppinsText>
         <View style={styles.quantityContainer}>
           <CardButton
-            getValue={(quantity) => handleUpdateQuantity(item.id, quantity)}
+            getValue={(quantity) => updateCartQuantity(item.id, quantity)}
+            initialValue={item.quantity}
+            syncQuantity={(quantity) => updateCartQuantity(item.id, quantity)}
           />
         </View>
-        <TouchableOpacity onPress={() => handleRemoveItem(item.id)}>
+        <TouchableOpacity onPress={() => removeFromCart(item.id)}>
           <PoppinsText style={styles.removeText}>Eliminar</PoppinsText>
         </TouchableOpacity>
       </View>
@@ -44,7 +34,9 @@ const CartListScreen = () => {
 
   return (
     <View style={styles.container}>
-      <PoppinsText style={styles.header}>Tu carrito</PoppinsText>
+      <PoppinsText style={styles.header} weight="regular">
+        Carrito de compras
+      </PoppinsText>
       <FlatList
         data={cartItems}
         renderItem={renderItem}
@@ -70,9 +62,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: FontSizes.h5.size,
+    lineHeight: FontSizes.h5.lineHeight,
     marginBottom: 16,
+    color: Colors.textMain,
   },
   listContainer: {
     paddingBottom: 16,
