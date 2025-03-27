@@ -5,6 +5,7 @@ import CardButton from '../components/CardButton';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import type { CartItem } from '../redux/slices/cartSlice';
+import Button from '../components/Button';
 
 const CartListScreen = () => {
   const { cartItems, total, removeFromCart, updateCartQuantity } = useCart();
@@ -49,13 +50,30 @@ const CartListScreen = () => {
           contentContainerStyle={styles.listContainer}
         />
       )}
+      <View style={styles.footerBackground} />
       <View style={styles.footer}>
-        <PoppinsText style={styles.totalText}>Total: ${total}</PoppinsText>
-        <TouchableOpacity style={styles.checkoutButton}>
-          <PoppinsText style={styles.checkoutText}>
-            Proceder al Pago
-          </PoppinsText>
-        </TouchableOpacity>
+        <View style={styles.row}>
+          <PoppinsText style={styles.subtotalText}>Subtotal</PoppinsText>
+          <PoppinsText style={styles.subtotalText}>${total}</PoppinsText>
+        </View>
+        <View style={styles.row}>
+          <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
+          <PoppinsText style={styles.discountText}>$0.00</PoppinsText>
+        </View>
+        <View style={styles.row}>
+          <PoppinsText style={styles.ivaText}>IVA</PoppinsText>
+          <PoppinsText style={styles.ivaText}>$0.00</PoppinsText>
+        </View>
+        <View style={styles.row}>
+          <PoppinsText style={styles.totalText}>Total</PoppinsText>
+          <PoppinsText style={styles.totalText}>${total}</PoppinsText>
+        </View>
+        <Button
+          title="Ir a pagar"
+          onPress={() => {}}
+          style={styles.checkoutButton}
+          size="medium"
+        />
       </View>
     </View>
   );
@@ -70,7 +88,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: FontSizes.h5.size,
     lineHeight: FontSizes.h5.lineHeight,
-    marginBottom: 16,
+    marginBottom: 24,
     color: Colors.textMain,
   },
   listContainer: {
@@ -100,8 +118,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   productName: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: FontSizes.b2.size,
+    lineHeight: FontSizes.b2.lineHeight,
     marginBottom: 8,
   },
   productPrice: {
@@ -118,22 +136,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.semanticDanger,
   },
+  footerBackground: {
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.menuWhite,
+    paddingTop: 310,
+    alignItems: 'center',
+  },
   footer: {
     borderTopWidth: 1,
     borderTopColor: '#e0e0e0',
-    paddingTop: 16,
+    paddingTop: 44,
     alignItems: 'center',
+    position: 'relative',
   },
   totalText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: FontSizes.h5.size,
+    lineHeight: FontSizes.h5.lineHeight,
+    color: Colors.textMain,
     marginBottom: 16,
   },
   checkoutButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    marginBottom: 16,
+    width: '100%',
+    height: 50,
   },
   checkoutText: {
     fontSize: 16,
@@ -145,6 +175,30 @@ const styles = StyleSheet.create({
     color: Colors.textMain,
     textAlign: 'center',
     marginTop: 20,
+  },
+  subtotalText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.textMain,
+    marginBottom: 8,
+  },
+  discountText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.secondary,
+    marginBottom: 8,
+  },
+  ivaText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.textMain,
+    marginBottom: 20,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
   },
 });
 
