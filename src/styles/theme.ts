@@ -23,12 +23,16 @@ export const Colors = {
   iconWhite: '#FFFFFF',
   iconMainPrimary: '#1C2143',
   iconMainSecondary: '#A3E4D7',
+  iconCancel: '#FF5959',
 
   menuWhite: '#FFFFFF',
   menuPrimary: '#1C2143',
 
   toggleOn: '#1C2143',
   toggleOff: '#D7D5D3',
+
+  gray_100: '#E7E7E6',
+  gray_500: '#6E6D6C',
 };
 
 export const Fonts = {

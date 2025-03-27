@@ -24,7 +24,7 @@ export default function HomeScreen() {
       const carouselProducts = pd.map((p) => ({
         id: p.product.id,
         imageUrl: p.product.images[0].url,
-        name: p.product.genericName,
+        name: p.product.name,
         category: p.product.categories[0].name,
         originalPrice: p.price,
         discount: 10,
@@ -33,7 +33,7 @@ export default function HomeScreen() {
         getQuantity: (quantity: number) => {
           addToCart({
             id: p.product.id,
-            name: p.product.genericName,
+            name: p.product.name,
             price: p.price,
             quantity,
             image: p.product.images[0].url,

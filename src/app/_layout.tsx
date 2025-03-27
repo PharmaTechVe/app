@@ -13,9 +13,9 @@ import {
   Poppins_600SemiBold,
 } from '@expo-google-fonts/poppins';
 import { Stack } from 'expo-router/stack';
-import { ChevronLeftIcon } from 'react-native-heroicons/outline';
-import { Provider } from 'react-redux'; // Importa el Provider de Redux
-import { store } from '../redux/store'; // Importa el store de Redux
+import { ChevronLeftIcon, XMarkIcon } from 'react-native-heroicons/outline';
+import { Provider } from 'react-redux';
+import { store } from '../redux/store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,7 +42,6 @@ export default function RootLayout() {
 
   return (
     <Provider store={store}>
-      {/* Envuelve el Stack con el Provider */}
       <Stack
         screenOptions={({ navigation }) => ({
           headerBackVisible: false,
@@ -72,7 +71,16 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="cart"
-          options={{ headerTitle: '', headerTransparent: true }}
+          options={({ navigation }) => ({
+            headerTitle: '',
+            headerTransparent: true,
+            headerLeft: undefined,
+            headerRight: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <XMarkIcon width={24} height={24} color="#000" />
+              </TouchableOpacity>
+            ),
+          })}
         />
       </Stack>
     </Provider>
