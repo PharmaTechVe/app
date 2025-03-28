@@ -1,4 +1,10 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  HomeIcon,
+  ListBulletIcon,
+  MapPinIcon,
+  TagIcon,
+  LifebuoyIcon,
+} from 'react-native-heroicons/outline';
 import { Tabs } from 'expo-router';
 import { Colors } from '../../styles/theme';
 import PoppinsText from '../../components/PoppinsText';
@@ -25,8 +31,8 @@ export default function TabLayout() {
             ),
             headerShown: false,
             title: 'home',
-            tabBarIcon: ({ color }) => (
-              <FontAwesome size={28} name="home" color={color} />
+            tabBarIcon: () => (
+              <HomeIcon width={24} height={24} color={Colors.primary} />
             ),
           }}
         />
@@ -41,8 +47,8 @@ export default function TabLayout() {
             ),
             headerShown: false,
             title: 'Categorías',
-            tabBarIcon: ({ color }) => (
-              <FontAwesome name="th-list" size={24} color={color} />
+            tabBarIcon: () => (
+              <ListBulletIcon width={24} height={24} color={Colors.primary} />
             ),
           }}
         />
@@ -56,8 +62,8 @@ export default function TabLayout() {
             ),
             title: 'Sucursales',
             headerShown: false,
-            tabBarIcon: ({ color }) => (
-              <FontAwesome name="map-marker" size={24} color={color} />
+            tabBarIcon: () => (
+              <MapPinIcon width={24} height={24} color={Colors.primary} />
             ),
           }}
         />
@@ -71,8 +77,8 @@ export default function TabLayout() {
             ),
             title: 'Ofertas',
             headerShown: false,
-            tabBarIcon: ({ color }) => (
-              <FontAwesome name="tags" size={24} color={color} />
+            tabBarIcon: () => (
+              <TagIcon width={24} height={24} color={Colors.primary} />
             ),
           }}
         />
@@ -86,8 +92,8 @@ export default function TabLayout() {
             ),
             title: 'Soporte',
             headerShown: false,
-            tabBarIcon: ({ color }) => (
-              <FontAwesome name="life-ring" size={24} color={color} />
+            tabBarIcon: () => (
+              <LifebuoyIcon width={24} height={24} color={Colors.primary} />
             ),
           }}
         />
