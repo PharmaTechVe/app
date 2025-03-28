@@ -114,17 +114,18 @@ export default function ChangePasswordScreen() {
       </View>
 
       {/* Enlace de recuperación de contraseña */}
-      <TouchableOpacity
-        onPress={() => router.push('/recover-password')}
-        style={styles.forgotPasswordContainer}
-      >
-        <PoppinsText weight="regular" style={styles.forgotPasswordText}>
-          ¿Olvidaste tu contraseña?{' '}
-          <PoppinsText weight="regular" style={styles.forgotPasswordLink}>
-            Ingresa aquí
+      <View style={styles.forgotPasswordContainer}>
+        <View style={styles.forgotPasswordRow}>
+          <PoppinsText weight="regular" style={styles.forgotPasswordText}>
+            ¿Olvidaste tu contraseña?{' '}
           </PoppinsText>
-        </PoppinsText>
-      </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/passwordRecovery')}>
+            <PoppinsText weight="regular" style={styles.forgotPasswordLink}>
+              Ingresa aquí
+            </PoppinsText>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <Button
         title="Continuar"
@@ -149,11 +150,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes.h4.size,
     lineHeight: FontSizes.h4.lineHeight,
-    marginBottom: 10,
+    marginBottom: 24,
     color: Colors.textMain,
   },
   description: {
-    marginTop: 30,
     fontSize: FontSizes.b1.size,
     lineHeight: FontSizes.b1.lineHeight,
     textAlign: 'center',
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 24, // Aumenta la separación entre los campos
+    marginBottom: 16,
   },
   changePasswordButton: {
     marginTop: 16,
@@ -180,7 +180,11 @@ const styles = StyleSheet.create({
     height: 50,
   },
   forgotPasswordContainer: {
-    marginTop: 5,
+    alignSelf: 'flex-start',
+  },
+  forgotPasswordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   forgotPasswordText: {
     fontSize: FontSizes.b3.size,
@@ -190,7 +194,7 @@ const styles = StyleSheet.create({
   forgotPasswordLink: {
     fontSize: FontSizes.b3.size,
     lineHeight: FontSizes.b3.lineHeight,
-    color: Colors.secondaryLight, // Color azul claro para indicar que es un enlace
+    color: Colors.secondaryLight,
   },
   button: {
     marginTop: 24,
