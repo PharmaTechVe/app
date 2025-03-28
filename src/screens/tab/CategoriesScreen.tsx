@@ -47,6 +47,13 @@ export default function CategoriesScreen() {
         mode="filled"
         size="large"
       />
+      <Button
+        title="Change password"
+        onPress={() => router.push('/change-password')}
+        variant="primary"
+        mode="filled"
+        size="large"
+      />
     </View>
   );
 }

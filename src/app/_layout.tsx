@@ -82,6 +82,10 @@ export default function RootLayout() {
             ),
           })}
         />
+        <Stack.Screen
+          name="change-password"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
       </Stack>
     </Provider>
   );
