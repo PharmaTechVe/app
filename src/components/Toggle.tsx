@@ -1,27 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pressable, Animated, StyleSheet } from 'react-native';
-import { Colors } from '../styles/theme';
+import { Colors, ToggleSizes } from '../styles/theme';
 
 interface ToggleProps {
   value?: boolean;
   onChange?: (newValue: boolean) => void;
   disabled?: boolean;
+  size?: 'small' | 'medium' | 'large';
 }
-
-const TOGGLE_CONFIG = {
-  width: 55,
-  height: 32,
-  radius: 30,
-  circleSize: 26, // Ajustado para que el círculo quede bien dentro del switch
-};
 
 const Toggle: React.FC<ToggleProps> = ({
   value = false,
   onChange,
   disabled = false,
+  size = 'medium',
 }) => {
   const [toggleValue, setToggleValue] = useState(value);
   const animatedValue = new Animated.Value(value ? 1 : 0);
+  const config = ToggleSizes[size];
+
+  useEffect(() => {
+    setToggleValue(value);
+    Animated.timing(animatedValue, {
+      toValue: value ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [value]);
 
   const handleToggle = () => {
     if (disabled) return;
@@ -38,7 +43,7 @@ const Toggle: React.FC<ToggleProps> = ({
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [2, TOGGLE_CONFIG.width - TOGGLE_CONFIG.circleSize - 2],
+    outputRange: [2, config.width - config.circleSize - 2],
   });
 
   return (
@@ -47,10 +52,10 @@ const Toggle: React.FC<ToggleProps> = ({
       style={[
         styles.toggleBase,
         {
-          width: TOGGLE_CONFIG.width,
-          height: TOGGLE_CONFIG.height,
+          width: config.width,
+          height: config.height,
           backgroundColor: toggleValue ? Colors.toggleOn : Colors.toggleOff,
-          borderRadius: TOGGLE_CONFIG.radius,
+          borderRadius: config.radius,
         },
         disabled && styles.disabled,
       ]}
@@ -59,8 +64,8 @@ const Toggle: React.FC<ToggleProps> = ({
         style={[
           styles.circle,
           {
-            width: TOGGLE_CONFIG.circleSize,
-            height: TOGGLE_CONFIG.circleSize,
+            width: config.circleSize,
+            height: config.circleSize,
             transform: [{ translateX }],
           },
         ]}
@@ -81,6 +86,7 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+    backgroundColor: Colors.stroke,
   },
 });
 

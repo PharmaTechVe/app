@@ -63,8 +63,15 @@ export const FontSizes = {
   btnTiny: { size: 10, lineHeight: 12 },
 };
 
+export const ToggleSizes = {
+  small: { width: 40, height: 24, circleSize: 18, radius: 12 },
+  medium: { width: 55, height: 32, circleSize: 26, radius: 16 },
+  large: { width: 70, height: 40, circleSize: 34, radius: 20 },
+};
+
 export default {
   Colors,
   Fonts,
   FontSizes,
+  ToggleSizes,
 };
