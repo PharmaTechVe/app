@@ -56,31 +56,37 @@ const Input: React.FC<InputProps> = ({
   }, [value]);
 
   const validateInput = (input: string) => {
-    setIvalue(input);
-    if (getValue) {
-      getValue(input);
-    }
     if (useDefaultValidation) {
       switch (fieldType) {
         case 'text':
-          setIsValid(input.length > 0);
-          break;
+          return input.length > 0;
         case 'email':
-          setIsValid(validateEmail(input));
-          break;
+          return validateEmail(input);
         case 'number':
-          setIsValid(!isNaN(Number(input)));
-          break;
+          return !isNaN(Number(input));
         case 'password':
-          setIsValid(validatePassword(input));
-          break;
+          return validatePassword(input);
         default:
-          setIsValid(true);
+          return true;
       }
     } else if (validation) {
-      setIsValid(validation(input));
-    } else {
-      setIsValid(true);
+      return validation(input);
+    }
+    return true;
+  };
+
+  const handleChange = (text: string) => {
+    let normalizedText = text;
+    if (fieldType === 'email') {
+      normalizedText = text.toLowerCase();
+    }
+
+    const isValidInput = validateInput(normalizedText); // Llama a validateInput
+    setIsValid(isValidInput); // Actualiza el estado de validación
+
+    setIvalue(normalizedText);
+    if (getValue) {
+      getValue(normalizedText);
     }
   };
 
@@ -150,7 +156,7 @@ const Input: React.FC<InputProps> = ({
           keyboardType={fieldType === 'number' ? 'numeric' : 'default'}
           multiline={fieldType === 'textarea'}
           editable={isEditable}
-          onChangeText={validateInput}
+          onChangeText={handleChange} // Usar la función corregida
           onFocus={() => {
             setIsFocused(true);
             setHasBlurred(false);
