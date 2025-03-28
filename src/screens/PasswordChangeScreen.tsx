@@ -39,7 +39,7 @@ export default function ChangePasswordScreen() {
   const handleChangePassword = async () => {
     if (loading) return;
 
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       showAlert('error', 'Error', 'Todos los campos son obligatorios.');
       return;
     }
@@ -55,6 +55,15 @@ export default function ChangePasswordScreen() {
 
     if (newPassword !== confirmPassword) {
       showAlert('error', 'Error', 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      showAlert(
+        'error',
+        'Error',
+        'La nueva contraseña debe ser diferente a la actual.',
+      );
       return;
     }
 
