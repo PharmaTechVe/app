@@ -6,14 +6,10 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../styles/theme';
 import * as SecureStore from 'expo-secure-store';
 import Popup from '../../components/Popup';
-import CartTotal from '../../components/CartTotal';
-import { useDispatch } from 'react-redux';
-import { addItem, removeItem } from '../../redux/slices/cartSlice';
 
 export default function CategoriesScreen() {
   const router = useRouter();
   const [showPopup, setShowPopup] = useState(false);
-  const dispatch = useDispatch();
 
   const handleLogout = async () => {
     try {
@@ -23,22 +19,6 @@ export default function CategoriesScreen() {
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
-  };
-
-  const handleAddToCart = () => {
-    dispatch(
-      addItem({
-        id: '1',
-        name: 'Camiseta Azul',
-        price: 20,
-        quantity: 1,
-        image: 'https://example.com/camiseta.jpg',
-      }),
-    );
-  };
-
-  const handleRemoveFromCart = () => {
-    dispatch(removeItem('1')); // Elimina el producto con ID '1'
   };
 
   return (
@@ -67,9 +47,6 @@ export default function CategoriesScreen() {
         mode="filled"
         size="large"
       />
-      <CartTotal />
-      <Button title="Agregar al carrito" onPress={handleAddToCart} />
-      <Button title="Eliminar del carrito" onPress={handleRemoveFromCart} />
     </View>
   );
 }
