@@ -1,56 +1,100 @@
-import React from 'react';
-import { Image, Text, View, StyleSheet } from 'react-native';
-import { Colors } from '../styles/theme';
+import React, { useEffect, useState } from 'react';
+import { Image, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { Colors, FontSizes } from '../styles/theme';
+import { UserService } from '../services/user';
+import { getUserIdFromSecureStore } from '../helper/jwtHelper';
+import PoppinsText from './PoppinsText';
 
-interface AvatarProps {
-  uri?: string; // URL de la imagen de perfil
-  name?: string; // Nombre completo del usuario
-}
+const Avatar: React.FC = () => {
+  const [profile, setProfile] = useState<{ uri?: string; name?: string }>({});
+  const [loading, setLoading] = useState(true);
 
-const Avatar: React.FC<AvatarProps> = ({ uri, name = '' }) => {
-  const dimension = 32; // Tamaño fijo
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
 
-  // Función para obtener iniciales del nombre
+      const userId = await getUserIdFromSecureStore();
+      console.log('User ID:', userId);
+      if (!userId) {
+        console.error('No se pudo obtener el ID del usuario');
+        setLoading(false);
+        return;
+      }
+
+      const response = await UserService.getProfile(userId);
+      console.log('Profile Response:', response);
+      if (response.success) {
+        const { firstName, lastName, profilePicture } = response.data!;
+        console.log('Profile Data:', { firstName, lastName, profilePicture });
+        setProfile({
+          uri: profilePicture,
+          name: `${firstName} ${lastName}`,
+        });
+      } else {
+        console.error('Error fetching profile:', response.error);
+      }
+      setLoading(false);
+    };
+
+    fetchProfile();
+  }, []);
+
   const getInitials = (fullName: string): string => {
+    console.log('Full Name:', fullName);
     const words = fullName.trim().split(' ');
     if (words.length === 1) return words[0].charAt(0).toUpperCase();
     return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.avatarContainer, styles.loadingContainer]}>
+        <ActivityIndicator color={Colors.textWhite} />
+      </View>
+    );
+  }
+
   return (
-    <View
-      style={[
-        styles.avatarContainer,
-        { width: dimension, height: dimension, borderRadius: dimension / 2 },
-      ]}
-    >
-      {uri ? (
-        <Image
-          source={{ uri }}
-          style={[styles.avatarImage, { width: dimension, height: dimension }]}
-        />
+    <View style={styles.avatar}>
+      {profile.uri ? (
+        <Image source={{ uri: profile.uri }} style={styles.avatarImage} />
       ) : (
-        <Text style={[styles.initials, { fontSize: dimension / 2.5 }]}>
-          {getInitials(name)}
-        </Text>
+        <PoppinsText style={styles.initials} weight="semibold">
+          {profile.name ? getInitials(profile.name) : ''}
+        </PoppinsText>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  avatarContainer: {
-    backgroundColor: Colors.primary, // Color de fondo cuando no hay foto
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   avatarImage: {
+    width: 32,
+    height: 32,
     resizeMode: 'cover',
   },
   initials: {
+    fontSize: FontSizes.label.size,
+    lineHeight: FontSizes.label.lineHeight,
     color: Colors.textWhite,
-    fontWeight: 'bold',
+  },
+  avatarContainer: {
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  loadingContainer: {
+    backgroundColor: Colors.stroke,
   },
 });
 
