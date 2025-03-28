@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
-import { View, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import PoppinsText from '../components/PoppinsText';
+import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
+import { AuthService } from '../services/auth';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -12,18 +20,33 @@ export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  // const api = new PharmaTech(true);
+  const [alert, setAlert] = useState({
+    visible: false,
+    type: 'info',
+    title: '',
+    message: '',
+  });
+
+  const showAlert = (
+    type: 'success' | 'error' | 'info',
+    title: string,
+    message: string,
+  ) => {
+    setAlert({ visible: true, type, title, message });
+    setTimeout(() => setAlert({ ...alert, visible: false }), 3000);
+  };
 
   const handleChangePassword = async () => {
     if (loading) return;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Error', 'Todos los campos son obligatorios.');
+      showAlert('error', 'Error', 'Todos los campos son obligatorios.');
       return;
     }
 
     if (newPassword.length < 8) {
-      Alert.alert(
+      showAlert(
+        'error',
         'Error',
         'La nueva contraseña debe tener al menos 8 caracteres.',
       );
@@ -31,12 +54,13 @@ export default function ChangePasswordScreen() {
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden.');
+      showAlert('error', 'Error', 'Las contraseñas no coinciden.');
       return;
     }
 
     if (newPassword === currentPassword) {
-      Alert.alert(
+      showAlert(
+        'error',
         'Error',
         'La nueva contraseña debe ser diferente a la actual.',
       );
@@ -45,95 +69,117 @@ export default function ChangePasswordScreen() {
 
     setLoading(true);
     try {
-      //await api.auth.changePassword({ currentPassword, newPassword });
-      Alert.alert('Éxito', 'Contraseña cambiada correctamente.', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/categories'),
-        },
-      ]);
+      const result = await AuthService.changePassword(newPassword);
+      if (result.success) {
+        showAlert('success', 'Éxito', 'Contraseña cambiada correctamente.');
+        setTimeout(() => router.replace('/categories'), 3000);
+      } else {
+        showAlert(
+          'error',
+          'Error',
+          result.error || 'No se pudo cambiar la contraseña.',
+        );
+      }
     } catch (error) {
       console.error('Error al cambiar la contraseña:', error);
-      Alert.alert(
-        'Error',
-        'No se pudo cambiar la contraseña, verifica tus datos.',
-      );
+      showAlert('error', 'Error', 'Ocurrió un error inesperado.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Título */}
-      <PoppinsText weight="medium" style={styles.title}>
-        Cambiar Contraseña
-      </PoppinsText>
-
-      {/* Descripción debajo del título */}
-      <PoppinsText weight="regular" style={styles.description}>
-        Crea una nueva contraseña.
-      </PoppinsText>
-      <PoppinsText weight="regular" style={styles.description2}>
-        Asegúrate de que sea diferente a las anteriores por seguridad.
-      </PoppinsText>
-      <View style={styles.inputsContainer}>
-        <View style={styles.inputGroup}>
-          <Input
-            label="Contraseña Actual"
-            placeholder="Ingresa tu contraseña actual"
-            value={currentPassword}
-            fieldType="password"
-            getValue={setCurrentPassword}
-            backgroundColor={Colors.menuWhite}
+    <KeyboardAvoidingView style={{ flex: 1 }}>
+      {/* Contenedor de la alerta personalizada */}
+      {alert.visible && (
+        <View style={styles.alertContainer}>
+          <Alert
+            type={alert.type as 'success' | 'error' | 'info'}
+            title={alert.title}
+            message={alert.message}
+            alertStyle="regular"
+            borderColor
+            onClose={() => setAlert({ ...alert, visible: false })}
           />
         </View>
+      )}
 
-        <View style={styles.inputGroup}>
-          <Input
-            label="Contraseña Nueva"
-            placeholder="Ingresa tu nueva contraseña"
-            value={newPassword}
-            fieldType="password"
-            getValue={setNewPassword}
-            backgroundColor={Colors.menuWhite}
-            errorText="Debe tener al menos 8 caracteres"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Input
-            label="Repetir Nueva Contraseña"
-            placeholder="Repite tu nueva contraseña"
-            value={confirmPassword}
-            fieldType="password"
-            getValue={setConfirmPassword}
-            backgroundColor={Colors.menuWhite}
-          />
-        </View>
-      </View>
-
-      {/* Enlace de recuperación de contraseña */}
-      <TouchableOpacity
-        onPress={() => router.push('/recover-password')}
-        style={styles.forgotPasswordContainer}
-      >
-        <PoppinsText weight="regular" style={styles.forgotPasswordText}>
-          ¿Olvidaste tu contraseña?{' '}
-          <PoppinsText weight="regular" style={styles.forgotPasswordLink}>
-            Ingresa aquí
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          {/* Título */}
+          <PoppinsText weight="medium" style={styles.title}>
+            Cambiar Contraseña
           </PoppinsText>
-        </PoppinsText>
-      </TouchableOpacity>
 
-      <Button
-        title="Continuar"
-        onPress={handleChangePassword}
-        style={styles.button}
-        size="medium"
-        loading={loading}
-      />
-    </View>
+          {/* Descripción debajo del título */}
+          <PoppinsText weight="regular" style={styles.description}>
+            Crea una nueva contraseña.
+          </PoppinsText>
+          <PoppinsText weight="regular" style={styles.description2}>
+            Asegúrate de que sea diferente a las anteriores por seguridad.
+          </PoppinsText>
+          <View style={styles.inputsContainer}>
+            <View style={styles.inputGroup}>
+              <Input
+                label="Contraseña Actual"
+                placeholder="Ingresa tu contraseña actual"
+                value={currentPassword}
+                fieldType="password"
+                getValue={setCurrentPassword}
+                backgroundColor={Colors.menuWhite}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Input
+                label="Contraseña Nueva"
+                placeholder="Ingresa tu nueva contraseña"
+                value={newPassword}
+                fieldType="password"
+                getValue={setNewPassword}
+                backgroundColor={Colors.menuWhite}
+                errorText="Debe tener al menos 8 caracteres"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Input
+                label="Repetir Nueva Contraseña"
+                placeholder="Repite tu nueva contraseña"
+                value={confirmPassword}
+                fieldType="password"
+                getValue={setConfirmPassword}
+                backgroundColor={Colors.menuWhite}
+              />
+            </View>
+          </View>
+
+          {/* Enlace de recuperación de contraseña */}
+          <View style={styles.forgotPasswordContainer}>
+            <View style={styles.forgotPasswordRow}>
+              <PoppinsText weight="regular" style={styles.forgotPasswordText}>
+                ¿Olvidaste tu contraseña?{' '}
+              </PoppinsText>
+              <TouchableOpacity
+                onPress={() => router.push('/passwordRecovery')}
+              >
+                <PoppinsText weight="regular" style={styles.forgotPasswordLink}>
+                  Ingresa aquí
+                </PoppinsText>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Button
+            title="Continuar"
+            onPress={handleChangePassword}
+            style={styles.button}
+            size="medium"
+            loading={loading}
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -146,14 +192,21 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingHorizontal: 20,
   },
+  alertContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 2,
+    right: 0,
+    zIndex: 1000,
+    padding: 16,
+  },
   title: {
     fontSize: FontSizes.h4.size,
     lineHeight: FontSizes.h4.lineHeight,
-    marginBottom: 10,
+    marginBottom: 24,
     color: Colors.textMain,
   },
   description: {
-    marginTop: 30,
     fontSize: FontSizes.b1.size,
     lineHeight: FontSizes.b1.lineHeight,
     textAlign: 'center',
@@ -172,7 +225,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 24, // Aumenta la separación entre los campos
+    marginBottom: 16,
   },
   changePasswordButton: {
     marginTop: 16,
@@ -180,7 +233,11 @@ const styles = StyleSheet.create({
     height: 50,
   },
   forgotPasswordContainer: {
-    marginTop: 5,
+    alignSelf: 'flex-start',
+  },
+  forgotPasswordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   forgotPasswordText: {
     fontSize: FontSizes.b3.size,
@@ -190,7 +247,7 @@ const styles = StyleSheet.create({
   forgotPasswordLink: {
     fontSize: FontSizes.b3.size,
     lineHeight: FontSizes.b3.lineHeight,
-    color: Colors.secondaryLight, // Color azul claro para indicar que es un enlace
+    color: Colors.secondaryLight,
   },
   button: {
     marginTop: 24,

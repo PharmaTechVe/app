@@ -131,4 +131,17 @@ export const AuthService = {
       };
     }
   },
+
+  changePassword: async (newPassword: string): Promise<ServiceResponse> => {
+    try {
+      const token = (await SecureStore.getItemAsync('auth_token')) || '';
+      await api.auth.updatePassword(newPassword.trim(), token);
+      return { success: true, data: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
 };
