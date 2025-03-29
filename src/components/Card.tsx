@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
 import { truncateString } from '../utils/commons';
 import { useCart } from '../hooks/useCart';
 import { Product } from '../types/Product';
+import { useRouter } from 'expo-router';
 
 const ProductCard: React.FC<Product> = ({
   id,
@@ -18,61 +19,64 @@ const ProductCard: React.FC<Product> = ({
   getQuantity,
 }) => {
   const { getItemQuantity, updateCartQuantity } = useCart();
+  const router = useRouter();
   return (
-    <View style={styles.card}>
-      <View
-        style={{
-          width: '100%',
-          height: 135,
-          marginBottom: 30,
-        }}
-      >
+    <TouchableOpacity onPress={() => router.push('/productDetail')}>
+      <View style={styles.card}>
         <View
           style={{
             width: '100%',
-            flexDirection: 'row-reverse',
+            height: 135,
+            marginBottom: 30,
           }}
         >
-          <PoppinsText style={styles.tag}>{category}</PoppinsText>
-        </View>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: imageUrl }}
-            width={114}
-            height={118}
-            style={{ borderRadius: 14 }}
-          />
-          <View style={styles.cardButtonContainer}>
-            <CardButton
-              getValue={(quantity) => {
-                if (getQuantity) getQuantity(quantity);
-                updateCartQuantity(id, quantity);
-              }}
-              initialValue={getItemQuantity(id)}
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row-reverse',
+            }}
+          >
+            <PoppinsText style={styles.tag}>{category}</PoppinsText>
+          </View>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: imageUrl }}
+              width={114}
+              height={118}
+              style={{ borderRadius: 14 }}
             />
+            <View style={styles.cardButtonContainer}>
+              <CardButton
+                getValue={(quantity) => {
+                  if (getQuantity) getQuantity(quantity);
+                  updateCartQuantity(id, quantity);
+                }}
+                initialValue={getItemQuantity(id)}
+              />
+            </View>
           </View>
         </View>
+        <View style={styles.description}>
+          <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
+          {discount && (
+            <View style={styles.priceContainer}>
+              <PoppinsText style={styles.originalPrice}>
+                ${originalPrice}
+              </PoppinsText>
+              <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
+            </View>
+          )}
+          <PoppinsText
+            style={[
+              styles.finalPrice,
+              !discount && { color: Colors.semanticInfo },
+            ]}
+          >
+            ${finalPrice}
+          </PoppinsText>
+        </View>
       </View>
-      <View style={styles.description}>
-        <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
-        {discount && (
-          <View style={styles.priceContainer}>
-            <PoppinsText style={styles.originalPrice}>
-              ${originalPrice}
-            </PoppinsText>
-            <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
-          </View>
-        )}
-        <PoppinsText
-          style={[
-            styles.finalPrice,
-            !discount && { color: Colors.semanticInfo },
-          ]}
-        >
-          ${finalPrice}
-        </PoppinsText>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

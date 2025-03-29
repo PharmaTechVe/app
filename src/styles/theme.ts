@@ -31,6 +31,8 @@ export const Colors = {
   toggleOn: '#1C2143',
   toggleOff: '#D7D5D3',
 
+  yellow: '#FFBA2E0',
+
   gray_100: '#E7E7E6',
   gray_500: '#6E6D6C',
 };
