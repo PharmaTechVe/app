@@ -40,7 +40,7 @@ const ProductCard: React.FC<Product> = ({
             source={{ uri: imageUrl }}
             width={114}
             height={118}
-            style={{ borderRadius: 15 }}
+            style={{ borderRadius: 14 }}
           />
           <View style={styles.cardButtonContainer}>
             <CardButton
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 140,
     minWidth: 140,
-    minHeight: 300,
+    //minHeight: 300,
     maxHeight: 300,
   },
   tag: {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: FontSizes.s2.size,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -135,16 +135,16 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b1.size,
     color: Colors.disableText,
     textDecorationLine: 'line-through',
-    marginRight: 18,
+    marginRight: 14,
   },
   discount: {
     fontSize: FontSizes.c1.size,
     backgroundColor: Colors.semanticInfo,
     borderRadius: 5,
-    padding: 5,
+    padding: 4,
   },
   finalPrice: {
-    fontSize: 20,
+    fontSize: FontSizes.s1.size,
   },
 });
 
