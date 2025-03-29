@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import TopBar from '../components/TopBar';
 import { StarIcon } from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
 import Dropdown from '../components/Dropdown';
 import CardButton from '../components/CardButton';
+import PoppinsText from '../components/PoppinsText';
 
 type Product = {
   id: string;
@@ -29,11 +32,29 @@ type Product = {
 const ProductDetailScreen: React.FC = () => {
   const [userRating, setUserRating] = useState<number>(0); // 0 significa no calificado
   const [hoverRating, setHoverRating] = useState<number>(0); // Para efecto hover
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const imagesScrollRef = useRef<ScrollView>(null);
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(contentOffsetX / width);
+    setCurrentImageIndex(newIndex);
+  };
+
+  const scrollToImage = (index: number) => {
+    setCurrentImageIndex(index);
+    if (imagesScrollRef.current) {
+      imagesScrollRef.current.scrollTo({
+        x: index * width,
+        animated: true,
+      });
+    }
+  };
 
   // Datos de ejemplo del producto
   const product: Product = {
     id: '1',
-    name: 'Zapatillas Running Premium',
+    name: 'Acetaminofen 650mg Genven Caja x 10 tabletas',
     price: 129.99,
     description:
       'Zapatillas de running con tecnología de amortiguación avanzada para mayor comodidad y rendimiento. Ideal para corredores que buscan soporte y ligereza.',
@@ -85,9 +106,11 @@ const ProductDetailScreen: React.FC = () => {
         <ScrollView>
           {/* Carrusel de imágenes */}
           <ScrollView
+            ref={imagesScrollRef}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleScroll}
           >
             {product.images.map((image, index) => (
               <Image
@@ -102,11 +125,21 @@ const ProductDetailScreen: React.FC = () => {
           {/* Indicadores de imágenes */}
           <View style={styles.imageIndicators}>
             {product.images.map((_, index) => (
-              <View key={index} style={styles.imageIndicator} />
+              <TouchableOpacity
+                key={index}
+                onPress={() => scrollToImage(index)}
+              >
+                <View
+                  style={[
+                    styles.imageIndicator,
+                    index === currentImageIndex && styles.activeImageIndicator,
+                  ]}
+                />
+              </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.productName}>{product.name}</Text>
+          <PoppinsText style={styles.productName}>{product.name}</PoppinsText>
 
           <RatingStars />
           {userRating > 0 && (
@@ -116,20 +149,28 @@ const ProductDetailScreen: React.FC = () => {
             </Text>
           )}
 
-          <Text style={styles.description}>{product.description}</Text>
+          <PoppinsText style={styles.description}>
+            {product.description}
+          </PoppinsText>
 
           {/* Información del producto */}
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
               <Text style={styles.price}>Bs {product.price.toFixed(2)}</Text>
             </View>
-
             <Text style={styles.sectionTitle}>Selecciona la presentación</Text>
             <View style={styles.quantitySelector}>
               <Dropdown
                 options={['A', 'B', 'c']}
+                borderColor={Colors.gray_100}
                 onSelect={() => console.log('p')}
               />
+            </View>
+            <Text style={styles.sectionTitle}>Disponibilidad en sucursal</Text>
+            <View style={styles.quantitySelector}>
+              <View style={styles.mapContainer}>
+                <PoppinsText>Mapa</PoppinsText>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -164,7 +205,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: width,
-    height: width,
+    height: 290,
   },
   imageIndicators: {
     flexDirection: 'row',
@@ -178,8 +219,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#CCCCCC',
     marginHorizontal: 4,
   },
+  activeImageIndicator: {
+    backgroundColor: Colors.gray_500,
+    width: 17,
+  },
   productInfo: {
     padding: 16,
+    paddingVertical: 0,
   },
   priceRatingContainer: {
     flexDirection: 'row',
@@ -205,7 +251,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
-    marginBottom: 20,
+    marginVertical: 15,
   },
   description: {
     fontSize: FontSizes.b3.size,
@@ -219,50 +265,9 @@ const styles = StyleSheet.create({
     color: Colors.textLowContrast,
     marginBottom: 3,
   },
-  sizeOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  sizeOption: {
-    width: 60,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    marginBottom: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  selectedSizeOption: {
-    borderColor: '#000000',
-    backgroundColor: '#000000',
-  },
-  sizeText: {
-    color: '#333333',
-  },
-  selectedSizeText: {
-    color: '#FFFFFF',
-  },
   quantitySelector: {
     flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 30,
-  },
-  quantityButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quantityText: {
-    fontSize: 18,
-    marginHorizontal: 20,
   },
   footer: {
     flexDirection: 'row-reverse',
@@ -287,6 +292,14 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     marginBottom: 20,
     fontStyle: 'italic',
+  },
+  mapContainer: {
+    backgroundColor: Colors.secondaryGray,
+    minHeight: width,
+    maxHeight: width,
+    width: width - 35,
+    borderRadius: 15,
+    marginVertical: 8,
   },
 });
 
