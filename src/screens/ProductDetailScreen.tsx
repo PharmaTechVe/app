@@ -172,11 +172,20 @@ const ProductDetailScreen: React.FC = () => {
                 <PoppinsText>Mapa</PoppinsText>
               </View>
             </View>
+
+            <Text style={styles.sectionTitle}>Selecciona el estado</Text>
+            <View style={styles.quantitySelector}>
+              <Dropdown
+                options={['Lara', 'Anzoategui', 'Caracas']}
+                borderColor={Colors.gray_100}
+                onSelect={() => console.log('p')}
+              />
+            </View>
           </View>
         </ScrollView>
 
         {/* Botón de agregar al carrito */}
-        <View style={styles.footer}>
+        <View style={styles.cardButtonContainer}>
           <CardButton initialValue={0} />
         </View>
       </SafeAreaView>
@@ -300,6 +309,14 @@ const styles = StyleSheet.create({
     width: width - 35,
     borderRadius: 15,
     marginVertical: 8,
+  },
+  cardButtonContainer: {
+    position: 'relative',
+    top: -40,
+    left: 120,
+    maxWidth: '65%',
+    alignItems: 'flex-end',
+    zIndex: 999,
   },
 });
 
