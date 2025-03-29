@@ -67,6 +67,16 @@ export const AuthService = {
         gender: mappedGender,
       });
 
+      // Saving user data in SecureStore
+      await SecureStore.setItemAsync(
+        'user_data',
+        JSON.stringify({
+          firstName: response.firstName,
+          lastName: response.lastName,
+          email: response.email,
+        }),
+      );
+
       return { success: true, data: response };
     } catch (error) {
       return {

@@ -3,6 +3,7 @@ import { Image, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import { UserService } from '../services/user';
 import PoppinsText from './PoppinsText';
+import * as SecureStore from 'expo-secure-store';
 
 const Avatar: React.FC = () => {
   const [profile, setProfile] = useState<{ uri?: string; name?: string }>({});
@@ -12,13 +13,32 @@ const Avatar: React.FC = () => {
     const fetchProfile = async () => {
       setLoading(true);
 
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        console.warn(
+          'No se encontró el token de autenticación. Usando datos locales.',
+        );
+
+        // Data from secureStore
+        const userData = await SecureStore.getItemAsync('user_data');
+        if (userData) {
+          const { firstName, lastName } = JSON.parse(userData);
+          setProfile({
+            name: `${firstName} ${lastName}`,
+          });
+        } else {
+          console.error('No se encontraron datos del usuario en SecureStore.');
+        }
+
+        setLoading(false);
+        return;
+      }
+
       const response = await UserService.getProfile();
-      console.log('Profile Response:', response);
       if (response.success) {
-        const { firstName, lastName, profile } = response.data!;
-        console.log('Profile Data:', { firstName, lastName, profile });
+        const { firstName, lastName, profilePicture } = response.data!;
         setProfile({
-          uri: profile.profilePicture,
+          uri: profilePicture,
           name: `${firstName} ${lastName}`,
         });
       } else {

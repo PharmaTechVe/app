@@ -1,6 +1,11 @@
 import * as SecureStore from 'expo-secure-store';
 
 export const decodeJWT = (token: string): { userId: string } | null => {
+  if (!token) {
+    console.error('Token vacío o nulo');
+    return null;
+  }
+
   try {
     const payload = token.split('.')[1];
     const decodedPayload = JSON.parse(atob(payload));
@@ -15,7 +20,7 @@ export const decodeJWT = (token: string): { userId: string } | null => {
 export const getUserIdFromSecureStore = async (): Promise<string | null> => {
   try {
     const token = await SecureStore.getItemAsync('auth_token');
-    console.log('Retrieved Token:', token); // Chenking if the token is retrieved correctly
+    console.log('Retrieved Token:', token); // Checking if the token is retrieved correctly
     if (!token) return null;
 
     const decoded = decodeJWT(token);
