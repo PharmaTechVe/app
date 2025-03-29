@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
   },
   mainButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
     borderRadius: 50,
     elevation: 3,
   },
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     gap: 15,
     backgroundColor: Colors.primary,
     borderRadius: 50,
-    padding: 5,
+    padding: 4,
   },
   counterButton: {
     width: 20,

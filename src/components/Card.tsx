@@ -23,7 +23,7 @@ const ProductCard: React.FC<Product> = ({
       <View
         style={{
           width: '100%',
-          height: 160,
+          height: 135,
           marginBottom: 30,
         }}
       >
@@ -38,9 +38,9 @@ const ProductCard: React.FC<Product> = ({
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: imageUrl }}
-            width={148}
-            height={140}
-            style={{ borderRadius: 15 }}
+            width={114}
+            height={118}
+            style={{ borderRadius: 14 }}
           />
           <View style={styles.cardButtonContainer}>
             <CardButton
@@ -79,42 +79,37 @@ const ProductCard: React.FC<Product> = ({
 const styles = StyleSheet.create({
   card: {
     margin: 10,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.menuWhite,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: Colors.gray_100,
     borderRadius: 15,
-    padding: 16,
+    padding: 10,
     paddingBottom: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
     marginBottom: 16,
-    maxWidth: 170,
-    minWidth: 170,
-    minHeight: 330,
-    maxHeight: 330,
+    maxWidth: 140,
+    minWidth: 140,
+    maxHeight: 300,
   },
   tag: {
     backgroundColor: Colors.semanticInfo,
     borderRadius: 50,
     paddingHorizontal: 9,
     color: Colors.textWhite,
-    fontSize: FontSizes.c2.size,
+    fontSize: FontSizes.c3.size,
     maxWidth: '100%',
   },
   imageContainer: {
     backgroundColor: Colors.secondaryGray,
-    minHeight: 140,
-    maxHeight: 140,
+    minHeight: 118,
+    maxHeight: 118,
+    maxWidth: 114,
     borderRadius: 15,
     marginVertical: 8,
   },
   cardButtonContainer: {
     position: 'relative',
     top: -30,
-    left: 63,
+    left: 58,
     maxWidth: '65%',
     alignItems: 'flex-end',
     zIndex: 999,
@@ -124,7 +119,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: FontSizes.s2.size,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -134,16 +129,16 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b1.size,
     color: Colors.disableText,
     textDecorationLine: 'line-through',
-    marginRight: 18,
+    marginRight: 14,
   },
   discount: {
     fontSize: FontSizes.c1.size,
     backgroundColor: Colors.semanticInfo,
     borderRadius: 5,
-    padding: 5,
+    padding: 4,
   },
   finalPrice: {
-    fontSize: 20,
+    fontSize: FontSizes.s1.size,
   },
 });
 
