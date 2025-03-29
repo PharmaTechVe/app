@@ -13,7 +13,7 @@ const Carousel: React.FC<CarouselProps> = ({ cards }) => {
   return (
     <ScrollView
       horizontal
-      showsHorizontalScrollIndicator={true}
+      showsHorizontalScrollIndicator={false}
       style={styles.carrusel}
     >
       {cards.map((item, index) => (
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    width: screenWidth - 170, // Ancho de cada card
+    width: screenWidth - 207, // Ancho de cada card
     borderRadius: 10,
     alignItems: 'center',
   },
