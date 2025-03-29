@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../styles/theme';
 import * as SecureStore from 'expo-secure-store';
 import Popup from '../../components/Popup';
+import * as Updates from 'expo-updates';
 
 export default function CategoriesScreen() {
   const router = useRouter();
@@ -13,9 +14,13 @@ export default function CategoriesScreen() {
 
   const handleLogout = async () => {
     try {
+      // Eliminating user data from SecureStore
+      await SecureStore.deleteItemAsync('user_data');
       await SecureStore.deleteItemAsync('auth_token');
-      setShowPopup(false);
-      router.replace('/login');
+      await SecureStore.deleteItemAsync('reset_token');
+
+      // Forcing app reload
+      await Updates.reloadAsync();
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }

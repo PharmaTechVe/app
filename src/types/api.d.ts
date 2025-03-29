@@ -52,3 +52,27 @@ export type ProductPresentation = BaseModel & {
   presentation: Presentation;
   product: Product;
 };
+
+export interface ProfileResponse {
+  firstName: string;
+  lastName: string;
+  email: string;
+  documentId: string;
+  phoneNumber: string;
+  birthDate: Date;
+  gender: string;
+  profilePicture: string;
+  role: string;
+}
+
+type UserList = BaseModel & {
+  firstName: string;
+  lastName: string;
+  email: string;
+  documentId: string;
+  phoneNumber: string;
+  lastOrderDate: Date;
+  role: string;
+  isValidated: boolean;
+  profile: Profile;
+};
