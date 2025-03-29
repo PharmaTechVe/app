@@ -18,6 +18,9 @@ export const AuthService = {
       });
 
       await SecureStore.setItemAsync('auth_token', accessToken);
+
+      await SecureStore.deleteItemAsync('user_data');
+
       return { success: true, data: undefined };
     } catch (error) {
       return {
