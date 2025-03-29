@@ -79,21 +79,15 @@ const ProductCard: React.FC<Product> = ({
 const styles = StyleSheet.create({
   card: {
     margin: 10,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.menuWhite,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: Colors.gray_100,
     borderRadius: 15,
     padding: 10,
     paddingBottom: 5,
-    //shadowColor: '#000',
-    //shadowOffset: { width: 0, height: 2 },
-    //shadowOpacity: 0.1,
-    //shadowRadius: 4,
-    //elevation: 3,
     marginBottom: 16,
     maxWidth: 140,
     minWidth: 140,
-    //minHeight: 300,
     maxHeight: 300,
   },
   tag: {
