@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Image, View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import { UserService } from '../services/user';
-import { getUserIdFromSecureStore } from '../helper/jwtHelper';
 import PoppinsText from './PoppinsText';
 
 const Avatar: React.FC = () => {
@@ -13,21 +12,13 @@ const Avatar: React.FC = () => {
     const fetchProfile = async () => {
       setLoading(true);
 
-      const userId = await getUserIdFromSecureStore();
-      console.log('User ID:', userId);
-      if (!userId) {
-        console.error('No se pudo obtener el ID del usuario');
-        setLoading(false);
-        return;
-      }
-
-      const response = await UserService.getProfile(userId);
+      const response = await UserService.getProfile();
       console.log('Profile Response:', response);
       if (response.success) {
-        const { firstName, lastName, profilePicture } = response.data!;
-        console.log('Profile Data:', { firstName, lastName, profilePicture });
+        const { firstName, lastName, profile } = response.data!;
+        console.log('Profile Data:', { firstName, lastName, profile });
         setProfile({
-          uri: profilePicture,
+          uri: profile.profilePicture,
           name: `${firstName} ${lastName}`,
         });
       } else {

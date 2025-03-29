@@ -64,3 +64,15 @@ export interface ProfileResponse {
   profilePicture: string;
   role: string;
 }
+
+type UserList = BaseModel & {
+  firstName: string;
+  lastName: string;
+  email: string;
+  documentId: string;
+  phoneNumber: string;
+  lastOrderDate: Date;
+  role: string;
+  isValidated: boolean;
+  profile: Profile;
+};
