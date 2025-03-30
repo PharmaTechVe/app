@@ -237,7 +237,9 @@ const ProductDetailScreen: React.FC = () => {
             <View style={styles.priceRatingContainer}>
               <PoppinsText style={styles.price}>$ {currentPrice}</PoppinsText>
               {product?.discount && (
-                <PoppinsText>{product.discount}</PoppinsText>
+                <PoppinsText style={styles.discount}>
+                  -{product.discount}%
+                </PoppinsText>
               )}
             </View>
             <PoppinsText style={styles.sectionTitle}>
@@ -426,7 +428,6 @@ const styles = StyleSheet.create({
   },
   priceRatingContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
@@ -434,6 +435,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.primary,
+    marginRight: 10,
   },
   productName: {
     textAlign: 'center',
@@ -501,6 +503,12 @@ const styles = StyleSheet.create({
     maxWidth: '65%',
     alignItems: 'flex-end',
     zIndex: 999,
+  },
+  discount: {
+    fontSize: FontSizes.b4.size,
+    backgroundColor: Colors.semanticInfo,
+    borderRadius: 5,
+    padding: 4,
   },
 });
 
