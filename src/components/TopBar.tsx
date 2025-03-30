@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import {
-  UserCircleIcon,
-  ShoppingCartIcon,
-} from 'react-native-heroicons/outline';
+import { ShoppingCartIcon } from 'react-native-heroicons/outline';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
 import { useRouter } from 'expo-router';
+import Avatar from './Avatar';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
@@ -24,7 +22,7 @@ const TopBar = () => {
       <View style={styles.topSection}>
         {/* Left user icon */}
         <TouchableOpacity style={styles.iconButton}>
-          <UserCircleIcon size={32} color={Colors.textMain} />
+          <Avatar />
         </TouchableOpacity>
 
         {/* Logo */}
