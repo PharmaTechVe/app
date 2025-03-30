@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     width: 326,
     left: '50%',
     marginLeft: -162,
-    top: 20,
+    top: -120,
     right: 0,
     zIndex: 1000,
   },
