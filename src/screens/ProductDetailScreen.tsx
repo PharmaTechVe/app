@@ -12,12 +12,14 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import TopBar from '../components/TopBar';
-import { StarIcon } from 'react-native-heroicons/solid';
+import { CheckCircleIcon, StarIcon } from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
 import Dropdown from '../components/Dropdown';
 import CardButton from '../components/CardButton';
 import PoppinsText from '../components/PoppinsText';
 import { ProductService } from '../services/products';
+import { TruckIcon } from 'react-native-heroicons/outline';
+//import Carousel from '../components/Carousel';
 
 type Product = {
   id: string;
@@ -211,6 +213,55 @@ const ProductDetailScreen: React.FC = () => {
                 onSelect={() => console.log('p')}
               />
             </View>
+            <View style={styles.availableContainer}>
+              <View style={styles.availableCard}>
+                <View style={{ padding: 10, paddingHorizontal: 16 }}>
+                  <PoppinsText style={styles.sectionTitle}>
+                    Pharmatech Sambil Barquisimeto
+                  </PoppinsText>
+                  <PoppinsText
+                    style={{
+                      fontSize: FontSizes.b3.size,
+                      color: Colors.textLowContrast,
+                    }}
+                  >
+                    Av. Venezuela con Av. Bracamonte
+                  </PoppinsText>
+                </View>
+                <View
+                  style={{
+                    width: '100%',
+                    alignItems: 'flex-end',
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <PoppinsText
+                    style={{
+                      fontSize: FontSizes.c1.size,
+                      color: Colors.textLowContrast,
+                    }}
+                  >
+                    150 unidades{' '}
+                    <CheckCircleIcon size={15} color={Colors.semanticSuccess} />
+                  </PoppinsText>
+                  <PoppinsText
+                    style={{
+                      fontSize: FontSizes.c3.size,
+                      color: Colors.gray_500,
+                    }}
+                  >
+                    <TruckIcon size={15} color={Colors.gray_500} /> Envio en
+                    menos de 3h
+                  </PoppinsText>
+                </View>
+              </View>
+            </View>
+            <PoppinsText style={styles.sectionTitle}>
+              Productos relacionados
+            </PoppinsText>
+            <View style={styles.quantitySelector}>
+              {/* <Carousel cards={} /> */}
+            </View>
           </View>
         </ScrollView>
 
@@ -324,6 +375,19 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flex: 1,
     alignItems: 'center',
+  },
+  availableContainer: {
+    marginBottom: 8,
+    backgroundColor: Colors.textWhite,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: Colors.gray_100,
+  },
+  availableCard: {
+    marginBottom: 10,
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderColor: Colors.gray_100,
   },
   cardButtonContainer: {
     position: 'relative',
