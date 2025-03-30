@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { Colors, FontSizes } from '../styles/theme';
 import Dropdown from '../components/Dropdown';
 import CardButton from '../components/CardButton';
 import PoppinsText from '../components/PoppinsText';
+import { ProductService } from '../services/products';
 
 type Product = {
   id: string;
@@ -25,8 +26,6 @@ type Product = {
   description: string;
   rating: number;
   images: string[];
-  colors: string[];
-  sizes: string[];
 };
 
 const ProductDetailScreen: React.FC = () => {
@@ -57,16 +56,27 @@ const ProductDetailScreen: React.FC = () => {
     name: 'Acetaminofen 650mg Genven Caja x 10 tabletas',
     price: 129.99,
     description:
-      'Zapatillas de running con tecnología de amortiguación avanzada para mayor comodidad y rendimiento. Ideal para corredores que buscan soporte y ligereza.',
+      'Zapatillas de running con tecnología de amortiguación avanzada.',
     rating: 4.8,
     images: [
       'https://wallpapers.com/images/featured/imagenes-lindas-para-perfil-estetico-r521rmfa6ucixtw5.jpg',
       'https://r-charts.com/es/miscelanea/procesamiento-imagenes-magick_files/figure-html/color-fondo-imagen-r.png',
       'https://img.freepik.com/vector-gratis/cute-cool-boy-dabbing-pose-dibujos-animados-vector-icono-ilustracion-concepto-icono-moda-personas-aislado_138676-5680.jpg',
     ],
-    colors: ['#000000', '#FF0000', '#1E90FF'],
-    sizes: ['US 6', 'US 7', 'US 8', 'US 9', 'US 10'],
   };
+
+  useEffect(() => {
+    const obtainProducts = async () => {
+      const productsData = await ProductService.getProduct(1);
+
+      if (productsData.success) {
+        console.log(productsData);
+      } else {
+        console.log(productsData.error);
+      }
+    };
+    obtainProducts();
+  }, []);
 
   const handleRating = (rating: number) => {
     setUserRating(rating);
@@ -156,26 +166,46 @@ const ProductDetailScreen: React.FC = () => {
           {/* Información del producto */}
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
-              <Text style={styles.price}>Bs {product.price.toFixed(2)}</Text>
+              <PoppinsText style={styles.price}>
+                Bs {product.price.toFixed(2)}
+              </PoppinsText>
             </View>
-            <Text style={styles.sectionTitle}>Selecciona la presentación</Text>
+            <PoppinsText style={styles.sectionTitle}>
+              Selecciona la presentación
+            </PoppinsText>
             <View style={styles.quantitySelector}>
               <Dropdown
+                placeholder="Presentación..."
                 options={['A', 'B', 'c']}
                 borderColor={Colors.gray_100}
                 onSelect={() => console.log('p')}
               />
             </View>
-            <Text style={styles.sectionTitle}>Disponibilidad en sucursal</Text>
+            <PoppinsText
+              style={[
+                styles.sectionTitle,
+                { fontSize: FontSizes.s1.size, paddingTop: 15 },
+              ]}
+            >
+              Disponibilidad en sucursales
+            </PoppinsText>
             <View style={styles.quantitySelector}>
               <View style={styles.mapContainer}>
-                <PoppinsText>Mapa</PoppinsText>
+                <Image
+                  source={{
+                    uri: 'https://s3-alpha-sig.figma.com/img/e1d4/243c/e04ae0848573e5aec930a59844b09c9d?Expires=1743984000&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=FXKYpecuImVVY6u2fXMUb9gNHckqHMuudCo5P2d8nKpcX4UOIDviLX9axkku~lqIwrFxFrrwi-K1SfHW9Ptvp1YCeRMuw12APbec9X45pxjdXxZZ7B--elUAPERCWzJXmX3WSxW~YIYfqMtK6Ld~3w4JXKif0ajl9zkzojgF-ZxGsddzhXL3Th~tgIrzCy3Nmv5tNFClXiweA3weh~tnqR3xKhsqr0YmPWihV24a40aDrQw-Qk1ilxuDYwZJ3sChx8TPXPIeM3K0dsjGkENGbHmqe5qHt4UWce1PGpPs4TnaCl~DmwdgIYRZP3TywbDsNZbXR9OQdFTB2EToVFmFvQ__',
+                  }}
+                  style={{ width: 300, height: 300, borderRadius: 5 }}
+                  resizeMode="contain"
+                />
               </View>
             </View>
-
-            <Text style={styles.sectionTitle}>Selecciona el estado</Text>
+            <PoppinsText style={styles.sectionTitle}>
+              Selecciona el estado
+            </PoppinsText>
             <View style={styles.quantitySelector}>
               <Dropdown
+                placeholder="Estado..."
                 options={['Lara', 'Anzoategui', 'Caracas']}
                 borderColor={Colors.gray_100}
                 onSelect={() => console.log('p')}
@@ -184,9 +214,8 @@ const ProductDetailScreen: React.FC = () => {
           </View>
         </ScrollView>
 
-        {/* Botón de agregar al carrito */}
         <View style={styles.cardButtonContainer}>
-          <CardButton initialValue={0} />
+          <CardButton initialValue={0} size={10} />
         </View>
       </SafeAreaView>
     </View>
@@ -197,24 +226,13 @@ const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 20,
+    paddingTop: 15,
     flex: 1,
     backgroundColor: Colors.bgColor,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  backButton: {
-    padding: 8,
-  },
-  favoriteButton: {
-    padding: 8,
-  },
   productImage: {
     width: width,
-    height: 290,
+    height: 250,
   },
   imageIndicators: {
     flexDirection: 'row',
@@ -270,13 +288,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   sectionTitle: {
-    fontSize: FontSizes.s1.size,
+    fontSize: FontSizes.s2.size,
     color: Colors.textLowContrast,
     marginBottom: 3,
   },
   quantitySelector: {
     flexDirection: 'row',
-    marginBottom: 30,
+    marginBottom: 15,
   },
   footer: {
     flexDirection: 'row-reverse',
@@ -303,12 +321,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   mapContainer: {
-    backgroundColor: Colors.secondaryGray,
-    minHeight: width,
-    maxHeight: width,
-    width: width - 35,
-    borderRadius: 15,
     marginVertical: 8,
+    flex: 1,
+    alignItems: 'center',
   },
   cardButtonContainer: {
     position: 'relative',

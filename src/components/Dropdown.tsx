@@ -111,6 +111,7 @@ const styles = StyleSheet.create({
     padding: 10,
     paddingHorizontal: 15,
     fontSize: FontSizes.label.size,
+    backgroundColor: Colors.textWhite,
   },
   selectedText: {
     fontSize: 16,
@@ -119,9 +120,10 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     marginTop: 15,
-    borderColor: '#ccc',
+    borderColor: Colors.gray_100,
     borderRadius: 5,
     borderWidth: 1,
+    backgroundColor: Colors.textWhite,
   },
   option: {
     padding: 10,

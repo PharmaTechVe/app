@@ -57,6 +57,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" redirect={true} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="productDetail" options={{ headerShown: false }} />
         <Stack.Screen
           name="register"
           options={{ headerTitle: '', headerTransparent: true }}

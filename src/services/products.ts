@@ -25,4 +25,18 @@ export const ProductService = {
       };
     }
   },
+
+  getProduct: async (id: number): Promise<ProductPresentation> => {
+    try {
+      console.log(id);
+      const product = await api.country.findAll({ page: 1, limit: 10 });
+
+      return { success: true, data: product };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
 };
