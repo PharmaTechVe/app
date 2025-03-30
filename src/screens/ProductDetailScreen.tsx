@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   Image,
   ScrollView,
   StyleSheet,
@@ -11,7 +10,10 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
+import { useCart } from '../hooks/useCart';
+import { Product as CardProduct } from '../types/Product';
 import { CheckCircleIcon, StarIcon } from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
 import Dropdown from '../components/Dropdown';
@@ -19,22 +21,114 @@ import CardButton from '../components/CardButton';
 import PoppinsText from '../components/PoppinsText';
 import { ProductService } from '../services/products';
 import { TruckIcon } from 'react-native-heroicons/outline';
-//import Carousel from '../components/Carousel';
+import Carousel from '../components/Carousel';
 
 type Product = {
   id: string;
   name: string;
-  price: number;
   description: string;
   rating: number;
+  discount: number;
+  presentation: { id: string; description: string; price: number }[];
   images: string[];
 };
 
 const ProductDetailScreen: React.FC = () => {
-  const [userRating, setUserRating] = useState<number>(0); // 0 significa no calificado
-  const [hoverRating, setHoverRating] = useState<number>(0); // Para efecto hover
+  const { id } = useLocalSearchParams<{ id: string }>();
+
+  const [product, setProduct] = useState<Product>();
+  const [products, setProducts] = useState<CardProduct[]>([]);
+  const [userRating, setUserRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
   const imagesScrollRef = useRef<ScrollView>(null);
+
+  const { cartItems, addToCart, getItemQuantity, updateCartQuantity } =
+    useCart();
+
+  const getQuantity = (): number => {
+    return product?.id ? getItemQuantity(product.id) : 0;
+  };
+
+  const obtainProducts = async () => {
+    const productsData = await ProductService.getProducts(1, 20);
+
+    if (productsData.success) {
+      const pd = productsData.data.results;
+      const carouselProducts = pd.map((p) => ({
+        id: p.product.id,
+        imageUrl: p.product.images[0].url,
+        name: p.product.name,
+        category: p.product.categories[0].name,
+        originalPrice: p.price,
+        discount: 10,
+        finalPrice: p.price - p.price * 0.1,
+        quantity: getItemQuantity(p.product.id),
+        getQuantity: (quantity: number) => {
+          addToCart({
+            id: p.product.id,
+            name: p.product.name,
+            price: p.price,
+            quantity,
+            image: p.product.images[0].url,
+          });
+          updateCartQuantity(p.product.id, quantity);
+        },
+      }));
+
+      setProducts(carouselProducts);
+    } else {
+      console.log(productsData.error);
+    }
+  };
+
+  const changePresentation = (description: string) => {
+    const presentation = product?.presentation.find(
+      (p) => p.description === description,
+    );
+    if (presentation && 'price' in presentation)
+      setCurrentPrice(presentation.price);
+  };
+
+  useEffect(() => {
+    obtainProducts();
+  }, [cartItems]);
+
+  useEffect(() => {
+    const obtainProducts = async () => {
+      const productsData = await ProductService.getProduct(id);
+
+      if (productsData.success) {
+        setProduct({
+          id: productsData.data.id,
+          name: productsData.data.name,
+          description: productsData.data.description,
+          rating: productsData.data.rating,
+          images: productsData.data.images.map(
+            (image: { url: string }) => image.url,
+          ),
+          discount: 10,
+          presentation: productsData.data.presentation.map(
+            (presentation: {
+              id: string;
+              presentation: { description: string };
+              price: number;
+            }) => ({
+              id: presentation.id,
+              description: presentation.presentation.description,
+              price: presentation.price,
+            }),
+          ),
+        });
+
+        setCurrentPrice(productsData.data.presentation[0].price);
+      } else {
+        console.log(productsData.error);
+      }
+    };
+    obtainProducts();
+  }, []);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -52,41 +146,12 @@ const ProductDetailScreen: React.FC = () => {
     }
   };
 
-  // Datos de ejemplo del producto
-  const product: Product = {
-    id: '1',
-    name: 'Acetaminofen 650mg Genven Caja x 10 tabletas',
-    price: 129.99,
-    description:
-      'Zapatillas de running con tecnología de amortiguación avanzada.',
-    rating: 4.8,
-    images: [
-      'https://wallpapers.com/images/featured/imagenes-lindas-para-perfil-estetico-r521rmfa6ucixtw5.jpg',
-      'https://r-charts.com/es/miscelanea/procesamiento-imagenes-magick_files/figure-html/color-fondo-imagen-r.png',
-      'https://img.freepik.com/vector-gratis/cute-cool-boy-dabbing-pose-dibujos-animados-vector-icono-ilustracion-concepto-icono-moda-personas-aislado_138676-5680.jpg',
-    ],
-  };
-
-  useEffect(() => {
-    const obtainProducts = async () => {
-      const productsData = await ProductService.getProduct(1);
-
-      if (productsData.success) {
-        console.log(productsData);
-      } else {
-        console.log(productsData.error);
-      }
-    };
-    obtainProducts();
-  }, []);
-
   const handleRating = (rating: number) => {
     setUserRating(rating);
     // Aquí podrías enviar la calificación a tu API
     console.log('Calificación enviada:', rating);
   };
 
-  // Componente de estrellas de calificación
   const RatingStars = () => {
     return (
       <View style={styles.ratingStarsContainer}>
@@ -101,7 +166,9 @@ const ProductDetailScreen: React.FC = () => {
             <StarIcon
               size={32}
               color={
-                star <= (hoverRating || userRating) ? '#FFD700' : '#CCCCCC'
+                star <= (hoverRating || userRating)
+                  ? Colors.semanticWarning
+                  : Colors.gray_100
               }
               style={styles.starIcon}
             />
@@ -124,7 +191,7 @@ const ProductDetailScreen: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleScroll}
           >
-            {product.images.map((image, index) => (
+            {product?.images.map((image, index) => (
               <Image
                 key={index}
                 source={{ uri: image }}
@@ -136,7 +203,7 @@ const ProductDetailScreen: React.FC = () => {
 
           {/* Indicadores de imágenes */}
           <View style={styles.imageIndicators}>
-            {product.images.map((_, index) => (
+            {product?.images.map((_, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => scrollToImage(index)}
@@ -151,26 +218,27 @@ const ProductDetailScreen: React.FC = () => {
             ))}
           </View>
 
-          <PoppinsText style={styles.productName}>{product.name}</PoppinsText>
+          <PoppinsText style={styles.productName}>{product?.name}</PoppinsText>
 
           <RatingStars />
           {userRating > 0 && (
-            <Text style={styles.ratingFeedback}>
+            <PoppinsText style={styles.ratingFeedback}>
               ¡Gracias por tu calificación de {userRating} estrella
               {userRating !== 1 ? 's' : ''}!
-            </Text>
+            </PoppinsText>
           )}
 
           <PoppinsText style={styles.description}>
-            {product.description}
+            {product?.description}
           </PoppinsText>
 
           {/* Información del producto */}
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
-              <PoppinsText style={styles.price}>
-                Bs {product.price.toFixed(2)}
-              </PoppinsText>
+              <PoppinsText style={styles.price}>$ {currentPrice}</PoppinsText>
+              {product?.discount && (
+                <PoppinsText>{product.discount}</PoppinsText>
+              )}
             </View>
             <PoppinsText style={styles.sectionTitle}>
               Selecciona la presentación
@@ -178,9 +246,13 @@ const ProductDetailScreen: React.FC = () => {
             <View style={styles.quantitySelector}>
               <Dropdown
                 placeholder="Presentación..."
-                options={['A', 'B', 'c']}
+                options={
+                  product?.presentation.map(
+                    (p: { description: string }) => p.description,
+                  ) || []
+                }
                 borderColor={Colors.gray_100}
-                onSelect={() => console.log('p')}
+                onSelect={(e) => changePresentation(e)}
               />
             </View>
             <PoppinsText
@@ -255,18 +327,65 @@ const ProductDetailScreen: React.FC = () => {
                   </PoppinsText>
                 </View>
               </View>
+              <View style={styles.availableCard}>
+                <View style={{ padding: 10, paddingHorizontal: 16 }}>
+                  <PoppinsText style={styles.sectionTitle}>
+                    Pharmatech Sambil Barquisimeto
+                  </PoppinsText>
+                  <PoppinsText
+                    style={{
+                      fontSize: FontSizes.b3.size,
+                      color: Colors.textLowContrast,
+                    }}
+                  >
+                    Av. Venezuela con Av. Bracamonte
+                  </PoppinsText>
+                </View>
+                <View
+                  style={{
+                    width: '100%',
+                    alignItems: 'flex-end',
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  <PoppinsText
+                    style={{
+                      fontSize: FontSizes.c1.size,
+                      color: Colors.textLowContrast,
+                    }}
+                  >
+                    11 unidades{' '}
+                    <CheckCircleIcon size={15} color={Colors.semanticSuccess} />
+                  </PoppinsText>
+                  <PoppinsText
+                    style={{
+                      fontSize: FontSizes.c3.size,
+                      color: Colors.gray_500,
+                    }}
+                  >
+                    <TruckIcon size={15} color={Colors.gray_500} /> Envio en
+                    menos de 3h
+                  </PoppinsText>
+                </View>
+              </View>
             </View>
             <PoppinsText style={styles.sectionTitle}>
               Productos relacionados
             </PoppinsText>
             <View style={styles.quantitySelector}>
-              {/* <Carousel cards={} /> */}
+              <Carousel cards={products} />
             </View>
           </View>
         </ScrollView>
 
         <View style={styles.cardButtonContainer}>
-          <CardButton initialValue={0} size={10} />
+          <CardButton
+            size={10}
+            getValue={(quantity) => {
+              if (product?.id) updateCartQuantity(product.id, quantity);
+            }}
+            initialValue={getQuantity()}
+          />
         </View>
       </SafeAreaView>
     </View>
@@ -283,7 +402,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: width,
-    height: 250,
+    height: 200,
   },
   imageIndicators: {
     flexDirection: 'row',
@@ -316,15 +435,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.primary,
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ratingText: {
-    marginLeft: 4,
-    fontSize: 16,
-    color: '#666666',
-  },
   productName: {
     textAlign: 'center',
     fontSize: FontSizes.h5.size,
@@ -336,7 +446,7 @@ const styles = StyleSheet.create({
     color: Colors.textLowContrast,
     marginHorizontal: 20,
     marginBottom: 20,
-    lineHeight: 24,
+    lineHeight: 20,
   },
   sectionTitle: {
     fontSize: FontSizes.s2.size,
@@ -351,11 +461,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     padding: 16,
     backgroundColor: '',
-  },
-  addToCartText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
   },
   ratingStarsContainer: {
     flexDirection: 'row',

@@ -26,10 +26,11 @@ export const ProductService = {
     }
   },
 
-  getProduct: async (id: number): Promise<ProductPresentation> => {
+  getProduct: async (id: string): Promise<ProductPresentation> => {
     try {
-      console.log(id);
-      const product = await api.country.findAll({ page: 1, limit: 10 });
+      const product: ProductPresentation = await api.genericProduct.getById(id);
+      product.presentation = await api.productPresentation.getByProductId(id);
+      product.images = await api.productImage.getByProductId(id);
 
       return { success: true, data: product };
     } catch (error) {
