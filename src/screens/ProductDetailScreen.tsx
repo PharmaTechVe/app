@@ -22,6 +22,8 @@ import PoppinsText from '../components/PoppinsText';
 import { ProductService } from '../services/products';
 import { TruckIcon } from 'react-native-heroicons/outline';
 import Carousel from '../components/Carousel';
+import { StateService } from '../services/state';
+import { State } from '../types/api';
 
 type Product = {
   id: string;
@@ -36,6 +38,7 @@ type Product = {
 const ProductDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  const [states, setStates] = useState<State[]>([]);
   const [product, setProduct] = useState<Product>();
   const [products, setProducts] = useState<CardProduct[]>([]);
   const [userRating, setUserRating] = useState<number>(0);
@@ -98,6 +101,11 @@ const ProductDetailScreen: React.FC = () => {
   useEffect(() => {
     const obtainProducts = async () => {
       const productsData = await ProductService.getProduct(id);
+      const states = await StateService.getStates(1, 40);
+
+      if (states.success) {
+        setStates(states.data.results);
+      }
 
       if (productsData.success) {
         setProduct({
@@ -282,7 +290,7 @@ const ProductDetailScreen: React.FC = () => {
             <View style={styles.quantitySelector}>
               <Dropdown
                 placeholder="Estado..."
-                options={['Lara', 'Anzoategui', 'Caracas']}
+                options={states.map((state) => state.name)}
                 borderColor={Colors.gray_100}
                 onSelect={() => console.log('p')}
               />

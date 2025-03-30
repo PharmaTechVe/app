@@ -76,3 +76,7 @@ type UserList = BaseModel & {
   isValidated: boolean;
   profile: Profile;
 };
+
+type State = {
+  name: string;
+};
