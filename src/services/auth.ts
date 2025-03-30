@@ -18,6 +18,9 @@ export const AuthService = {
       });
 
       await SecureStore.setItemAsync('auth_token', accessToken);
+
+      await SecureStore.deleteItemAsync('user_data');
+
       return { success: true, data: undefined };
     } catch (error) {
       return {
@@ -66,6 +69,16 @@ export const AuthService = {
         birthDate: birthDate,
         gender: mappedGender,
       });
+
+      // Saving user data in SecureStore
+      await SecureStore.setItemAsync(
+        'user_data',
+        JSON.stringify({
+          firstName: response.firstName,
+          lastName: response.lastName,
+          email: response.email,
+        }),
+      );
 
       return { success: true, data: response };
     } catch (error) {
