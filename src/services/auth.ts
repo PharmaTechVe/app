@@ -144,4 +144,52 @@ export const AuthService = {
       };
     }
   },
+
+  validateOtp: async (otp: string): Promise<ServiceResponse> => {
+    try {
+      if (!/^\d{6}$/.test(otp)) {
+        return { success: false, error: 'El código debe tener 6 dígitos' };
+      }
+
+      const token = (await SecureStore.getItemAsync('auth_token')) || '';
+
+      if (!token) {
+        return {
+          success: false,
+          error: 'Token de autenticación no encontrado',
+        };
+      }
+
+      await api.auth.validateOtp(otp.trim(), token);
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
+  resendOtp: async (): Promise<ServiceResponse> => {
+    try {
+      const token = (await SecureStore.getItemAsync('auth_token')) || '';
+
+      if (!token) {
+        return {
+          success: false,
+          error: 'Token de autenticación no encontrado',
+        };
+      }
+
+      await api.auth.resendOtp(token);
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
 };

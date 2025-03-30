@@ -3,11 +3,13 @@ import { View, StyleSheet } from 'react-native';
 import PoppinsText from '../../components/PoppinsText';
 import Button from '../../components/Button';
 import { useRouter } from 'expo-router';
+import EmailVerificationModal from './EmailVerificationModal';
 import { Colors } from '../../styles/theme';
 import * as SecureStore from 'expo-secure-store';
 import Popup from '../../components/Popup';
 
 export default function CategoriesScreen() {
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const router = useRouter();
   const [showPopup, setShowPopup] = useState(false);
 
@@ -53,6 +55,17 @@ export default function CategoriesScreen() {
         variant="primary"
         mode="filled"
         size="large"
+      />
+      <Button
+        title="Verificar correo"
+        onPress={() => setIsModalVisible(true)}
+        variant="primary"
+        mode="filled"
+        size="large"
+      />
+      <EmailVerificationModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
       />
     </View>
   );
