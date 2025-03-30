@@ -23,14 +23,15 @@ export default function EmailVerificationModal({
   onClose: () => void;
 }) {
   const [resending, setResending] = useState(false);
-  const [countdown, setCountdown] = useState(0); // Countdown state
+  const [countdown, setCountdown] = useState(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const codeRefs = useRef<Array<TextInput>>([]);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showVerifySuccessAlert, setShowVerifySuccessAlert] = useState(false); // Alert for verifying code
+  const [showResendSuccessAlert, setShowResendSuccessAlert] = useState(false); // Alert for resending code
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -55,9 +56,12 @@ export default function EmailVerificationModal({
     setLoading(true);
     try {
       await AuthService.validateOtp(enteredCode);
-      setShowSuccessAlert(true);
+      setShowVerifySuccessAlert(true);
       setCode(['', '', '', '', '', '']);
       setTimeout(() => onClose(), 2000);
+    } catch {
+      setErrorMessage('Error al verificar el código. Inténtalo nuevamente.');
+      setShowErrorAlert(true);
     } finally {
       setLoading(false);
     }
@@ -71,14 +75,14 @@ export default function EmailVerificationModal({
     try {
       const response = await AuthService.resendOtp();
       if (response.success) {
-        setShowSuccessAlert(true);
-        setErrorMessage('Código reenviado exitosamente.');
+        setShowResendSuccessAlert(true);
       } else {
         setErrorMessage(response.error || 'Error al reenviar el código.');
         setShowErrorAlert(true);
       }
-    } finally {
-      setResending(false);
+    } catch {
+      setErrorMessage('Error inesperado al reenviar el código.');
+      setShowErrorAlert(true);
     }
   };
 
@@ -155,14 +159,24 @@ export default function EmailVerificationModal({
                 onClose={() => setShowErrorAlert(false)}
               />
             )}
-            {showSuccessAlert && (
+            {showVerifySuccessAlert && (
               <Alert
                 type="success"
                 title="Verificación exitosa"
                 message="Redirigiendo a la página principal..."
                 alertStyle="regular"
                 borderColor
-                onClose={() => setShowSuccessAlert(false)}
+                onClose={() => setShowVerifySuccessAlert(false)}
+              />
+            )}
+            {showResendSuccessAlert && (
+              <Alert
+                type="success"
+                title="Código reenviado"
+                message="El código fue reenviado exitosamente."
+                alertStyle="regular"
+                borderColor
+                onClose={() => setShowResendSuccessAlert(false)}
               />
             )}
           </View>
@@ -186,9 +200,9 @@ export default function EmailVerificationModal({
               <TouchableOpacity
                 style={[styles.resendCodeButton, resending && { opacity: 0.5 }]} // Adjust opacity when disabled
                 onPress={handleResendCode}
-                disabled={resending} // Disable the button
+                disabled={resending}
               >
-                <Text style={styles.resendCodeText}>on Reenviar código</Text>
+                <Text style={styles.resendCodeText}>Reenviar código</Text>
               </TouchableOpacity>
               {resending && (
                 <Text style={styles.countdownText}>
