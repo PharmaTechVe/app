@@ -5,9 +5,8 @@ import Button from '../../components/Button';
 import { useRouter } from 'expo-router';
 import EmailVerificationModal from './EmailVerificationModal';
 import { Colors } from '../../styles/theme';
-import * as SecureStore from 'expo-secure-store';
 import Popup from '../../components/Popup';
-import * as Updates from 'expo-updates';
+import { AuthService } from '../../services/auth';
 
 export default function CategoriesScreen() {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -16,13 +15,8 @@ export default function CategoriesScreen() {
 
   const handleLogout = async () => {
     try {
-      // Eliminating user data from SecureStore
-      await SecureStore.deleteItemAsync('user_data');
-      await SecureStore.deleteItemAsync('auth_token');
-      await SecureStore.deleteItemAsync('reset_token');
-
-      // Forcing app reload
-      await Updates.reloadAsync();
+      await AuthService.logout(); // Llama al método logout del servicio de autenticación
+      router.replace('/login'); // Redirige a la pantalla de inicio de sesión
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }

@@ -158,6 +158,19 @@ export const AuthService = {
     }
   },
 
+  logout: async (): Promise<void> => {
+    try {
+      // Eliminar el token del SecureStore
+      await SecureStore.deleteItemAsync('auth_token');
+
+      // Eliminar los interceptores configurados en el cliente HTTP
+      const interceptors = api.client['client'].interceptors.request;
+      interceptors.handlers = []; // Limpia todos los interceptores configurados
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  },
+
   validateOtp: async (otp: string): Promise<ServiceResponse> => {
     try {
       if (!/^\d{6}$/.test(otp)) {
