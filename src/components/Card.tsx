@@ -21,7 +21,7 @@ const ProductCard: React.FC<Product> = ({
   const { getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
   return (
-    <TouchableOpacity onPress={() => router.replace('/products/' + id)}>
+    <TouchableOpacity onPress={() => router.push('/products/' + id)}>
       <View style={styles.card}>
         <View
           style={{
