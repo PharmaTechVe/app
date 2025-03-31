@@ -137,7 +137,20 @@ const ProductDetailScreen: React.FC = () => {
             }),
           ),
         });
-        for (const p of product?.presentation || []) {
+
+        setCurrentPrice(productsData.data.presentation[0].price);
+      } else {
+        console.log(productsData.error);
+      }
+    };
+
+    obtainProducts();
+  }, []);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      if (product?.presentation) {
+        for (const p of product.presentation) {
           const inventoryData = await InventoryService.getPresentationInventory(
             1,
             20,
@@ -167,15 +180,10 @@ const ProductDetailScreen: React.FC = () => {
             console.error(inventoryData.error);
           }
         }
-
-        setCurrentPrice(productsData.data.presentation[0].price);
-      } else {
-        console.log(productsData.error);
       }
     };
-
-    obtainProducts();
-  }, []);
+    fetchInventory();
+  }, [product]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
