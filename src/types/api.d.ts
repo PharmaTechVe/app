@@ -80,3 +80,9 @@ type UserList = BaseModel & {
 type State = {
   name: string;
 };
+
+type Inventory = BaseModel & {
+  stockQuantity: number;
+  branch: BranchResponse;
+  productPresentation: ProductPresentation;
+};

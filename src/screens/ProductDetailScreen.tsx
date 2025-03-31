@@ -23,7 +23,8 @@ import { ProductService } from '../services/products';
 import { TruckIcon } from 'react-native-heroicons/outline';
 import Carousel from '../components/Carousel';
 import { StateService } from '../services/state';
-import { State } from '../types/api';
+import { Inventory, State } from '../types/api';
+import { InventoryService } from '../services/inventory';
 
 type Product = {
   id: string;
@@ -38,6 +39,7 @@ type Product = {
 const ProductDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
 
+  const [inventory, setInventory] = useState<Inventory[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [product, setProduct] = useState<Product>();
   const [products, setProducts] = useState<CardProduct[]>([]);
@@ -129,12 +131,43 @@ const ProductDetailScreen: React.FC = () => {
             }),
           ),
         });
+        for (const p of product?.presentation || []) {
+          const inventoryData = await InventoryService.getPresentationInventory(
+            1,
+            20,
+            p.id || '',
+          );
+          if (inventoryData.success) {
+            const newInventory = inventoryData.data.results.map((inv) => ({
+              id: inv.id,
+              branch: {
+                id: inv.branch.id,
+                name: inv.branch.name,
+                address: inv.branch.address,
+                stockQuantity: inv.stockQuantity,
+              },
+            }));
+
+            setInventory((prevInventory) => {
+              const updatedInventory = [...prevInventory];
+              newInventory.forEach((newItem) => {
+                if (!prevInventory.some((item) => item.id === newItem.id)) {
+                  updatedInventory.push(newItem);
+                }
+              });
+              return updatedInventory;
+            });
+          } else {
+            console.error(inventoryData.error);
+          }
+        }
 
         setCurrentPrice(productsData.data.presentation[0].price);
       } else {
         console.log(productsData.error);
       }
     };
+
     obtainProducts();
   }, []);
 
@@ -296,88 +329,53 @@ const ProductDetailScreen: React.FC = () => {
               />
             </View>
             <View style={styles.availableContainer}>
-              <View style={styles.availableCard}>
-                <View style={{ padding: 10, paddingHorizontal: 16 }}>
-                  <PoppinsText style={styles.sectionTitle}>
-                    Pharmatech Sambil Barquisimeto
-                  </PoppinsText>
-                  <PoppinsText
-                    style={{
-                      fontSize: FontSizes.b3.size,
-                      color: Colors.textLowContrast,
-                    }}
-                  >
-                    Av. Venezuela con Av. Bracamonte
-                  </PoppinsText>
-                </View>
-                <View
-                  style={{
-                    width: '100%',
-                    alignItems: 'flex-end',
-                    paddingHorizontal: 20,
-                  }}
-                >
-                  <PoppinsText
-                    style={{
-                      fontSize: FontSizes.c1.size,
-                      color: Colors.textLowContrast,
-                    }}
-                  >
-                    150 unidades{' '}
-                    <CheckCircleIcon size={15} color={Colors.semanticSuccess} />
-                  </PoppinsText>
-                  <PoppinsText
-                    style={{
-                      fontSize: FontSizes.c3.size,
-                      color: Colors.gray_500,
-                    }}
-                  >
-                    <TruckIcon size={15} color={Colors.gray_500} /> Envio en
-                    menos de 3h
-                  </PoppinsText>
-                </View>
-              </View>
-              <View style={styles.availableCard}>
-                <View style={{ padding: 10, paddingHorizontal: 16 }}>
-                  <PoppinsText style={styles.sectionTitle}>
-                    Pharmatech Sambil Barquisimeto
-                  </PoppinsText>
-                  <PoppinsText
-                    style={{
-                      fontSize: FontSizes.b3.size,
-                      color: Colors.textLowContrast,
-                    }}
-                  >
-                    Av. Venezuela con Av. Bracamonte
-                  </PoppinsText>
-                </View>
-                <View
-                  style={{
-                    width: '100%',
-                    alignItems: 'flex-end',
-                    paddingHorizontal: 20,
-                  }}
-                >
-                  <PoppinsText
-                    style={{
-                      fontSize: FontSizes.c1.size,
-                      color: Colors.textLowContrast,
-                    }}
-                  >
-                    11 unidades{' '}
-                    <CheckCircleIcon size={15} color={Colors.semanticSuccess} />
-                  </PoppinsText>
-                  <PoppinsText
-                    style={{
-                      fontSize: FontSizes.c3.size,
-                      color: Colors.gray_500,
-                    }}
-                  >
-                    <TruckIcon size={15} color={Colors.gray_500} /> Envio en
-                    menos de 3h
-                  </PoppinsText>
-                </View>
-              </View>
+              {inventory &&
+                inventory.map((inv) => (
+                  <View key={inv.id} style={styles.availableCard}>
+                    <View style={{ padding: 10, paddingHorizontal: 16 }}>
+                      <PoppinsText style={styles.sectionTitle}>
+                        {inv.branch.name}
+                      </PoppinsText>
+                      <PoppinsText
+                        style={{
+                          fontSize: FontSizes.b3.size,
+                          color: Colors.textLowContrast,
+                        }}
+                      >
+                        {inv.branch.address}
+                      </PoppinsText>
+                    </View>
+                    <View
+                      style={{
+                        width: '100%',
+                        alignItems: 'flex-end',
+                        paddingHorizontal: 20,
+                      }}
+                    >
+                      <PoppinsText
+                        style={{
+                          fontSize: FontSizes.c1.size,
+                          color: Colors.textLowContrast,
+                        }}
+                      >
+                        {inv.branch.stockQuantity} unidades{' '}
+                        <CheckCircleIcon
+                          size={15}
+                          color={Colors.semanticSuccess}
+                        />
+                      </PoppinsText>
+                      <PoppinsText
+                        style={{
+                          fontSize: FontSizes.c3.size,
+                          color: Colors.gray_500,
+                        }}
+                      >
+                        <TruckIcon size={15} color={Colors.gray_500} /> Envio en
+                        menos de 3h
+                      </PoppinsText>
+                    </View>
+                  </View>
+                ))}
             </View>
             <PoppinsText style={styles.sectionTitle}>
               Productos relacionados
