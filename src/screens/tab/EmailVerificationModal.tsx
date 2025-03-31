@@ -216,7 +216,7 @@ export default function EmailVerificationModal({
               />
             )}
           </View>
-          <Animated.View style={[styles.fadeAnim, { flex: 1 }]}>
+          <Animated.View style={[styles.fadeAnim, styles.flexContainer]}>
             <View style={styles.stepContainer}>
               <PoppinsText weight="medium" style={styles.stepTitle}>
                 Confirma tu correo electrónico
@@ -371,5 +371,8 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b2.size,
     textAlign: 'left',
     marginVertical: 8,
+  },
+  flexContainer: {
+    flex: 1,
   },
 });

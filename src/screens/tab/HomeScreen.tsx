@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router'; // Importamos useLocalSearchParams
 import * as SecureStore from 'expo-secure-store';
 import { useCart } from '../../hooks/useCart';
 import PoppinsText from '../../components/PoppinsText';
@@ -8,11 +8,15 @@ import { Colors, FontSizes } from '../../styles/theme';
 import Carousel from '../../components/Carousel';
 import { ProductService } from '../../services/products';
 import { Product } from '../../types/Product';
+import EmailVerificationModal from './EmailVerificationModal';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
   const router = useRouter();
+  const { showEmailVerification: showEmailVerificationParam } =
+    useLocalSearchParams();
   const { cartItems, addToCart, updateCartQuantity } = useCart();
 
   const getItemQuantity = (productId: number) => {
@@ -67,6 +71,15 @@ export default function HomeScreen() {
     obtainProducts();
   }, [cartItems]);
 
+  useEffect(() => {
+    if (showEmailVerificationParam) {
+      const timer = setTimeout(() => {
+        setShowEmailVerification(true);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showEmailVerificationParam]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -85,7 +98,7 @@ export default function HomeScreen() {
           <PoppinsText weight="medium" style={styles.title}>
             Ofertas especiales
           </PoppinsText>
-          <View style={{ flexDirection: 'row', width: '100%' }}>
+          <View style={styles.rowFullWidth}>
             <Carousel cards={products} />
           </View>
         </View>
@@ -93,11 +106,15 @@ export default function HomeScreen() {
           <PoppinsText weight="medium" style={styles.title}>
             Medicamentos
           </PoppinsText>
-          <View style={{ flexDirection: 'row', width: '100%' }}>
+          <View style={styles.rowFullWidth}>
             <Carousel cards={products} />
           </View>
         </View>
       </ScrollView>
+      <EmailVerificationModal
+        visible={showEmailVerification}
+        onClose={() => setShowEmailVerification(false)}
+      />
     </View>
   );
 }
@@ -123,5 +140,9 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.s1.size,
     color: Colors.textMain,
     paddingHorizontal: 15,
+  },
+  rowFullWidth: {
+    flexDirection: 'row',
+    width: '100%',
   },
 });

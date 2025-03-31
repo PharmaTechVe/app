@@ -12,6 +12,13 @@ export default function RegistrationSuccessScreen() {
   const [loading, setLoading] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
+  const handleRedirectToHome = () => {
+    router.replace({
+      pathname: '/(tabs)',
+      params: { showEmailVerification: 'true' },
+    });
+  };
+
   useEffect(() => {
     const autoLogin = async () => {
       if (email && password) {
@@ -55,7 +62,7 @@ export default function RegistrationSuccessScreen() {
           <Button
             title="Ir al Home"
             size="medium"
-            onPress={() => router.replace('/(tabs)')}
+            onPress={handleRedirectToHome}
             style={styles.button}
           />
         </>
