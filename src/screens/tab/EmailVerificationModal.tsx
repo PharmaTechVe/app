@@ -45,6 +45,27 @@ export default function EmailVerificationModal({
     return () => clearInterval(timer);
   }, [resending, countdown]);
 
+  useEffect(() => {
+    if (showErrorAlert) {
+      const timer = setTimeout(() => setShowErrorAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showErrorAlert]);
+
+  useEffect(() => {
+    if (showVerifySuccessAlert) {
+      const timer = setTimeout(() => setShowVerifySuccessAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showVerifySuccessAlert]);
+
+  useEffect(() => {
+    if (showResendSuccessAlert) {
+      const timer = setTimeout(() => setShowResendSuccessAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showResendSuccessAlert]);
+
   const handleVerifyCode = async () => {
     const enteredCode = code.join('');
     if (enteredCode.length !== 6) {
@@ -277,7 +298,7 @@ const styles = StyleSheet.create({
     width: 326,
     left: '50%',
     marginLeft: -162,
-    top: -120,
+    top: 20,
     right: 0,
     zIndex: 1000,
   },
