@@ -14,7 +14,11 @@ import { useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
 import { useCart } from '../hooks/useCart';
 import { Product as CardProduct } from '../types/Product';
-import { CheckCircleIcon, StarIcon } from 'react-native-heroicons/solid';
+import {
+  CheckCircleIcon,
+  StarIcon,
+  ChevronLeftIcon,
+} from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
 import Dropdown from '../components/Dropdown';
 import CardButton from '../components/CardButton';
@@ -24,6 +28,7 @@ import { TruckIcon } from 'react-native-heroicons/outline';
 import Carousel from '../components/Carousel';
 import { StateService } from '../services/state';
 import { State } from '../types/api';
+import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
 
 type Product = {
   id: string;
@@ -37,6 +42,7 @@ type Product = {
 
 const ProductDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation(); // Obtén la instancia de navegación
 
   const [states, setStates] = useState<State[]>([]);
   const [product, setProduct] = useState<Product>();
@@ -187,8 +193,30 @@ const ProductDetailScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
       <TopBar />
+      {/* Botón de volver */}
+      <TouchableOpacity
+        onPress={() => navigation.goBack()} // Navega a la pantalla anterior
+        style={{ padding: 10, flexDirection: 'row', alignItems: 'center' }}
+      >
+        <ChevronLeftIcon
+          width={16}
+          height={16}
+          color={Colors.primary}
+          style={{ marginRight: 2, marginLeft: 6 }} // Espacio entre el ícono y el texto
+        />
+        <PoppinsText
+          weight="medium"
+          style={{
+            fontSize: FontSizes.b1.size,
+            lineHeight: FontSizes.b1.lineHeight,
+            color: Colors.primary,
+          }}
+        >
+          Volver
+        </PoppinsText>
+      </TouchableOpacity>
       <SafeAreaView style={styles.container}>
         <ScrollView>
           {/* Carrusel de imágenes */}
