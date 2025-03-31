@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { useCart } from '../../hooks/useCart';
 import PoppinsText from '../../components/PoppinsText';
 import { Colors, FontSizes } from '../../styles/theme';
@@ -9,6 +11,8 @@ import { Product } from '../../types/Product';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const { cartItems, addToCart, updateCartQuantity } = useCart();
 
   const getItemQuantity = (productId: number) => {
@@ -49,8 +53,30 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    const checkAuthToken = async () => {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        router.replace('/login'); // Redirige al login si no hay token
+      } else {
+        console.log('JWT Token:', token); // Log del JWT
+        setLoading(false);
+      }
+    };
+
+    checkAuthToken();
     obtainProducts();
   }, [cartItems]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <PoppinsText weight="regular" style={styles.loadingText}>
+          Verificando autenticación...
+        </PoppinsText>
+      </View>
+    );
+  }
 
   return (
     <View testID="home-screen" style={styles.container}>
@@ -81,6 +107,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
     paddingLeft: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bgColor,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: FontSizes.b1.size,
+    color: Colors.textLowContrast,
   },
   title: {
     fontSize: FontSizes.s1.size,
