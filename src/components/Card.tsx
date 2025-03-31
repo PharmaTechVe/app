@@ -104,7 +104,6 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   imageContainer: {
-    backgroundColor: Colors.secondaryGray,
     minHeight: 118,
     maxHeight: 118,
     maxWidth: 114,
