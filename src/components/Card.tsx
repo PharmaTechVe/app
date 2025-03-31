@@ -92,6 +92,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 140,
     minWidth: 140,
+    minHeight: 270,
     maxHeight: 300,
   },
   tag: {
@@ -119,7 +120,8 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   description: {
-    marginHorizontal: 4,
+    marginHorizontal: 2,
+    justifyContent: 'center',
   },
   name: {
     fontSize: FontSizes.s2.size,
