@@ -32,18 +32,24 @@ export default function LoginScreen() {
     if (loading) return;
 
     setLoading(true);
-    const result = await AuthService.login(email, password);
-    setLoading(false);
-
-    if (result.success) {
-      setShowSuccessAlert(true);
-      setTimeout(() => {
-        setShowSuccessAlert(false);
-        router.replace('/(tabs)');
-      }, 2000);
-    } else {
+    try {
+      const result = await AuthService.login(email, password);
+      if (result.success) {
+        setShowSuccessAlert(true);
+        setTimeout(() => {
+          setShowSuccessAlert(false);
+          router.replace('/(tabs)');
+        }, 2000);
+      } else {
+        setShowErrorAlert(true);
+        setErrorMessage('Error al iniciar sesión, verifica tus credenciales.');
+      }
+    } catch (error) {
+      console.error(error);
       setShowErrorAlert(true);
-      setErrorMessage(result.error);
+      setErrorMessage('Error al iniciar sesión, verifica tus credenciales.');
+    } finally {
+      setLoading(false);
     }
   };
 

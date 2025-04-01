@@ -13,6 +13,11 @@ import PoppinsText from '../components/PoppinsText';
 import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
 import { AuthService } from '../services/auth';
+import {
+  validatePassword,
+  validatePasswordMatch,
+  validateRequiredFields,
+} from '../utils/validators';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -39,12 +44,14 @@ export default function ChangePasswordScreen() {
   const handleChangePassword = async () => {
     if (loading) return;
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (
+      !validateRequiredFields([currentPassword, newPassword, confirmPassword])
+    ) {
       showAlert('error', 'Error', 'Todos los campos son obligatorios.');
       return;
     }
 
-    if (newPassword.length < 8) {
+    if (!validatePassword(newPassword)) {
       showAlert(
         'error',
         'Error',
@@ -53,7 +60,7 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (!validatePasswordMatch(newPassword, confirmPassword)) {
       showAlert('error', 'Error', 'Las contraseñas no coinciden.');
       return;
     }
