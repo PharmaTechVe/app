@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { ServiceResponse, UserGender, SignUpResponse } from '../types/api.d';
 import { validateEmail } from '../utils/validators';
 import { extractErrorMessage } from '../utils/errorHandler';
+import { decodeJWT } from '../helper/jwtHelper';
 
 export const AuthService = {
   login: async (email: string, password: string): Promise<ServiceResponse> => {
@@ -216,6 +217,22 @@ export const AuthService = {
         success: false,
         error: extractErrorMessage(error),
       };
+    }
+  },
+
+  validateSession: async (): Promise<boolean> => {
+    try {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) return false;
+
+      const decoded = decodeJWT(token);
+      if (!decoded || !decoded.userId) return false;
+
+      console.log('Token válido. Usuario ID:', decoded.userId);
+      return true; // El token es válido
+    } catch (error) {
+      console.error('Error al validar la sesión:', error);
+      return false;
     }
   },
 };
