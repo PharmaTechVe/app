@@ -6,14 +6,28 @@ import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
 import { useRouter } from 'expo-router';
 import Avatar from './Avatar';
+import Popup from './Popup';
+import { AuthService } from '../services/auth';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
+    useState(false);
   const router = useRouter();
 
   const handleSearch = () => {
-    // Search logic
     console.log('Texto de búsqueda:', searchText);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout(); // Llama al método logout del servicio de autenticación
+      setIsLogoutConfirmationVisible(false); // Cierra el popup de confirmación
+      router.replace('/login'); // Redirige a la pantalla de inicio de sesión
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   return (
@@ -21,9 +35,11 @@ const TopBar = () => {
       {/* Upper section */}
       <View style={styles.topSection}>
         {/* Left user icon */}
-        <TouchableOpacity style={styles.iconButton}>
-          <Avatar />
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity onPress={() => setIsPopupVisible(true)}>
+            <Avatar />
+          </TouchableOpacity>
+        </View>
 
         {/* Logo */}
         <View style={styles.logoContainer}>
@@ -47,6 +63,46 @@ const TopBar = () => {
         onChangeText={setSearchText}
         onSearchPress={handleSearch}
         style={styles.searchInput}
+      />
+
+      {/* Popup for Avatar Options */}
+      <Popup
+        visible={isPopupVisible}
+        type="center"
+        headerText="Opciones"
+        bodyText="Selecciona una acción:"
+        primaryButton={{
+          text: 'Cambiar contraseña',
+          onPress: () => {
+            setIsPopupVisible(false);
+            router.push('/change-password');
+          },
+        }}
+        secondaryButton={{
+          text: 'Cerrar sesión',
+          onPress: () => {
+            setIsPopupVisible(false);
+            setIsLogoutConfirmationVisible(true); // Muestra el popup de confirmación
+          },
+        }}
+        onClose={() => setIsPopupVisible(false)}
+      />
+
+      {/* Popup for Logout Confirmation */}
+      <Popup
+        visible={isLogoutConfirmationVisible}
+        type="center"
+        headerText="Cerrar sesión"
+        bodyText="¿Estás seguro de que deseas cerrar sesión?"
+        primaryButton={{
+          text: 'Sí',
+          onPress: handleLogout,
+        }}
+        secondaryButton={{
+          text: 'No',
+          onPress: () => setIsLogoutConfirmationVisible(false),
+        }}
+        onClose={() => setIsLogoutConfirmationVisible(false)}
       />
     </View>
   );
