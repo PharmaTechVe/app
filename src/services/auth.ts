@@ -18,6 +18,9 @@ export const AuthService = {
       });
 
       await SecureStore.setItemAsync('auth_token', accessToken);
+
+      await SecureStore.deleteItemAsync('user_data');
+
       return { success: true, data: undefined };
     } catch (error) {
       return {
@@ -66,6 +69,16 @@ export const AuthService = {
         birthDate: birthDate,
         gender: mappedGender,
       });
+
+      // Saving user data in SecureStore
+      await SecureStore.setItemAsync(
+        'user_data',
+        JSON.stringify({
+          firstName: response.firstName,
+          lastName: response.lastName,
+          email: response.email,
+        }),
+      );
 
       return { success: true, data: response };
     } catch (error) {
@@ -129,6 +142,32 @@ export const AuthService = {
         success: false,
         error: extractErrorMessage(error),
       };
+    }
+  },
+
+  changePassword: async (newPassword: string): Promise<ServiceResponse> => {
+    try {
+      const token = (await SecureStore.getItemAsync('auth_token')) || '';
+      await api.auth.updatePassword(newPassword.trim(), token);
+      return { success: true, data: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
+  logout: async (): Promise<void> => {
+    try {
+      // Eliminar el token del SecureStore
+      await SecureStore.deleteItemAsync('auth_token');
+
+      // Eliminar los interceptores configurados en el cliente HTTP
+      const interceptors = api.client['client'].interceptors.request;
+      interceptors.handlers = []; // Limpia todos los interceptores configurados
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
     }
   },
 };

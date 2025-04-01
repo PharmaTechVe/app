@@ -4,8 +4,8 @@ import PoppinsText from '../../components/PoppinsText';
 import Button from '../../components/Button';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../styles/theme';
-import * as SecureStore from 'expo-secure-store';
 import Popup from '../../components/Popup';
+import { AuthService } from '../../services/auth';
 
 export default function CategoriesScreen() {
   const router = useRouter();
@@ -13,9 +13,8 @@ export default function CategoriesScreen() {
 
   const handleLogout = async () => {
     try {
-      await SecureStore.deleteItemAsync('auth_token');
-      setShowPopup(false);
-      router.replace('/login');
+      await AuthService.logout(); // Llama al método logout del servicio de autenticación
+      router.replace('/login'); // Redirige a la pantalla de inicio de sesión
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -44,6 +43,13 @@ export default function CategoriesScreen() {
         title="Cerrar sesión"
         onPress={() => setShowPopup(true)}
         variant="secondary"
+        mode="filled"
+        size="large"
+      />
+      <Button
+        title="Change password"
+        onPress={() => router.push('/change-password')}
+        variant="primary"
         mode="filled"
         size="large"
       />

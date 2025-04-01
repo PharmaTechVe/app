@@ -6,21 +6,33 @@ import { Colors, FontSizes } from '../styles/theme';
 
 interface CardButtonProps {
   getValue?: (count: number) => void;
+  initialValue: number;
+  syncQuantity?: (count: number) => void;
 }
 
-const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
-  const [count, setCount] = useState(0);
+const CardButton: React.FC<CardButtonProps> = ({
+  getValue,
+  initialValue = 0,
+  syncQuantity,
+}) => {
+  const [count, setCount] = useState(initialValue);
   const [showCounter, setShowCounter] = useState(false);
 
+  const toggleCounter = () => setShowCounter(count > 0);
+  useEffect(toggleCounter, [count]);
+
   useEffect(() => {
-    if (count == 0) setShowCounter(false);
-    else {
-      setShowCounter(true);
-    }
     if (getValue) {
       getValue(count);
     }
+    if (syncQuantity) {
+      syncQuantity(count);
+    }
   }, [count]);
+
+  useEffect(() => {
+    setCount(initialValue);
+  }, [initialValue]);
 
   const incrementCount = () => {
     setCount((prev) => prev + 1);
@@ -42,9 +54,7 @@ const CardButton: React.FC<CardButtonProps> = ({ getValue }) => {
       {!showCounter ? (
         <TouchableOpacity
           style={styles.mainButton}
-          onPress={() => {
-            showCounterIncrement();
-          }}
+          onPress={showCounterIncrement}
         >
           <PoppinsText style={styles.buttonText}>
             <PlusIcon size={20} color={Colors.textWhite} />
@@ -85,8 +95,8 @@ const styles = StyleSheet.create({
   },
   mainButton: {
     backgroundColor: Colors.primary,
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 4,
     borderRadius: 50,
     elevation: 3,
   },
@@ -96,7 +106,7 @@ const styles = StyleSheet.create({
     gap: 15,
     backgroundColor: Colors.primary,
     borderRadius: 50,
-    padding: 5,
+    padding: 4,
   },
   counterButton: {
     width: 20,

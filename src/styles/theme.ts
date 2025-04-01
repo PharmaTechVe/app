@@ -23,12 +23,16 @@ export const Colors = {
   iconWhite: '#FFFFFF',
   iconMainPrimary: '#1C2143',
   iconMainSecondary: '#A3E4D7',
+  iconCancel: '#FF5959',
 
   menuWhite: '#FFFFFF',
   menuPrimary: '#1C2143',
 
   toggleOn: '#1C2143',
   toggleOff: '#D7D5D3',
+
+  gray_100: '#E7E7E6',
+  gray_500: '#6E6D6C',
 };
 
 export const Fonts = {
@@ -63,8 +67,15 @@ export const FontSizes = {
   btnTiny: { size: 10, lineHeight: 12 },
 };
 
+export const ToggleSizes = {
+  small: { width: 40, height: 24, circleSize: 18, radius: 12 },
+  medium: { width: 55, height: 32, circleSize: 26, radius: 16 },
+  large: { width: 70, height: 40, circleSize: 34, radius: 20 },
+};
+
 export default {
   Colors,
   Fonts,
   FontSizes,
+  ToggleSizes,
 };

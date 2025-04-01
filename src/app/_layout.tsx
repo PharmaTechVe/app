@@ -13,7 +13,9 @@ import {
   Poppins_600SemiBold,
 } from '@expo-google-fonts/poppins';
 import { Stack } from 'expo-router/stack';
-import { ChevronLeftIcon } from 'react-native-heroicons/outline';
+import { ChevronLeftIcon, XMarkIcon } from 'react-native-heroicons/outline';
+import { Provider } from 'react-redux';
+import { store } from '../redux/store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,36 +41,53 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={({ navigation }) => ({
-        headerBackVisible: false,
-        headerLeft: () =>
-          navigation.canGoBack() ? (
-            <TouchableOpacity onPress={navigation.goBack}>
-              <ChevronLeftIcon width={24} height={24} color="#000" />
-            </TouchableOpacity>
-          ) : null,
-        headerBackTitleVisible: false,
-      })}
-    >
-      <Stack.Screen name="index" redirect={true} />
-
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="register"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-      <Stack.Screen
-        name="passwordRecovery"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-      <Stack.Screen
-        name="success"
-        options={{ headerTitle: '', headerTransparent: true }}
-      />
-    </Stack>
+    <Provider store={store}>
+      <Stack
+        screenOptions={({ navigation }) => ({
+          headerBackVisible: false,
+          headerLeft: () =>
+            navigation.canGoBack() ? (
+              <TouchableOpacity onPress={navigation.goBack}>
+                <ChevronLeftIcon width={24} height={24} color="#000" />
+              </TouchableOpacity>
+            ) : null,
+          headerBackTitleVisible: false,
+        })}
+      >
+        <Stack.Screen name="index" redirect={true} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="register"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="passwordRecovery"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="success"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="cart"
+          options={({ navigation }) => ({
+            headerTitle: '',
+            headerTransparent: true,
+            headerLeft: undefined,
+            headerRight: () => (
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <XMarkIcon width={24} height={24} color="#000" />
+              </TouchableOpacity>
+            ),
+          })}
+        />
+        <Stack.Screen
+          name="change-password"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+      </Stack>
+    </Provider>
   );
 }
 
