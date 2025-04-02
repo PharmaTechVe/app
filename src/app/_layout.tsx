@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ActivityIndicator,
@@ -16,6 +16,7 @@ import { Stack } from 'expo-router/stack';
 import { ChevronLeftIcon, XMarkIcon } from 'react-native-heroicons/outline';
 import { Provider } from 'react-redux';
 import { store } from '../redux/store';
+import { Colors } from '../styles/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,16 +27,23 @@ export default function RootLayout() {
     Poppins_600SemiBold,
   });
 
+  const [isAppReady, setIsAppReady] = useState(false);
+
   useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
+    const prepareApp = async () => {
+      if (fontsLoaded) {
+        SplashScreen.hideAsync();
+        setIsAppReady(true); // Marca la app como lista
+      }
+    };
+
+    prepareApp();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
+  if (!isAppReady) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
@@ -54,9 +62,12 @@ export default function RootLayout() {
           headerBackTitleVisible: false,
         })}
       >
-        <Stack.Screen name="index" redirect={true} />
+        {/* Cambia la pantalla inicial al SplashScreen personalizado */}
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="products/[id]" options={{ headerShown: false }} />
         <Stack.Screen
           name="register"
           options={{ headerTitle: '', headerTransparent: true }}

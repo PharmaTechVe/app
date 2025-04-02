@@ -25,4 +25,19 @@ export const ProductService = {
       };
     }
   },
+
+  getProduct: async (id: string): Promise<ProductPresentation> => {
+    try {
+      const product: ProductPresentation = await api.genericProduct.getById(id);
+      product.presentation = await api.productPresentation.getByProductId(id);
+      product.images = await api.productImage.getByProductId(id);
+
+      return { success: true, data: product };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
 };

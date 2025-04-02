@@ -16,6 +16,7 @@ interface DropdownProps {
   placeholder?: string;
   options: string[];
   border?: borderType;
+  borderColor?: string;
   onSelect: (option: string) => void;
 }
 
@@ -24,6 +25,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   placeholder,
   options,
   border = 'default',
+  borderColor = Colors.primary,
   onSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +53,10 @@ const Dropdown: React.FC<DropdownProps> = ({
       {label && <PoppinsText style={styles.label}>{label}</PoppinsText>}
       <TouchableOpacity
         onPress={() => setIsOpen(!isOpen)}
-        style={[{ borderWidth: getBorderWidth() }, styles.Selectbtn]}
+        style={[
+          { borderWidth: getBorderWidth(), borderColor: borderColor },
+          styles.Selectbtn,
+        ]}
       >
         <PoppinsText style={[styles.selectedText]}>
           {selectedOption || placeholder}
@@ -93,7 +98,6 @@ const Dropdown: React.FC<DropdownProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingHorizontal: 24,
     paddingVertical: 12,
   },
   label: {
@@ -103,11 +107,11 @@ const styles = StyleSheet.create({
   Selectbtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: Colors.primary,
     borderRadius: 10,
     padding: 10,
     paddingHorizontal: 15,
     fontSize: FontSizes.label.size,
+    backgroundColor: Colors.textWhite,
   },
   selectedText: {
     fontSize: 16,
@@ -116,9 +120,10 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     marginTop: 15,
-    borderColor: '#ccc',
+    borderColor: Colors.gray_100,
     borderRadius: 5,
     borderWidth: 1,
+    backgroundColor: Colors.textWhite,
   },
   option: {
     padding: 10,

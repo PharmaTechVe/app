@@ -184,7 +184,10 @@ export default function RegisterScreen() {
       if (result.success) {
         setShowSuccessAlert(true);
         setTimeout(() => {
-          router.replace('/success');
+          router.replace({
+            pathname: '/success',
+            params: { email, password },
+          });
         }, 2000);
       } else {
         setShowErrorAlert(true);
