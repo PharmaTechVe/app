@@ -4,6 +4,8 @@ import { ServiceResponse, UserGender, SignUpResponse } from '../types/api.d';
 import { validateEmail } from '../utils/validators';
 import { extractErrorMessage } from '../utils/errorHandler';
 import { decodeJWT } from '../helper/jwtHelper';
+import { store } from '../redux/store';
+import { setUserId } from '../redux/slices/cartSlice';
 
 export const AuthService = {
   login: async (email: string, password: string): Promise<ServiceResponse> => {
@@ -21,6 +23,9 @@ export const AuthService = {
       await SecureStore.setItemAsync('auth_token', accessToken);
 
       await SecureStore.deleteItemAsync('user_data');
+
+      const decoded = decodeJWT(accessToken);
+      store.dispatch(setUserId(decoded?.userId || null));
 
       return { success: true, data: undefined };
     } catch (error) {
@@ -167,6 +172,8 @@ export const AuthService = {
       // Eliminar los interceptores configurados en el cliente HTTP
       const interceptors = api.client['client'].interceptors.request;
       interceptors.handlers = []; // Limpia todos los interceptores configurados
+
+      store.dispatch(setUserId(null)); // Limpia el carrito al cerrar sesión
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }

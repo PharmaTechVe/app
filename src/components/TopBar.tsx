@@ -6,14 +6,37 @@ import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
 import { useRouter } from 'expo-router';
 import Avatar from './Avatar';
+import Popup from './Popup';
+import { AuthService } from '../services/auth';
+import Badge from './Badge';
+import { useCart } from '../hooks/useCart';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
+    useState(false);
   const router = useRouter();
+  const { cartItems } = useCart();
+
+  // Calculate the total quantity of items in the cart
+  const totalCartQuantity = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
 
   const handleSearch = () => {
-    // Search logic
     console.log('Texto de búsqueda:', searchText);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout(); // Llama al método logout del servicio de autenticación
+      setIsLogoutConfirmationVisible(false); // Cierra el popup de confirmación
+      router.replace('/login'); // Redirige a la pantalla de inicio de sesión
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   return (
@@ -21,16 +44,18 @@ const TopBar = () => {
       {/* Upper section */}
       <View style={styles.topSection}>
         {/* Left user icon */}
-        <TouchableOpacity style={styles.iconButton}>
-          <Avatar />
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity onPress={() => setIsPopupVisible(true)}>
+            <Avatar />
+          </TouchableOpacity>
+        </View>
 
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Logo width={118} height={48} />
         </View>
 
-        {/* Right cart icon */}
+        {/* Right cart icon with badge */}
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => {
@@ -38,6 +63,13 @@ const TopBar = () => {
           }}
         >
           <ShoppingCartIcon size={26} color={Colors.textMain} />
+          {totalCartQuantity > 0 && (
+            <View style={styles.badgeContainer}>
+              <Badge variant="filled" color="primary" size="tiny">
+                {totalCartQuantity}
+              </Badge>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -47,6 +79,46 @@ const TopBar = () => {
         onChangeText={setSearchText}
         onSearchPress={handleSearch}
         style={styles.searchInput}
+      />
+
+      {/* Popup for Avatar Options */}
+      <Popup
+        visible={isPopupVisible}
+        type="center"
+        headerText="Opciones"
+        bodyText="Selecciona una acción:"
+        primaryButton={{
+          text: 'Cambiar contraseña',
+          onPress: () => {
+            setIsPopupVisible(false);
+            router.push('/change-password');
+          },
+        }}
+        secondaryButton={{
+          text: 'Cerrar sesión',
+          onPress: () => {
+            setIsPopupVisible(false);
+            setIsLogoutConfirmationVisible(true); // Muestra el popup de confirmación
+          },
+        }}
+        onClose={() => setIsPopupVisible(false)}
+      />
+
+      {/* Popup for Logout Confirmation */}
+      <Popup
+        visible={isLogoutConfirmationVisible}
+        type="center"
+        headerText="Cerrar sesión"
+        bodyText="¿Estás seguro de que deseas cerrar sesión?"
+        primaryButton={{
+          text: 'Sí',
+          onPress: handleLogout,
+        }}
+        secondaryButton={{
+          text: 'No',
+          onPress: () => setIsLogoutConfirmationVisible(false),
+        }}
+        onClose={() => setIsLogoutConfirmationVisible(false)}
       />
     </View>
   );
@@ -72,6 +144,12 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     paddingRight: 4,
+    position: 'relative',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
   },
   searchInput: {
     backgroundColor: Colors.menuWhite,

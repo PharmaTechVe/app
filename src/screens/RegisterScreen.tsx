@@ -19,6 +19,13 @@ import DatePickerInput from '../components/DatePickerInput';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import { AuthService } from '../services/auth';
 import Alert from '../components/Alerts';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordMatch,
+  validateRequiredFields,
+  validateDateFormat,
+} from '../utils/validators';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -84,17 +91,22 @@ export default function RegisterScreen() {
   };
 
   const handleNext = () => {
-    if (password.length < 8) {
+    if (!validateEmail(email)) {
+      setShowErrorAlert(true);
+      setErrorMessage('El correo ingresado no es válido');
+      return;
+    }
+    if (!validatePassword(password)) {
       setShowErrorAlert(true);
       setErrorMessage('La contraseña debe tener al menos 8 caracteres');
       return;
     }
-    if (!email || !password || !confirmPassword) {
+    if (!validateRequiredFields([email, password, confirmPassword])) {
       setShowErrorAlert(true);
       setErrorMessage('Por favor completa todos los campos.');
       return;
     }
-    if (password !== confirmPassword) {
+    if (!validatePasswordMatch(password, confirmPassword)) {
       setShowErrorAlert(true);
       setErrorMessage('Las contraseñas no coinciden.');
       return;
@@ -103,17 +115,56 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
-    if (!firstName || !lastName || !cedula || !phoneNumber || !dateOfBirth) {
+    if (
+      !validateRequiredFields([
+        firstName,
+        lastName,
+        cedula,
+        phoneNumber,
+        dateOfBirth,
+      ])
+    ) {
       setShowErrorAlert(true);
       setErrorMessage('Por favor completa todos los campos');
       return;
     }
 
-    // Date validation
-    const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth);
-    if (!isValidDate) {
+    if (!validateDateFormat(dateOfBirth)) {
       setShowErrorAlert(true);
       setErrorMessage('Formato de fecha inválido (Use YYYY-MM-DD)');
+      return;
+    }
+
+    // Validar que el usuario tenga al menos 14 años
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    if (age < 14) {
+      setShowErrorAlert(true);
+      setErrorMessage('Debes tener al menos 14 años para registrarte');
+      return;
+    }
+
+    // Validar que la cédula no exceda los 10 caracteres
+    if (cedula.length > 10) {
+      setShowErrorAlert(true);
+      setErrorMessage('La cédula no puede exceder los 10 caracteres');
+      return;
+    }
+
+    // Validar que el teléfono tenga entre 8 y 15 caracteres
+    if (phoneNumber.length < 8 || phoneNumber.length > 15) {
+      setShowErrorAlert(true);
+      setErrorMessage(
+        'El número de teléfono debe tener entre 8 y 15 caracteres',
+      );
       return;
     }
 
@@ -140,12 +191,12 @@ export default function RegisterScreen() {
         }, 2000);
       } else {
         setShowErrorAlert(true);
-        setErrorMessage(result.error);
+        setErrorMessage('Error al crear la cuenta, intenta de nuevo');
       }
     } catch (error) {
       console.error(error);
       setShowErrorAlert(true);
-      setErrorMessage('Error al crear la cuenta');
+      setErrorMessage('Error al crear la cuenta, intenta de nuevo');
     } finally {
       setLoading(false);
     }

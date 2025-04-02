@@ -1,18 +1,18 @@
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   StyleProp,
   ViewStyle,
   TextStyle,
 } from 'react-native';
 import { Colors } from '../styles/theme';
+import PoppinsText from './PoppinsText';
 
 export interface BadgeProps {
   variant: 'filled' | 'outlined' | 'text';
   color: 'primary' | 'warning' | 'danger' | 'success' | 'info';
-  size: 'small' | 'medium' | 'large';
+  size: 'tiny' | 'small' | 'medium' | 'large';
   borderRadius?: 'rounded' | 'square';
   children: React.ReactNode;
 }
@@ -25,9 +25,10 @@ const Badge: React.FC<BadgeProps> = ({
   children,
 }) => {
   const sizeStyles: Record<string, StyleProp<ViewStyle | TextStyle>> = {
-    small: { paddingHorizontal: 8, paddingVertical: 4, fontSize: 12 },
-    medium: { paddingHorizontal: 12, paddingVertical: 6, fontSize: 14 },
-    large: { paddingHorizontal: 16, paddingVertical: 8, fontSize: 16 },
+    tiny: { width: 17, height: 17, fontSize: 10 }, // Fixed width and height for a perfect circle
+    small: { width: 24, height: 24, fontSize: 12 },
+    medium: { width: 32, height: 32, fontSize: 14 },
+    large: { width: 40, height: 40, fontSize: 16 },
   };
 
   const borderRadiusStyles: Record<string, StyleProp<ViewStyle>> = {
@@ -97,7 +98,7 @@ const Badge: React.FC<BadgeProps> = ({
 
   return (
     <View style={[styles.base, sizeStyle, borderRadiusStyle, variantStyle]}>
-      <Text
+      <PoppinsText
         style={[
           styles.text,
           variant === 'outlined' || variant === 'text'
@@ -107,9 +108,11 @@ const Badge: React.FC<BadgeProps> = ({
               }
             : { color: Colors.textWhite },
         ]}
+        numberOfLines={1} // Ensures the text does not wrap
+        ellipsizeMode="clip" // Prevents truncation
       >
         {children}
-      </Text>
+      </PoppinsText>
     </View>
   );
 };
@@ -120,7 +123,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    fontFamily: 'Poppins',
+    textAlign: 'center',
+    marginTop: 1.5,
+    lineHeight: 16, // Matches the height for vertical centering
+    fontSize: 10, // Matches the font size for the "tiny" size
   },
 });
 

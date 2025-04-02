@@ -365,7 +365,7 @@ const ProductDetailScreen: React.FC = () => {
               />
             </View>
             <View style={styles.availableContainer}>
-              {inventory &&
+              {inventory && inventory.length > 0 ? (
                 inventory.map((inv) => (
                   <View key={inv.id} style={styles.availableCard}>
                     <View style={{ padding: 10, paddingHorizontal: 16 }}>
@@ -411,7 +411,18 @@ const ProductDetailScreen: React.FC = () => {
                       </PoppinsText>
                     </View>
                   </View>
-                ))}
+                ))
+              ) : (
+                <PoppinsText
+                  style={{
+                    textAlign: 'center',
+                    color: Colors.textLowContrast,
+                    marginVertical: 10,
+                  }}
+                >
+                  No hay productos disponibles
+                </PoppinsText>
+              )}
             </View>
             <PoppinsText style={styles.sectionTitle}>
               Productos relacionados
