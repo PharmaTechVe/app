@@ -5,27 +5,27 @@
     "scheme": "pharmatech",
     "version": "0.2.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/icon.png",
+    "icon": "./src/assets/images/PharmaTech-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "src/assets/images/splash-icon.png",
+      "image": "src/assets/images/PharmaTech-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1C2143"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./src/assets/images/PharmaTech-icon.png",
+        "backgroundColor": "#1C2143"
       },
       "package": "com.pharmatech.pharmatech"
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./src/assets/images/icon.png"
+      "favicon": "./src/assets/images/PharmaTech-icon.png"
     },
     "extra": {
       "router": {

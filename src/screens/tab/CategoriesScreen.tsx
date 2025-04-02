@@ -38,7 +38,7 @@ export default function CategoriesScreen() {
         }}
         onClose={() => setShowPopup(false)}
       />
-      <PoppinsText>Pantalla Categorías</PoppinsText>
+      <PoppinsText>Pantalla Categorías some change</PoppinsText>
       <Button
         title="Cerrar sesión"
         onPress={() => setShowPopup(true)}
