@@ -9,6 +9,7 @@ import Carousel from '../../components/Carousel';
 import { ProductService } from '../../services/products';
 import { Product } from '../../types/Product';
 import EmailVerificationModal from './EmailVerificationModal';
+import { decodeJWT } from '../../helper/jwtHelper';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,7 +18,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { showEmailVerification: showEmailVerificationParam } =
     useLocalSearchParams();
-  const { cartItems, addToCart, updateCartQuantity } = useCart();
+  const { cartItems, addToCart, updateCartQuantity, setCartUserId } = useCart();
 
   const getItemQuantity = (productId: number) => {
     const cartItem = cartItems.find((item) => item.id === productId.toString());
@@ -63,6 +64,10 @@ export default function HomeScreen() {
         router.replace('/login'); // Redirige al login si no hay token
       } else {
         console.log('JWT Token:', token); // Log del JWT
+        const decoded = decodeJWT(token);
+        if (decoded?.userId) {
+          setCartUserId(decoded.userId); // Set the userId in the cart
+        }
         setLoading(false);
       }
     };

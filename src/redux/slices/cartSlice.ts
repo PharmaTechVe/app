@@ -9,11 +9,13 @@ export type CartItem = {
 };
 
 type CartState = {
+  userId: string | null;
   items: CartItem[];
   total: number;
 };
 
 const initialState: CartState = {
+  userId: null,
   items: [],
   total: 0,
 };
@@ -25,6 +27,13 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
+    setUserId: (state, action: PayloadAction<string | null>) => {
+      state.userId = action.payload;
+      if (!action.payload) {
+        state.items = [];
+        state.total = 0;
+      }
+    },
     addItem: (state, action: PayloadAction<CartItem>) => {
       const existingItem = state.items.find(
         (item) => item.id === action.payload.id,
@@ -57,6 +66,6 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addItem, removeItem, updateQuantity, clearCart } =
+export const { setUserId, addItem, removeItem, updateQuantity, clearCart } =
   cartSlice.actions;
 export default cartSlice.reducer;

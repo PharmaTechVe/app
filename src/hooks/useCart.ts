@@ -5,12 +5,14 @@ import {
   removeItem,
   updateQuantity,
   CartItem,
+  setUserId,
 } from '../redux/slices/cartSlice';
 
 export const useCart = () => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const total = useSelector((state: RootState) => state.cart.total);
+  const userId = useSelector((state: RootState) => state.cart.userId);
 
   const addToCart = (item: CartItem) => {
     dispatch(addItem(item));
@@ -29,12 +31,18 @@ export const useCart = () => {
     return item ? item.quantity : 0;
   };
 
+  const setCartUserId = (id: string | null) => {
+    dispatch(setUserId(id));
+  };
+
   return {
     cartItems,
     total,
+    userId,
     addToCart,
     removeFromCart,
     updateCartQuantity,
     getItemQuantity,
+    setCartUserId,
   };
 };
