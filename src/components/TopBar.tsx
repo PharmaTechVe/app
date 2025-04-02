@@ -8,6 +8,8 @@ import { useRouter } from 'expo-router';
 import Avatar from './Avatar';
 import Popup from './Popup';
 import { AuthService } from '../services/auth';
+import Badge from './Badge';
+import { useCart } from '../hooks/useCart';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
@@ -15,6 +17,13 @@ const TopBar = () => {
   const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
     useState(false);
   const router = useRouter();
+  const { cartItems } = useCart();
+
+  // Calculate the total quantity of items in the cart
+  const totalCartQuantity = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
 
   const handleSearch = () => {
     console.log('Texto de búsqueda:', searchText);
@@ -46,7 +55,7 @@ const TopBar = () => {
           <Logo width={118} height={48} />
         </View>
 
-        {/* Right cart icon */}
+        {/* Right cart icon with badge */}
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => {
@@ -54,6 +63,13 @@ const TopBar = () => {
           }}
         >
           <ShoppingCartIcon size={26} color={Colors.textMain} />
+          {totalCartQuantity > 0 && (
+            <View style={styles.badgeContainer}>
+              <Badge variant="filled" color="primary" size="tiny">
+                {totalCartQuantity}
+              </Badge>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -128,6 +144,12 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     paddingRight: 4,
+    position: 'relative',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
   },
   searchInput: {
     backgroundColor: Colors.menuWhite,
