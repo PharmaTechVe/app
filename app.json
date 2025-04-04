@@ -21,7 +21,12 @@
         "foregroundImage": "./src/assets/images/PharmaTech-icon.png",
         "backgroundColor": "#1C2143"
       },
-      "package": "com.pharmatech.pharmatech"
+      "package": "com.pharmatech.pharmatech",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDo6tMJUrZsd-LsNNnUDJ95ZGZfUrYMmgU"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
