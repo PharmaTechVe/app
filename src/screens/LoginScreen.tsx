@@ -69,10 +69,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-        >
+        <View style={{ flex: 1 }}>
           {/* Alerts */}
           <View style={styles.alertContainer}>
             {showErrorAlert && (
@@ -94,80 +91,86 @@ export default function LoginScreen() {
               />
             )}
           </View>
-          {/* Logo */}
-          <Logo style={styles.logo} />
-          {/* Titles */}
-          <PoppinsText weight="medium" style={styles.title}>
-            Bienvenido
-          </PoppinsText>
-          <PoppinsText weight="regular" style={styles.subtitle}>
-            Por favor introduce tus datos para iniciar sesión
-          </PoppinsText>
-          {/* Inputs */}
-          <View style={styles.inputsContainer}>
-            <Input
-              label="Correo electrónico"
-              placeholder="Ingresa tu correo electrónico"
-              value={email}
-              fieldType="email"
-              getValue={setEmail}
-              backgroundColor={Colors.menuWhite}
-              errorText="El correo ingresado no es válido"
-            />
-            <Input
-              label="Contraseña"
-              placeholder="Ingresa tu contraseña"
-              value={password}
-              fieldType="password"
-              getValue={setPassword}
-              backgroundColor={Colors.menuWhite}
-              errorText="La contraseña debe tener al menos 8 caracteres"
-            />
-          </View>
-          {/* Forgot my password */}
-          <TouchableOpacity
-            onPress={handleRecoverPassword}
-            style={styles.linkContainer}
+          {/* Scrollable content */}
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
           >
-            <PoppinsText weight="regular" style={styles.linkText}>
-              ¿Olvidaste tu contraseña?
+            {/* Logo */}
+            <Logo style={styles.logo} />
+            {/* Titles */}
+            <PoppinsText weight="medium" style={styles.title}>
+              Bienvenido
             </PoppinsText>
-          </TouchableOpacity>
-          {/* Login button */}
-          <Button
-            title="Iniciar sesión"
-            onPress={handleLogin}
-            style={styles.loginButton}
-            size="medium"
-            loading={loading}
-          />
-          {/* Google button */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-          >
-            <Image
-              source={GoogleLogo}
-              style={styles.googleIcon}
-              resizeMode="contain"
-            />
-            <PoppinsText weight="medium" style={styles.googleButtonText}>
-              Iniciar sesión con Google
+            <PoppinsText weight="regular" style={styles.subtitle}>
+              Por favor introduce tus datos para iniciar sesión
             </PoppinsText>
-          </TouchableOpacity>
-          {/* Register link */}
-          <TouchableOpacity
-            onPress={handleRegister}
-            style={styles.registerContainer}
-          >
-            <PoppinsText weight="regular" style={styles.registerText}>
-              ¿No tienes cuenta?{' '}
-              <PoppinsText weight="regular" style={styles.registerLink}>
-                Regístrate
+            {/* Inputs */}
+            <View style={styles.inputsContainer}>
+              <Input
+                label="Correo electrónico"
+                placeholder="Ingresa tu correo electrónico"
+                value={email}
+                fieldType="email"
+                getValue={setEmail}
+                backgroundColor={Colors.menuWhite}
+                errorText="El correo ingresado no es válido"
+              />
+              <Input
+                label="Contraseña"
+                placeholder="Ingresa tu contraseña"
+                value={password}
+                fieldType="password"
+                getValue={setPassword}
+                backgroundColor={Colors.menuWhite}
+                errorText="La contraseña debe tener al menos 8 caracteres"
+              />
+            </View>
+            {/* Forgot my password */}
+            <TouchableOpacity
+              onPress={handleRecoverPassword}
+              style={styles.linkContainer}
+            >
+              <PoppinsText weight="regular" style={styles.linkText}>
+                ¿Olvidaste tu contraseña?
               </PoppinsText>
-            </PoppinsText>
-          </TouchableOpacity>
-        </ScrollView>
+            </TouchableOpacity>
+            {/* Login button */}
+            <Button
+              title="Iniciar sesión"
+              onPress={handleLogin}
+              style={styles.loginButton}
+              size="medium"
+              loading={loading}
+            />
+            {/* Google button */}
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={handleGoogleLogin}
+            >
+              <Image
+                source={GoogleLogo}
+                style={styles.googleIcon}
+                resizeMode="contain"
+              />
+              <PoppinsText weight="medium" style={styles.googleButtonText}>
+                Iniciar sesión con Google
+              </PoppinsText>
+            </TouchableOpacity>
+            {/* Register link */}
+            <TouchableOpacity
+              onPress={handleRegister}
+              style={styles.registerContainer}
+            >
+              <PoppinsText weight="regular" style={styles.registerText}>
+                ¿No tienes cuenta?{' '}
+                <PoppinsText weight="regular" style={styles.registerLink}>
+                  Regístrate
+                </PoppinsText>
+              </PoppinsText>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -184,10 +187,11 @@ const styles = StyleSheet.create({
   },
   alertContainer: {
     position: 'absolute',
+    width: 326,
+    left: '50%',
+    marginLeft: -163,
     top: 20,
-    width: '100%',
     zIndex: 1000,
-    alignItems: 'center',
   },
   logo: {
     width: 192,
