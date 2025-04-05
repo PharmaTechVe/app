@@ -27,6 +27,11 @@ export const AuthService = {
       // Guardar el token en SecureStore
       await SecureStore.setItemAsync('auth_token', accessToken);
 
+      await SecureStore.deleteItemAsync('user_data');
+
+      const decoded = decodeJWT(accessToken);
+      store.dispatch(setUserId(decoded?.userId || null));
+
       // Obtener el perfil del usuario para verificar el estado de isValidated
       const profileResponse = await UserService.getProfile();
       if (!profileResponse.success) {
@@ -145,10 +150,15 @@ export const AuthService = {
 
       return { success: true, data: accessToken };
     } catch (error) {
-      return {
-        success: false,
-        error: extractErrorMessage(error),
-      };
+      // Manejar errores específicos del backend
+      const errorMessage = extractErrorMessage(error);
+      if (errorMessage.includes('invalid')) {
+        return {
+          success: false,
+          error: 'El código ingresado es incorrecto o ha expirado.',
+        };
+      }
+      return { success: false, error: errorMessage };
     }
   },
 
@@ -161,8 +171,15 @@ export const AuthService = {
         return { success: false, error: 'Las contraseñas no coinciden' };
       }
 
-      const token = (await SecureStore.getItemAsync('reset_token')) || '';
+      const token = (await SecureStore.getItemAsync('reset_token')) || ''; // Obtener el token
+      if (!token) {
+        return { success: false, error: 'Token de recuperación no encontrado' };
+      }
+
       await api.auth.updatePassword(newPassword.trim(), token);
+
+      // Logout silencioso para limpiar la sesión
+      await AuthService.logout();
 
       return { success: true, data: undefined };
     } catch (error) {

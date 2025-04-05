@@ -15,6 +15,12 @@ export const api = new PharmaTech(
 // Configurar un interceptor para manejar dinámicamente el JWT
 api.client['client'].interceptors.request.use(
   async (config: AxiosRequestConfig) => {
+    // Si ya se pasa un jwt explícitamente, no agregar el auth_token
+    if (config.headers?.Authorization) {
+      return config;
+    }
+
+    // Obtener el auth_token de SecureStore
     const token = await SecureStore.getItemAsync('auth_token');
     if (token) {
       config.headers = {
