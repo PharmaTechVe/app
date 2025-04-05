@@ -80,7 +80,7 @@ export default function HomeScreen() {
     if (showEmailVerificationParam) {
       const timer = setTimeout(() => {
         setShowEmailVerification(true);
-      }, 3000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [showEmailVerificationParam]);

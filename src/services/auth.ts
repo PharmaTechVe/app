@@ -6,9 +6,13 @@ import { extractErrorMessage } from '../utils/errorHandler';
 import { decodeJWT } from '../helper/jwtHelper';
 import { store } from '../redux/store';
 import { setUserId } from '../redux/slices/cartSlice';
+import { UserService } from './user';
 
 export const AuthService = {
-  login: async (email: string, password: string): Promise<ServiceResponse> => {
+  login: async (
+    email: string,
+    password: string,
+  ): Promise<ServiceResponse<{ isValidated: boolean }>> => {
     try {
       if (!validateEmail(email)) {
         return { success: false, error: 'Correo electrónico inválido' };
@@ -20,14 +24,32 @@ export const AuthService = {
         password: password.trim(),
       });
 
+      // Guardar el token en SecureStore
       await SecureStore.setItemAsync('auth_token', accessToken);
 
-      await SecureStore.deleteItemAsync('user_data');
+      // Obtener el perfil del usuario para verificar el estado de isValidated
+      const profileResponse = await UserService.getProfile();
+      if (!profileResponse.success) {
+        return {
+          success: false,
+          error: 'Error al obtener el perfil del usuario',
+        };
+      }
 
-      const decoded = decodeJWT(accessToken);
-      store.dispatch(setUserId(decoded?.userId || null));
+      const isValidated = profileResponse.data?.isValidated || false;
 
-      return { success: true, data: undefined };
+      // Si el usuario no está validado, enviar automáticamente el OTP
+      if (!isValidated) {
+        const resendResponse = await AuthService.resendOtp();
+        if (!resendResponse.success) {
+          return {
+            success: false,
+            error: 'Error al enviar el OTP. Inténtalo nuevamente.',
+          };
+        }
+      }
+
+      return { success: true, data: { isValidated } };
     } catch (error) {
       return {
         success: false,

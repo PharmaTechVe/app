@@ -35,14 +35,24 @@ export default function LoginScreen() {
     try {
       const result = await AuthService.login(email, password);
       if (result.success) {
-        setShowSuccessAlert(true);
-        setTimeout(() => {
-          setShowSuccessAlert(false);
-          router.replace('/(tabs)');
-        }, 2000);
+        const { isValidated } = result.data!;
+        if (!isValidated) {
+          // Redirigir al home con el modal de verificación de correo
+          router.replace({
+            pathname: '/(tabs)',
+            params: { showEmailVerification: 'true' },
+          });
+        } else {
+          // Redirigir al home si el correo ya está validado
+          setShowSuccessAlert(true);
+          setTimeout(() => {
+            setShowSuccessAlert(false);
+            router.replace('/(tabs)');
+          }, 2000);
+        }
       } else {
         setShowErrorAlert(true);
-        setErrorMessage('Error al iniciar sesión, verifica tus credenciales.');
+        setErrorMessage(result.error || 'Error al iniciar sesión.');
       }
     } catch (error) {
       console.error(error);
