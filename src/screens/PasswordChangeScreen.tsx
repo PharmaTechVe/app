@@ -168,7 +168,7 @@ export default function ChangePasswordScreen() {
                 ¿Olvidaste tu contraseña?{' '}
               </PoppinsText>
               <TouchableOpacity
-                onPress={() => router.push('/passwordRecovery')}
+                onPress={() => router.push('/loggedInPasswordRecovery')}
               >
                 <PoppinsText weight="regular" style={styles.forgotPasswordLink}>
                   Ingresa aquí

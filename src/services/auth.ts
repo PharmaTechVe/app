@@ -171,12 +171,23 @@ export const AuthService = {
         return { success: false, error: 'Las contraseñas no coinciden' };
       }
 
-      const token = (await SecureStore.getItemAsync('reset_token')) || ''; // Obtener el token
+      const token = (await SecureStore.getItemAsync('reset_token')) || ''; // Obtener el reset_token
       if (!token) {
         return { success: false, error: 'Token de recuperación no encontrado' };
       }
 
-      await api.auth.updatePassword(newPassword.trim(), token);
+      // Realizar la solicitud sobrescribiendo el header Authorization
+      await api.client['client'].patch(
+        '/auth/password',
+        {
+          password: newPassword.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Sobrescribir el header con el reset_token
+          },
+        },
+      );
 
       // Logout silencioso para limpiar la sesión
       await AuthService.logout();
@@ -207,6 +218,7 @@ export const AuthService = {
     try {
       // Eliminar el token del SecureStore
       await SecureStore.deleteItemAsync('auth_token');
+      await SecureStore.deleteItemAsync('reset_token');
 
       // Eliminar los interceptores configurados en el cliente HTTP
       const interceptors = api.client['client'].interceptors.request;

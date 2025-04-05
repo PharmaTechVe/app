@@ -36,20 +36,24 @@ export default function LoginScreen() {
       const result = await AuthService.login(email, password);
       if (result.success) {
         const { isValidated } = result.data!;
-        if (!isValidated) {
-          // Redirigir al home con el modal de verificación de correo
-          router.replace({
-            pathname: '/(tabs)',
-            params: { showEmailVerification: 'true' },
-          });
-        } else {
-          // Redirigir al home si el correo ya está validado
-          setShowSuccessAlert(true);
-          setTimeout(() => {
-            setShowSuccessAlert(false);
+
+        // Mostrar alerta de éxito para todos los usuarios
+        setShowSuccessAlert(true);
+
+        setTimeout(() => {
+          setShowSuccessAlert(false);
+
+          if (!isValidated) {
+            // Redirigir al home con el modal de verificación de correo
+            router.replace({
+              pathname: '/(tabs)',
+              params: { showEmailVerification: 'true' },
+            });
+          } else {
+            // Redirigir al home si el correo ya está validado
             router.replace('/(tabs)');
-          }, 2000);
-        }
+          }
+        }, 2000);
       } else {
         setShowErrorAlert(true);
         setErrorMessage(result.error || 'Error al iniciar sesión.');
