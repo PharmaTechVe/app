@@ -30,6 +30,7 @@ import { StateService } from '../services/state';
 import { Inventory, State } from '../types/api';
 import { InventoryService } from '../services/inventory';
 import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
+import BranchMap from '../components/BranchMap';
 
 type Product = {
   id: string;
@@ -344,13 +345,28 @@ const ProductDetailScreen: React.FC = () => {
             </PoppinsText>
             <View style={styles.quantitySelector}>
               <View style={styles.mapContainer}>
-                <Image
-                  source={{
-                    uri: 'https://s3-alpha-sig.figma.com/img/e1d4/243c/e04ae0848573e5aec930a59844b09c9d?Expires=1743984000&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=FXKYpecuImVVY6u2fXMUb9gNHckqHMuudCo5P2d8nKpcX4UOIDviLX9axkku~lqIwrFxFrrwi-K1SfHW9Ptvp1YCeRMuw12APbec9X45pxjdXxZZ7B--elUAPERCWzJXmX3WSxW~YIYfqMtK6Ld~3w4JXKif0ajl9zkzojgF-ZxGsddzhXL3Th~tgIrzCy3Nmv5tNFClXiweA3weh~tnqR3xKhsqr0YmPWihV24a40aDrQw-Qk1ilxuDYwZJ3sChx8TPXPIeM3K0dsjGkENGbHmqe5qHt4UWce1PGpPs4TnaCl~DmwdgIYRZP3TywbDsNZbXR9OQdFTB2EToVFmFvQ__',
-                  }}
-                  style={{ width: 300, height: 300, borderRadius: 5 }}
-                  resizeMode="contain"
-                />
+                {inventory && inventory.length > 0 ? (
+                  <BranchMap
+                    branches={inventory.map((inv) => ({
+                      id: inv.branch.id,
+                      name: inv.branch.name,
+                      address: inv.branch.address,
+                      latitude: inv.branch.latitude,
+                      longitude: inv.branch.longitude,
+                      stockQuantity: inv.stockQuantity,
+                    }))}
+                  />
+                ) : (
+                  <PoppinsText
+                    style={{
+                      textAlign: 'center',
+                      color: Colors.textLowContrast,
+                      marginVertical: 10,
+                    }}
+                  >
+                    No hay productos disponibles
+                  </PoppinsText>
+                )}
               </View>
             </View>
             <PoppinsText style={styles.sectionTitle}>

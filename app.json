@@ -24,7 +24,7 @@
       "package": "com.pharmatech.pharmatech",
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyDo6tMJUrZsd-LsNNnUDJ95ZGZfUrYMmgU"
+          "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
         }
       }
     },
