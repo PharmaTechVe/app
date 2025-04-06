@@ -201,12 +201,30 @@ export const AuthService = {
     }
   },
 
-  changePassword: async (newPassword: string): Promise<ServiceResponse> => {
+  changePassword: async (
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<ServiceResponse> => {
     try {
+      // Obtener el token de autenticación almacenado
       const token = (await SecureStore.getItemAsync('auth_token')) || '';
-      await api.auth.updatePassword(newPassword.trim(), token);
+      if (!token) {
+        return {
+          success: false,
+          error: 'Token de autenticación no encontrado',
+        };
+      }
+
+      // Llamar al endpoint updateCurrentPassword del SDK
+      await api.auth.updateCurrentPassword(
+        currentPassword.trim(),
+        newPassword.trim(),
+        token,
+      );
+
       return { success: true, data: undefined };
     } catch (error) {
+      // Manejar errores específicos del backend
       return {
         success: false,
         error: extractErrorMessage(error),

@@ -64,6 +64,10 @@ export default function LoggedInPasswordRecoveryScreen() {
   }, []);
 
   const handleStepChange = (newStep: number) => {
+    // Eliminar cualquier alerta de error al cambiar de paso
+    setShowErrorAlert(false);
+    setErrorMessage('');
+
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 200,
@@ -118,25 +122,31 @@ export default function LoggedInPasswordRecoveryScreen() {
     }
 
     setLoading(true);
-    const result = await AuthService.updatePassword(
-      newPassword,
-      confirmPassword,
-    );
-    setLoading(false);
+    try {
+      const result = await AuthService.updatePassword(
+        newPassword,
+        confirmPassword,
+      );
+      if (result.success) {
+        // Mostrar alerta de éxito
+        setShowSuccessAlert(true);
 
-    if (result.success) {
-      setShowSuccessAlert(true);
-
-      // Cerrar sesión y redirigir al login
-      await AuthService.logout();
-      router.dismissAll();
-
-      setTimeout(() => {
-        router.replace('/login');
-      }, 2000);
-    } else {
-      setErrorMessage(result.error);
+        // Cerrar sesión y redirigir al login
+        setTimeout(async () => {
+          await AuthService.logout();
+          router.dismissAll(); // Cierra toda la pila de pantallas
+          router.replace('/login'); // Redirige al login
+        }, 2000); // Tiempo para mostrar la alerta
+      } else {
+        setErrorMessage(result.error || 'No se pudo cambiar la contraseña.');
+        setShowErrorAlert(true);
+      }
+    } catch (error) {
+      console.error('Error al cambiar la contraseña:', error);
+      setErrorMessage('Ocurrió un error inesperado.');
       setShowErrorAlert(true);
+    } finally {
+      setLoading(false);
     }
   };
 
