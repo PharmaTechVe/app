@@ -164,8 +164,10 @@ const ProductDetailScreen: React.FC = () => {
                 id: inv.branch.id,
                 name: inv.branch.name,
                 address: inv.branch.address,
-                stockQuantity: inv.stockQuantity,
+                latitude: inv.branch.latitude,
+                longitude: inv.branch.longitude,
               },
+              stockQuantity: inv.stockQuantity, // Mover al nivel superior
             }));
 
             setInventory((prevInventory) => {
@@ -234,13 +236,20 @@ const ProductDetailScreen: React.FC = () => {
     );
   };
 
+  console.log('Current inventory state:', inventory); // Log para inspeccionar el estado de inventory
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
       <TopBar />
       {/* Botón de volver */}
       <TouchableOpacity
         onPress={() => navigation.goBack()} // Navega a la pantalla anterior
-        style={{ padding: 10, flexDirection: 'row', alignItems: 'center' }}
+        style={{
+          paddingHorizontal: 10,
+          marginBottom: -4,
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}
       >
         <ChevronLeftIcon
           width={16}
@@ -344,7 +353,7 @@ const ProductDetailScreen: React.FC = () => {
               Disponibilidad en sucursales
             </PoppinsText>
             <View style={styles.quantitySelector}>
-              <View style={styles.mapContainer}>
+              <View style={{ flex: 1, height: 300 }}>
                 {inventory && inventory.length > 0 ? (
                   <BranchMap
                     branches={inventory.map((inv) => ({
@@ -404,27 +413,36 @@ const ProductDetailScreen: React.FC = () => {
                         paddingHorizontal: 20,
                       }}
                     >
-                      <PoppinsText
-                        style={{
-                          fontSize: FontSizes.c1.size,
-                          color: Colors.textLowContrast,
-                        }}
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
                       >
-                        {inv.branch.stockQuantity} unidades{' '}
+                        <PoppinsText
+                          style={{
+                            fontSize: FontSizes.c1.size,
+                            color: Colors.textLowContrast,
+                          }}
+                        >
+                          {inv.stockQuantity} unidades{' '}
+                        </PoppinsText>
                         <CheckCircleIcon
                           size={15}
                           color={Colors.semanticSuccess}
                         />
-                      </PoppinsText>
-                      <PoppinsText
-                        style={{
-                          fontSize: FontSizes.c3.size,
-                          color: Colors.gray_500,
-                        }}
+                      </View>
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
                       >
-                        <TruckIcon size={15} color={Colors.gray_500} /> Envio en
-                        menos de 3h
-                      </PoppinsText>
+                        <TruckIcon size={15} color={Colors.gray_500} />
+                        <PoppinsText
+                          style={{
+                            fontSize: FontSizes.c3.size,
+                            color: Colors.gray_500,
+                            marginLeft: 5,
+                          }}
+                        >
+                          Envio en menos de 3h
+                        </PoppinsText>
+                      </View>
                     </View>
                   </View>
                 ))

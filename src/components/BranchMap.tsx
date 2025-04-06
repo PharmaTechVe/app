@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import PoppinsText from './PoppinsText';
 
 type Branch = {
   id: string;
@@ -16,6 +17,8 @@ type BranchMapProps = {
 };
 
 const BranchMap: React.FC<BranchMapProps> = ({ branches }) => {
+  console.log('Branches received in BranchMap:', branches); // Log para inspeccionar las sucursales recibidas
+
   // Filtrar sucursales con coordenadas válidas
   const validBranches = branches.filter(
     (branch) =>
@@ -24,6 +27,8 @@ const BranchMap: React.FC<BranchMapProps> = ({ branches }) => {
       branch.longitude !== null &&
       branch.longitude !== undefined,
   );
+
+  console.log('Valid branches after filtering:', validBranches); // Log para inspeccionar las sucursales válidas
 
   // Configurar la región inicial del mapa
   const initialRegion =
@@ -41,6 +46,8 @@ const BranchMap: React.FC<BranchMapProps> = ({ branches }) => {
           longitudeDelta: 0.1,
         };
 
+  console.log('Initial region for the map:', initialRegion); // Log para inspeccionar la región inicial del mapa
+
   return (
     <View style={styles.container}>
       {validBranches.length > 0 ? (
@@ -49,22 +56,25 @@ const BranchMap: React.FC<BranchMapProps> = ({ branches }) => {
           style={styles.map}
           initialRegion={initialRegion}
         >
-          {validBranches.map((branch) => (
-            <Marker
-              key={branch.id}
-              coordinate={{
-                latitude: branch.latitude!,
-                longitude: branch.longitude!,
-              }}
-              title={branch.name}
-              description={`Stock: ${branch.stockQuantity}`}
-            />
-          ))}
+          {validBranches.map((branch) => {
+            console.log('Rendering Marker for branch:', branch); // Log para inspeccionar cada sucursal
+            return (
+              <Marker
+                key={branch.id}
+                coordinate={{
+                  latitude: branch.latitude!,
+                  longitude: branch.longitude!,
+                }}
+                title={branch.name}
+                description={`Stock: ${branch.stockQuantity ?? 'No disponible'}`} // Manejar undefined
+              />
+            );
+          })}
         </MapView>
       ) : (
-        <Text style={styles.noDataText}>
+        <PoppinsText style={styles.noDataText}>
           No hay sucursales disponibles para mostrar en el mapa.
-        </Text>
+        </PoppinsText>
       )}
     </View>
   );
@@ -72,13 +82,10 @@ const BranchMap: React.FC<BranchMapProps> = ({ branches }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    height: 300, // Altura fija para el mapa
-    borderRadius: 10,
-    overflow: 'hidden',
+    flex: 1, // Asegura que el mapa ocupe todo el espacio disponible
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFillObject, // Hace que el mapa ocupe todo el espacio del contenedor
   },
   noDataText: {
     textAlign: 'center',
