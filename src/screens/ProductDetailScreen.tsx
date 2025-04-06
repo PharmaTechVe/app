@@ -546,11 +546,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 15,
   },
-  footer: {
-    flexDirection: 'row-reverse',
-    padding: 16,
-    backgroundColor: '',
-  },
   ratingStarsContainer: {
     flexDirection: 'row',
     marginBottom: 20,
