@@ -46,9 +46,6 @@ const TopBar = () => {
         {/* Left user icon */}
         <View>
           <AvatarWithMenu />
-          {/* <TouchableOpacity onPress={() => setIsPopupVisible(true)}>
-            <Avatar />
-          </TouchableOpacity> */}
         </View>
 
         {/* Logo */}

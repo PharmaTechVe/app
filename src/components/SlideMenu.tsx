@@ -14,6 +14,9 @@ import { ChevronLeftIcon } from 'react-native-heroicons/solid';
 import Avatar from './Avatar';
 import { UserService } from '../services/user';
 import { ArrowUpTrayIcon } from 'react-native-heroicons/outline';
+import { AuthService } from '../services/auth';
+import { useRouter } from 'expo-router';
+import Popup from './Popup';
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,6 +41,19 @@ const FullScreenSlideMenu: React.FC<FullScreenSlideMenuProps> = ({
   const [userName, setUserName] = React.useState('');
   const menuPosition = React.useRef(new Animated.Value(-width)).current;
   const [isActive, setIsActive] = React.useState('');
+  const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
+    React.useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await AuthService.logout(); // Llama al método logout del servicio de autenticación
+      setIsLogoutConfirmationVisible(false); // Cierra el popup de confirmación
+      router.replace('/login'); // Redirige a la pantalla de inicio de sesión
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
 
   React.useEffect(() => {
     Animated.timing(menuPosition, {
@@ -150,6 +166,7 @@ const FullScreenSlideMenu: React.FC<FullScreenSlideMenuProps> = ({
                   padding: 15,
                   alignContent: 'center',
                 }}
+                onPress={() => setIsLogoutConfirmationVisible(true)}
               >
                 <View>
                   <ArrowUpTrayIcon
@@ -168,6 +185,23 @@ const FullScreenSlideMenu: React.FC<FullScreenSlideMenuProps> = ({
           </View>
         </SafeAreaView>
       </Animated.View>
+
+      {/* Popup for Logout Confirmation */}
+      <Popup
+        visible={isLogoutConfirmationVisible}
+        type="center"
+        headerText="Cerrar sesión"
+        bodyText="¿Estás seguro de que deseas cerrar sesión?"
+        primaryButton={{
+          text: 'Sí',
+          onPress: handleLogout,
+        }}
+        secondaryButton={{
+          text: 'No',
+          onPress: () => setIsLogoutConfirmationVisible(false),
+        }}
+        onClose={() => setIsLogoutConfirmationVisible(false)}
+      />
 
       {isOpen && (
         <TouchableOpacity
