@@ -9,16 +9,18 @@ import {
   ShoppingCartIcon,
 } from 'react-native-heroicons/outline';
 import { Colors } from '../styles/theme';
+import { useRouter } from 'expo-router';
 
 const AvatarWithMenu: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
 
   const menuItems = [
     {
       id: '1',
       title: 'Perfil',
       icon: <UserIcon color={Colors.iconMainPrimary} />,
-      onPress: () => console.log('Perfil presionado'),
+      onPress: () => router.push('/profile'),
     },
     {
       id: '2',

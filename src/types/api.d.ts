@@ -77,6 +77,17 @@ type UserList = BaseModel & {
   profile: Profile;
 };
 
+type UpdateUser = {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email: string;
+  profilePicture?: string;
+  birthDate: string;
+  gender?: UserGender;
+  role?: UserRole;
+};
+
 type State = {
   name: string;
 };
