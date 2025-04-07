@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import Avatar from '../components/Avatar';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
@@ -174,7 +168,7 @@ const ProfileScreen = () => {
             style={styles.editButton}
             onPress={() => setIsEditable(true)}
           >
-            <Text style={styles.editButtonText}>EDITAR</Text>
+            <PoppinsText style={styles.editButtonText}>EDITAR</PoppinsText>
           </TouchableOpacity>
         )}
       </View>
@@ -188,6 +182,7 @@ const ProfileScreen = () => {
           border={isEditable ? 'default' : 'none'}
           getValue={(value) => setProfile({ ...profile, firstName: value })}
           errorText="El campo no puede estar vacío"
+          backgroundColor={isEditable ? Colors.textWhite : undefined}
         />
         <Input
           label="Apellido"
@@ -196,6 +191,7 @@ const ProfileScreen = () => {
           border={isEditable ? 'default' : 'none'}
           getValue={(value) => setProfile({ ...profile, lastName: value })}
           errorText="El campo no puede estar vacío"
+          backgroundColor={isEditable ? Colors.textWhite : undefined}
         />
         <Input
           label="Correo Electrónico"
@@ -238,6 +234,7 @@ const ProfileScreen = () => {
           getValue={(value) => setProfile({ ...profile, phoneNumber: value })}
           fieldType="number"
           errorText="El campo no puede estar vacío"
+          backgroundColor={isEditable ? Colors.textWhite : undefined}
         />
       </View>
 
@@ -258,7 +255,7 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bgColor,
     padding: 20,
   },
   alertContainer: {

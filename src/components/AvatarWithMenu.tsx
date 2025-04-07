@@ -26,7 +26,7 @@ const AvatarWithMenu: React.FC = () => {
       id: '2',
       title: 'Mis Direcciones',
       icon: <MapIcon color={Colors.iconMainPrimary} />,
-      onPress: () => console.log('Configuración presionada'),
+      onPress: () => router.push('/direction'),
     },
     {
       id: '3',
