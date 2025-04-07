@@ -33,6 +33,12 @@ const TopBar = () => {
     try {
       await AuthService.logout(); // Llama al método logout del servicio de autenticación
       setIsLogoutConfirmationVisible(false); // Cierra el popup de confirmación
+
+      // Verificar si hay pantallas en la pila antes de llamar a dismissAll
+      if (router.canGoBack()) {
+        router.dismissAll();
+      }
+
       router.replace('/login'); // Redirige a la pantalla de inicio de sesión
     } catch (error) {
       console.error('Error al cerrar sesión:', error);

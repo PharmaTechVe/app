@@ -79,6 +79,10 @@ export default function RootLayout() {
           options={{ headerTitle: '', headerTransparent: true }}
         />
         <Stack.Screen
+          name="loggedInPasswordRecovery"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
           name="success"
           options={{ headerTitle: '', headerTransparent: true }}
         />
