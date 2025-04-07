@@ -5,65 +5,69 @@ import {
   ScrollView,
   TextInput,
   Animated,
-  TouchableOpacity,
 } from 'react-native';
-import { useRouter, useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import PoppinsText from '../components/PoppinsText';
 import Steps from '../components/Steps';
 import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
-import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import { AuthService } from '../services/auth';
+import { UserService } from '../services/user';
 
-export default function PasswordRecoveryScreen() {
+export default function LoggedInPasswordRecoveryScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1); // Comenzar en el primer step visual (Código)
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [loading, setLoading] = useState(false);
-  const [, setAccessToken] = useState('');
-
-  useEffect(() => {
-    if (currentStep === 1) {
-      navigation.setOptions({
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
-          </TouchableOpacity>
-        ),
-      });
-    } else {
-      navigation.setOptions({
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => handleStepChange(currentStep - 1)}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
-          </TouchableOpacity>
-        ),
-      });
-    }
-  }, [currentStep, navigation]);
-
-  const [showAlert, setShowAlert] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const codeRefs = useRef<Array<TextInput>>([]);
-
-  // States
-  const [email, setEmail] = useState('');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Email validation
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  useEffect(() => {
+    const sendOtpAutomatically = async () => {
+      setLoading(true);
+      try {
+        // Obtener el correo del usuario logueado
+        const profileResponse = await UserService.getProfile();
+        if (!profileResponse.success || !profileResponse.data?.email) {
+          throw new Error('No se pudo obtener el correo del usuario.');
+        }
+
+        const email = profileResponse.data.email;
+
+        // Enviar OTP automáticamente
+        const forgotPasswordResponse = await AuthService.forgotPassword(email);
+        if (!forgotPasswordResponse.success) {
+          throw new Error(
+            forgotPasswordResponse.error || 'Error al enviar el OTP.',
+          );
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setErrorMessage(error.message || 'Error inesperado.');
+        } else {
+          setErrorMessage('Error inesperado.');
+        }
+        setShowErrorAlert(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    sendOtpAutomatically();
+  }, []);
 
   const handleStepChange = (newStep: number) => {
+    // Eliminar cualquier alerta de error al cambiar de paso
+    setShowErrorAlert(false);
+    setErrorMessage('');
+
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 200,
@@ -78,26 +82,6 @@ export default function PasswordRecoveryScreen() {
     });
   };
 
-  const handleSendEmail = async () => {
-    if (!validateEmail(email)) {
-      setErrorMessage('Por favor ingresa un correo electrónico válido');
-      setShowErrorAlert(true);
-      return;
-    }
-
-    setLoading(true);
-    const result = await AuthService.forgotPassword(email);
-    setLoading(false);
-
-    if (result.success) {
-      setShowAlert(true);
-      setTimeout(() => handleStepChange(2), 2000);
-    } else {
-      setErrorMessage(result.error);
-      setShowErrorAlert(true);
-    }
-  };
-
   const handleVerifyCode = async () => {
     const enteredCode = code.join('');
     if (enteredCode.length !== 6) {
@@ -110,10 +94,8 @@ export default function PasswordRecoveryScreen() {
     try {
       const result = await AuthService.resetPassword(enteredCode);
       if (result.success) {
-        setAccessToken(result.data);
-        handleStepChange(3); // Avanzar al siguiente paso
+        handleStepChange(2); // Avanzar al siguiente paso (Recuperar Contraseña)
       } else {
-        // Limpiar el estado del código y permitir un nuevo intento
         setCode(['', '', '', '', '', '']);
         setErrorMessage(
           result.error ||
@@ -140,22 +122,34 @@ export default function PasswordRecoveryScreen() {
     }
 
     setLoading(true);
-    const result = await AuthService.updatePassword(
-      newPassword,
-      confirmPassword,
-    );
-    setLoading(false);
+    try {
+      const result = await AuthService.updatePassword(
+        newPassword,
+        confirmPassword,
+      );
+      if (result.success) {
+        // Mostrar alerta de éxito
+        setShowSuccessAlert(true);
 
-    if (result.success) {
-      setShowSuccessAlert(true);
-      setTimeout(() => router.replace('/login'), 2000);
-    } else {
-      setErrorMessage(result.error);
+        // Cerrar sesión y redirigir al login
+        setTimeout(async () => {
+          await AuthService.logout();
+          router.dismissAll(); // Cierra toda la pila de pantallas
+          router.replace('/login'); // Redirige al login
+        }, 2000); // Tiempo para mostrar la alerta
+      } else {
+        setErrorMessage(result.error || 'No se pudo cambiar la contraseña.');
+        setShowErrorAlert(true);
+      }
+    } catch (error) {
+      console.error('Error al cambiar la contraseña:', error);
+      setErrorMessage('Ocurrió un error inesperado.');
       setShowErrorAlert(true);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Code inputs
   const renderCodeInputs = useCallback(() => {
     return (
       <View style={styles.codeContainer}>
@@ -193,39 +187,9 @@ export default function PasswordRecoveryScreen() {
     );
   }, [code]);
 
-  // Current step render
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <View style={styles.stepContainer}>
-            <PoppinsText weight="medium" style={styles.stepTitle}>
-              Recuperar contraseña
-            </PoppinsText>
-            <PoppinsText weight="regular" style={styles.stepDescription}>
-              Ingresa el correo electrónico asociado a tu cuenta para recuperar
-              tu contraseña.
-            </PoppinsText>
-            <Input
-              label="Correo electrónico"
-              placeholder="Ingresa tu correo"
-              value={email}
-              fieldType="email"
-              getValue={setEmail}
-              backgroundColor={Colors.menuWhite}
-              errorText="El correo ingresado no es válido"
-            />
-            <Button
-              title="Enviar"
-              onPress={handleSendEmail}
-              style={styles.button}
-              size="medium"
-              loading={loading}
-            />
-          </View>
-        );
-
-      case 2:
         return (
           <View style={styles.stepContainer}>
             <PoppinsText weight="medium" style={styles.stepTitle}>
@@ -245,7 +209,7 @@ export default function PasswordRecoveryScreen() {
           </View>
         );
 
-      case 3:
+      case 2:
         return (
           <View style={styles.stepContainer}>
             <PoppinsText weight="medium" style={styles.stepTitle}>
@@ -289,18 +253,7 @@ export default function PasswordRecoveryScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Alerts */}
       <View style={styles.alertsContainer}>
-        {showAlert && (
-          <Alert
-            type="success"
-            title="Correo enviado"
-            message="Revisa tu bandeja de entrada para continuar"
-            alertStyle="regular"
-            borderColor
-            onClose={() => setShowAlert(false)}
-          />
-        )}
         {showErrorAlert && (
           <Alert
             type="error"
@@ -326,12 +279,11 @@ export default function PasswordRecoveryScreen() {
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.stepsWrapper}>
             <Steps
-              totalSteps={3}
+              totalSteps={2} // Solo dos steps visuales
               currentStep={currentStep}
-              labels={['Enviar correo', 'Código', 'Recuperar Contraseña']}
+              labels={['Código', 'Recuperar Contraseña']}
             />
           </View>
-
           {renderStepContent()}
         </ScrollView>
       </Animated.View>

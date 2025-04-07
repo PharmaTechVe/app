@@ -76,6 +76,10 @@ export default function RegisterScreen() {
   }, [currentStep]);
 
   const handleStepChange = (newStep: number) => {
+    // Clear alerts when changing steps
+    setShowErrorAlert(false);
+    setErrorMessage('');
+
     Animated.timing(fadeAnim, {
       toValue: 0,
       duration: 200,

@@ -76,10 +76,21 @@ export default function ChangePasswordScreen() {
 
     setLoading(true);
     try {
-      const result = await AuthService.changePassword(newPassword);
+      const result = await AuthService.changePassword(
+        currentPassword,
+        newPassword,
+      );
       if (result.success) {
+        // Mostrar alerta de éxito
         showAlert('success', 'Éxito', 'Contraseña cambiada correctamente.');
-        setTimeout(() => router.replace('/categories'), 3000);
+
+        // Esperar un momento para que el usuario vea la alerta
+        setTimeout(async () => {
+          // Cerrar sesión y redirigir al login
+          await AuthService.logout();
+          router.dismissAll(); // Cierra toda la pila de pantallas
+          router.replace('/login'); // Redirige al login
+        }, 2000); // Tiempo para mostrar la alerta
       } else {
         showAlert(
           'error',
@@ -168,7 +179,7 @@ export default function ChangePasswordScreen() {
                 ¿Olvidaste tu contraseña?{' '}
               </PoppinsText>
               <TouchableOpacity
-                onPress={() => router.push('/passwordRecovery')}
+                onPress={() => router.push('/loggedInPasswordRecovery')}
               >
                 <PoppinsText weight="regular" style={styles.forgotPasswordLink}>
                   Ingresa aquí
