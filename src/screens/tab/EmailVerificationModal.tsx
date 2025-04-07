@@ -288,19 +288,18 @@ const styles = StyleSheet.create({
     height: 24,
     color: Colors.textMain,
   },
+  alertsContainer: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 1000,
+  },
   stepContainer: {
     width: '100%',
     marginVertical: 21,
     marginTop: 70,
-  },
-  alertsContainer: {
-    position: 'absolute',
-    width: 326,
-    left: '50%',
-    marginLeft: -162,
-    top: 20,
-    right: 0,
-    zIndex: 1000,
   },
   stepTitle: {
     fontSize: FontSizes.h3.size,
