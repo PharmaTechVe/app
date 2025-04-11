@@ -4,11 +4,24 @@ import { ShoppingBagIcon, TruckIcon } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import RadioCard from '../components/RadioCard';
 import OrderSummary from '../components/OrderSummary';
+import { useCart } from '../hooks/useCart';
 
 const CheckoutScreen = () => {
   const [selectedOption, setSelectedOption] = useState<
     'pickup' | 'delivery' | null
   >(null);
+  const { cartItems } = useCart();
+
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+  const totalDiscount = cartItems.reduce(
+    (sum, item) => sum + item.price * (item.quantity * 0.1),
+    0,
+  );
+  const iva = (subtotal - totalDiscount) * 0.12;
+  const total = subtotal - totalDiscount + iva;
 
   return (
     <View style={styles.container}>
@@ -31,6 +44,12 @@ const CheckoutScreen = () => {
         </View>
       </View>
       <OrderSummary />
+      <View style={styles.totalContainer}>
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total:</Text>
+          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+        </View>
+      </View>
       <TouchableOpacity
         style={styles.continueButton}
         onPress={() => console.log('Continuar pressed')}
@@ -56,13 +75,35 @@ const styles = StyleSheet.create({
   radioItem: {
     marginBottom: 24,
   },
+  totalContainer: {
+    width: '110%',
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 16,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  totalLabel: {
+    fontSize: FontSizes.h5.size,
+    lineHeight: FontSizes.h5.lineHeight,
+    color: Colors.textMain,
+  },
+  totalAmount: {
+    fontSize: FontSizes.h5.size,
+    lineHeight: FontSizes.h5.lineHeight,
+    color: Colors.textMain,
+  },
   continueButton: {
     width: '100%',
     backgroundColor: Colors.primary,
     paddingVertical: 12,
     alignItems: 'center',
     borderRadius: 4,
-    marginTop: 20,
+    marginTop: 10,
   },
   continueButtonText: {
     color: Colors.textWhite,
