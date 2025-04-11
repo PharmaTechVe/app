@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { ShoppingBagIcon, TruckIcon } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import RadioCard from '../components/RadioCard';
@@ -86,13 +86,17 @@ const CheckoutScreen = () => {
         />
 
         {renderFooterMessage() && (
-          <Text style={styles.footerMessage}>{renderFooterMessage()}</Text>
+          <PoppinsText style={styles.footerMessage}>
+            {renderFooterMessage()}
+          </PoppinsText>
         )}
         <OrderSummary />
         <View style={styles.totalContainer}>
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total:</Text>
-            <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+            <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
+            <PoppinsText style={styles.totalAmount}>
+              ${total.toFixed(2)}
+            </PoppinsText>
           </View>
         </View>
         <Button title="Continuar" size="medium" style={styles.checkoutButton} />
