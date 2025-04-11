@@ -146,7 +146,9 @@ const CartListScreen = () => {
             </View>
             <Button
               title="Ir a pagar"
-              onPress={() => {}}
+              onPress={() => {
+                router.push('/checkout');
+              }}
               style={styles.checkoutButton}
               size="medium"
             />

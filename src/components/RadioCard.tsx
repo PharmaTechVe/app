@@ -1,28 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 
 interface RadioCardProps {
   label: string;
   icon: React.ReactNode;
+  selected: boolean;
+  onPress: () => void;
 }
 
-const RadioCard: React.FC<RadioCardProps> = ({ label, icon }) => {
-  const [selected, setSelected] = useState(false);
-
-  const handlePress = () => {
-    setSelected(!selected);
-  };
-
+const RadioCard: React.FC<RadioCardProps> = ({
+  label,
+  icon,
+  selected,
+  onPress,
+}) => {
   return (
     <TouchableOpacity
       style={[
         styles.container,
         selected ? styles.selectedContainer : styles.unselectedContainer,
       ]}
-      onPress={handlePress}
+      onPress={onPress}
     >
-      <View style={styles.radioCircle}>
+      <View
+        style={[
+          styles.radioCircle,
+          selected && { borderColor: Colors.primary_600, borderWidth: 4 },
+        ]}
+      >
         {selected && <View style={styles.radioCircleInner} />}
       </View>
       <Text
@@ -60,7 +66,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: Colors.gray_100,
     justifyContent: 'center',
     alignItems: 'center',
