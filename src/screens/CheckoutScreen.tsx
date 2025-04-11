@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { ShoppingBagIcon, TruckIcon } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import RadioCard from '../components/RadioCard';
 import OrderSummary from '../components/OrderSummary';
 import { useCart } from '../hooks/useCart';
+import Button from '../components/Button';
 
 const CheckoutScreen = () => {
   const [selectedOption, setSelectedOption] = useState<
@@ -50,12 +51,7 @@ const CheckoutScreen = () => {
           <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.continueButton}
-        onPress={() => console.log('Continuar pressed')}
-      >
-        <Text style={styles.continueButtonText}>Continuar</Text>
-      </TouchableOpacity>
+      <Button title="Continuar" size="medium" style={styles.checkoutButton} />
     </View>
   );
 };
@@ -109,6 +105,11 @@ const styles = StyleSheet.create({
     color: Colors.textWhite,
     fontSize: FontSizes.b1.size,
     fontFamily: 'Poppins_600SemiBold',
+  },
+  checkoutButton: {
+    marginBottom: 16,
+    width: '100%',
+    height: 50,
   },
 });
 
