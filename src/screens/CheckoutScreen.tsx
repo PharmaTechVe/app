@@ -9,6 +9,7 @@ import Button from '../components/Button';
 import Steps from '../components/Steps';
 import PaymentMethods from '../components/PaymentMethods';
 import PoppinsText from '../components/PoppinsText';
+import Coupon from '../components/Coupon';
 
 const CheckoutScreen = () => {
   const [selectedOption, setSelectedOption] = useState<
@@ -84,13 +85,13 @@ const CheckoutScreen = () => {
           selectedPayment={selectedPayment}
           setSelectedPayment={setSelectedPayment}
         />
-
+        <Coupon onApplyCoupon={(code) => console.log('Cupon aplicado', code)} />
+        <OrderSummary />
         {renderFooterMessage() && (
           <PoppinsText style={styles.footerMessage}>
             {renderFooterMessage()}
           </PoppinsText>
         )}
-        <OrderSummary />
         <View style={styles.totalContainer}>
           <View style={styles.totalRow}>
             <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
