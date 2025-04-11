@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useCart } from '../hooks/useCart';
 import PoppinsText from './PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
 import type { CartItem } from '../redux/slices/cartSlice';
-import { ChevronDownIcon, ChevronUpIcon } from 'react-native-heroicons/outline'; // Import Heroicons
+import { ChevronDownIcon, ChevronUpIcon } from 'react-native-heroicons/outline';
 
 const OrderSummary = () => {
   const { cartItems } = useCart();
@@ -90,15 +84,19 @@ const OrderSummary = () => {
           />
         )}
       </TouchableOpacity>
+
       {isOpen && (
         <>
-          <FlatList
-            data={cartItems.filter((item) => item.quantity > 0)}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-          />
+          <View style={styles.listContainer}>
+            {cartItems
+              .filter((item) => item.quantity > 0)
+              .map((item) => (
+                <React.Fragment key={item.id}>
+                  {renderItem({ item })}
+                </React.Fragment>
+              ))}
+          </View>
+
           <View style={styles.footer}>
             <View style={styles.row}>
               <PoppinsText style={styles.subtotalText}>Subtotal</PoppinsText>
@@ -128,14 +126,13 @@ const OrderSummary = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   dropdownHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    width: '110%',
+    width: '100%',
     height: 46,
     borderWidth: 1,
     borderColor: Colors.gray_100,
@@ -235,11 +232,6 @@ const styles = StyleSheet.create({
   ivaText: {
     fontSize: FontSizes.b1.size,
     lineHeight: FontSizes.b1.lineHeight,
-    color: Colors.textMain,
-  },
-  totalText: {
-    fontSize: FontSizes.h5.size,
-    lineHeight: FontSizes.h5.lineHeight,
     color: Colors.textMain,
   },
   productImage: {
