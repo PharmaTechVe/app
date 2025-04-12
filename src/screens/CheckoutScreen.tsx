@@ -11,6 +11,7 @@ import PaymentMethods from '../components/PaymentMethods';
 import PoppinsText from '../components/PoppinsText';
 import Coupon from '../components/Coupon';
 import LocationSelector from '../components/LocationSelector';
+import PaymentInfoForm from '../components/PaymentInfoForm';
 
 const CheckoutScreen = () => {
   const [selectedOption, setSelectedOption] = useState<
@@ -19,6 +20,7 @@ const CheckoutScreen = () => {
   const [selectedPayment, setSelectedPayment] = useState<
     'punto_de_venta' | 'efectivo' | 'transferencia' | 'pago_movil' | null
   >(null);
+  const [currentStep, setCurrentStep] = useState(1);
   const { cartItems } = useCart();
 
   const isSimplifiedSteps =
@@ -28,8 +30,6 @@ const CheckoutScreen = () => {
   const stepsLabels = isSimplifiedSteps
     ? ['Opciones de Compra', 'Confirmación de orden']
     : ['Opciones de Compra', 'Visualización de datos', 'Confirmación de orden'];
-
-  const currentStep = 1;
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -52,6 +52,12 @@ const CheckoutScreen = () => {
     return null;
   };
 
+  const handleContinue = () => {
+    if (currentStep < stepsLabels.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
@@ -62,43 +68,65 @@ const CheckoutScreen = () => {
             labels={stepsLabels}
           />
         </View>
-        <PoppinsText style={styles.purchaseOptionsTitle}>
-          Opciones de Compra
-        </PoppinsText>
-        <View style={styles.radioContainer}>
-          <View style={styles.radioItem}>
-            <RadioCard
-              label="Retiro en Sucursal"
-              icon={<ShoppingBagIcon color={Colors.textMain} />}
-              selected={selectedOption === 'pickup'}
-              onPress={() => setSelectedOption('pickup')}
+
+        {currentStep === 1 && (
+          <>
+            <PoppinsText style={styles.purchaseOptionsTitle}>
+              Opciones de Compra
+            </PoppinsText>
+            <View style={styles.radioContainer}>
+              <View style={styles.radioItem}>
+                <RadioCard
+                  label="Retiro en Sucursal"
+                  icon={<ShoppingBagIcon color={Colors.textMain} />}
+                  selected={selectedOption === 'pickup'}
+                  onPress={() => setSelectedOption('pickup')}
+                />
+              </View>
+              <View>
+                <RadioCard
+                  label="Delivery"
+                  icon={<TruckIcon color={Colors.textMain} />}
+                  selected={selectedOption === 'delivery'}
+                  onPress={() => setSelectedOption('delivery')}
+                />
+              </View>
+            </View>
+            <LocationSelector
+              selectedOption={selectedOption}
+              onSelect={(val) => console.log('Seleccionado:', val)}
             />
-          </View>
-          <View>
-            <RadioCard
-              label="Delivery"
-              icon={<TruckIcon color={Colors.textMain} />}
-              selected={selectedOption === 'delivery'}
-              onPress={() => setSelectedOption('delivery')}
-            />
-          </View>
-        </View>
-        <LocationSelector
-          selectedOption={selectedOption}
-          onSelect={(val) => console.log('Seleccionado:', val)}
-        />
-        <View style={styles.paymentMethods}>
-          <PaymentMethods
-            selectedOption={selectedOption}
-            selectedPayment={selectedPayment}
-            setSelectedPayment={setSelectedPayment}
-          />
-        </View>
-        {renderFooterMessage() && (
-          <PoppinsText style={styles.footerMessage}>
-            {renderFooterMessage()}
-          </PoppinsText>
+            <View style={styles.paymentMethods}>
+              <PaymentMethods
+                selectedOption={selectedOption}
+                selectedPayment={selectedPayment}
+                setSelectedPayment={setSelectedPayment}
+              />
+            </View>
+            {renderFooterMessage() && (
+              <PoppinsText style={styles.footerMessage}>
+                {renderFooterMessage()}
+              </PoppinsText>
+            )}
+          </>
         )}
+
+        {currentStep === 2 && !isSimplifiedSteps && (
+          <>
+            <PoppinsText
+              style={[styles.purchaseOptionsTitle, styles.step2Title]}
+            >
+              Visualización de datos
+            </PoppinsText>
+            <View style={styles.paymentInfoFormContainer}>
+              <PaymentInfoForm
+                paymentMethod={selectedPayment}
+                total={total.toFixed(2)}
+              />
+            </View>
+          </>
+        )}
+
         <View style={styles.whiteBackgroundContainer}>
           <Coupon
             onApplyCoupon={(code) => console.log('Cupon aplicado:', code)}
@@ -114,9 +142,10 @@ const CheckoutScreen = () => {
             </View>
           </View>
           <Button
-            title="Continuar"
+            title={currentStep < stepsLabels.length ? 'Continuar' : 'Finalizar'}
             size="medium"
             style={styles.checkoutButton}
+            onPress={handleContinue}
           />
         </View>
       </View>
@@ -132,7 +161,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
   },
-
+  steps: {
+    marginTop: 40,
+  },
+  purchaseOptionsTitle: {
+    fontSize: FontSizes.h5.size,
+    color: Colors.textMain,
+    marginBottom: 24,
+    alignSelf: 'flex-start',
+    padding: 20,
+  },
   radioContainer: {
     width: '100%',
     padding: 20,
@@ -140,6 +178,27 @@ const styles = StyleSheet.create({
   },
   radioItem: {
     marginBottom: 24,
+  },
+  paymentMethods: {
+    padding: 20,
+  },
+  footerMessage: {
+    fontSize: FontSizes.c1.size,
+    color: Colors.textLowContrast,
+    marginBottom: -20,
+    padding: 20,
+    marginTop: -20,
+  },
+  whiteBackgroundContainer: {
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    marginTop: 20,
+    padding: 20,
+  },
+  spacer: {
+    height: 20,
   },
   totalContainer: {
     width: '100%',
@@ -162,42 +221,18 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.h5.lineHeight,
     color: Colors.textMain,
   },
-  footerMessage: {
-    fontSize: FontSizes.c1.size,
-    color: Colors.textLowContrast,
-    marginBottom: -20,
-    padding: 20,
-    marginTop: -20,
-  },
   checkoutButton: {
     marginBottom: 16,
     width: '100%',
     height: 50,
     marginTop: 15,
   },
-  purchaseOptionsTitle: {
-    fontSize: FontSizes.h5.size,
-    color: Colors.textMain,
-    marginBottom: 24,
-    alignSelf: 'flex-start',
+  step2Title: {
+    marginBottom: -20,
+  },
+  paymentInfoFormContainer: {
     padding: 20,
-  },
-  whiteBackgroundContainer: {
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    marginTop: 20,
-    padding: 20,
-  },
-  paymentMethods: {
-    padding: 20,
-  },
-  steps: {
-    marginTop: 40,
-  },
-  spacer: {
-    height: 20,
+    paddingTop: 0,
   },
 });
 
