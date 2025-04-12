@@ -51,8 +51,16 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
             <RadioButton
               label={option.label}
               value={option.value}
-              selectedValue={selectedPayment}
-              onValueChange={setSelectedPayment}
+              selectedValue={selectedPayment || ''}
+              onValueChange={(value) =>
+                setSelectedPayment(
+                  value as
+                    | 'punto_de_venta'
+                    | 'efectivo'
+                    | 'transferencia'
+                    | 'pago_movil',
+                )
+              } // Explicitly cast the value
             />
           </View>
         ))}
