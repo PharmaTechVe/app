@@ -1,3 +1,4 @@
+// CheckoutScreen.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { ShoppingBagIcon, TruckIcon } from 'react-native-heroicons/outline';
@@ -20,6 +21,7 @@ const CheckoutScreen = () => {
   const [selectedPayment, setSelectedPayment] = useState<
     'punto_de_venta' | 'efectivo' | 'transferencia' | 'pago_movil' | null
   >(null);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const { cartItems } = useCart();
 
@@ -58,6 +60,20 @@ const CheckoutScreen = () => {
     }
   };
 
+  const isStep1Complete =
+    selectedOption !== null &&
+    selectedPayment !== null &&
+    selectedLocation !== null;
+
+  const isStep2Complete = isSimplifiedSteps || selectedPayment !== null;
+
+  const isButtonEnabled =
+    currentStep === 1
+      ? isStep1Complete
+      : currentStep === 2
+        ? isStep2Complete
+        : true;
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
@@ -80,7 +96,10 @@ const CheckoutScreen = () => {
                   label="Retiro en Sucursal"
                   icon={<ShoppingBagIcon color={Colors.textMain} />}
                   selected={selectedOption === 'pickup'}
-                  onPress={() => setSelectedOption('pickup')}
+                  onPress={() => {
+                    setSelectedOption('pickup');
+                    setSelectedLocation(null);
+                  }}
                 />
               </View>
               <View>
@@ -88,13 +107,16 @@ const CheckoutScreen = () => {
                   label="Delivery"
                   icon={<TruckIcon color={Colors.textMain} />}
                   selected={selectedOption === 'delivery'}
-                  onPress={() => setSelectedOption('delivery')}
+                  onPress={() => {
+                    setSelectedOption('delivery');
+                    setSelectedLocation(null);
+                  }}
                 />
               </View>
             </View>
             <LocationSelector
               selectedOption={selectedOption}
-              onSelect={(val) => console.log('Seleccionado:', val)}
+              onSelect={(val) => setSelectedLocation(val)}
             />
             <View style={styles.paymentMethods}>
               <PaymentMethods
@@ -145,7 +167,8 @@ const CheckoutScreen = () => {
             title={currentStep < stepsLabels.length ? 'Continuar' : 'Finalizar'}
             size="medium"
             style={styles.checkoutButton}
-            onPress={handleContinue}
+            variant={isButtonEnabled ? 'primary' : 'disabled'}
+            onPress={isButtonEnabled ? handleContinue : undefined}
           />
         </View>
       </View>
