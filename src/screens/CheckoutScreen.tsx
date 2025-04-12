@@ -10,11 +10,12 @@ import Steps from '../components/Steps';
 import PaymentMethods from '../components/PaymentMethods';
 import PoppinsText from '../components/PoppinsText';
 import Coupon from '../components/Coupon';
+import LocationSelector from '../components/LocationSelector';
 
 const CheckoutScreen = () => {
   const [selectedOption, setSelectedOption] = useState<
     'pickup' | 'delivery' | null
-  >(null);
+  >('pickup');
   const [selectedPayment, setSelectedPayment] = useState<
     'punto_de_venta' | 'efectivo' | 'transferencia' | 'pago_movil' | null
   >(null);
@@ -54,11 +55,13 @@ const CheckoutScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <Steps
-          totalSteps={stepsLabels.length}
-          currentStep={currentStep}
-          labels={stepsLabels}
-        />
+        <View style={styles.steps}>
+          <Steps
+            totalSteps={stepsLabels.length}
+            currentStep={currentStep}
+            labels={stepsLabels}
+          />
+        </View>
         <PoppinsText style={styles.purchaseOptionsTitle}>
           Opciones de Compra
         </PoppinsText>
@@ -80,27 +83,42 @@ const CheckoutScreen = () => {
             />
           </View>
         </View>
-        <PaymentMethods
+        <LocationSelector
           selectedOption={selectedOption}
-          selectedPayment={selectedPayment}
-          setSelectedPayment={setSelectedPayment}
+          onSelect={(val) => console.log('Seleccionado:', val)}
         />
-        <Coupon onApplyCoupon={(code) => console.log('Cupon aplicado', code)} />
-        <OrderSummary />
+        <View style={styles.paymentMethods}>
+          <PaymentMethods
+            selectedOption={selectedOption}
+            selectedPayment={selectedPayment}
+            setSelectedPayment={setSelectedPayment}
+          />
+        </View>
         {renderFooterMessage() && (
           <PoppinsText style={styles.footerMessage}>
             {renderFooterMessage()}
           </PoppinsText>
         )}
-        <View style={styles.totalContainer}>
-          <View style={styles.totalRow}>
-            <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
-            <PoppinsText style={styles.totalAmount}>
-              ${total.toFixed(2)}
-            </PoppinsText>
+        <View style={styles.whiteBackgroundContainer}>
+          <Coupon
+            onApplyCoupon={(code) => console.log('Cupon aplicado:', code)}
+          />
+          <View style={styles.spacer} />
+          <OrderSummary />
+          <View style={styles.totalContainer}>
+            <View style={styles.totalRow}>
+              <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
+              <PoppinsText style={styles.totalAmount}>
+                ${total.toFixed(2)}
+              </PoppinsText>
+            </View>
           </View>
+          <Button
+            title="Continuar"
+            size="medium"
+            style={styles.checkoutButton}
+          />
         </View>
-        <Button title="Continuar" size="medium" style={styles.checkoutButton} />
       </View>
     </ScrollView>
   );
@@ -112,14 +130,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    padding: 20,
     backgroundColor: Colors.bgColor,
   },
+
   radioContainer: {
     width: '100%',
-    marginBottom: 20,
+    padding: 20,
+    marginTop: -30,
   },
   radioItem: {
     marginBottom: 24,
@@ -148,18 +165,39 @@ const styles = StyleSheet.create({
   footerMessage: {
     fontSize: FontSizes.c1.size,
     color: Colors.textLowContrast,
-    marginBottom: 20,
+    marginBottom: -20,
+    padding: 20,
+    marginTop: -20,
   },
   checkoutButton: {
     marginBottom: 16,
     width: '100%',
     height: 50,
+    marginTop: 15,
   },
   purchaseOptionsTitle: {
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
     marginBottom: 24,
     alignSelf: 'flex-start',
+    padding: 20,
+  },
+  whiteBackgroundContainer: {
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    marginTop: 20,
+    padding: 20,
+  },
+  paymentMethods: {
+    padding: 20,
+  },
+  steps: {
+    marginTop: 40,
+  },
+  spacer: {
+    height: 20,
   },
 });
 
