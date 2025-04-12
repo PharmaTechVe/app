@@ -22,6 +22,8 @@ const Coupon: React.FC<CouponProps> = ({
     }
   };
 
+  const isButtonDisabled = couponCode.trim().length === 0;
+
   return (
     <View style={styles.container}>
       <PoppinsText style={styles.label}>Ingresa el Cupón</PoppinsText>
@@ -51,7 +53,7 @@ const Coupon: React.FC<CouponProps> = ({
         <Button
           title="Aplicar"
           onPress={handleApply}
-          variant="primary"
+          variant={isButtonDisabled ? 'disabled' : 'primary'}
           size="medium"
           loading={isLoading}
           style={styles.button}
