@@ -1,7 +1,11 @@
 // CheckoutScreen.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { ShoppingBagIcon, TruckIcon } from 'react-native-heroicons/outline';
+import {
+  ShoppingBagIcon,
+  TruckIcon,
+  MapPinIcon,
+} from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import RadioCard from '../components/RadioCard';
 import OrderSummary from '../components/OrderSummary';
@@ -10,11 +14,14 @@ import Button from '../components/Button';
 import Steps from '../components/Steps';
 import PaymentMethods from '../components/PaymentMethods';
 import PoppinsText from '../components/PoppinsText';
-import Coupon from '../components/Coupon';
 import LocationSelector from '../components/LocationSelector';
 import PaymentInfoForm from '../components/PaymentInfoForm';
+import Coupon from '../components/Coupon';
+import PurchaseStatusMessage from '../components/PurchaseStatusMessage';
+import { useRouter } from 'expo-router';
 
 const CheckoutScreen = () => {
+  const router = useRouter();
   const [selectedOption, setSelectedOption] = useState<
     'pickup' | 'delivery' | null
   >('pickup');
@@ -23,6 +30,7 @@ const CheckoutScreen = () => {
   >(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [status] = useState<'approved' | 'rejected'>('approved'); // Remove setStatus
   const { cartItems } = useCart();
 
   const isSimplifiedSteps =
@@ -60,6 +68,12 @@ const CheckoutScreen = () => {
     }
   };
 
+  const handleGoToHome = () => {
+    router.replace({
+      pathname: '/(tabs)',
+    });
+  };
+
   const isStep1Complete =
     selectedOption !== null &&
     selectedPayment !== null &&
@@ -73,6 +87,71 @@ const CheckoutScreen = () => {
       : currentStep === 2
         ? isStep2Complete
         : true;
+
+  const renderConfirmationContent = (status: 'approved' | 'rejected') => {
+    if (selectedOption === 'pickup' && status === 'approved') {
+      return (
+        <>
+          <PoppinsText style={styles.confirmationMessage}>
+            Tu pedido ya está listo para que pases por él en la sucursal
+            indicada. En el mapa adjunto podrás ver la ubicación exacta para que
+            llegues sin problemas.
+          </PoppinsText>
+          <PoppinsText style={styles.sucursalText}>
+            Sucursal de retiro: [Nombre de la sucursal]
+          </PoppinsText>
+          <Button
+            title="Ver Ubicación en el Mapa"
+            size="small"
+            style={styles.secondaryButton}
+            variant="secondary"
+            icon={<MapPinIcon width={16} height={16} color={Colors.textMain} />}
+            onPress={() => console.log('Ver ubicación en el mapa')}
+          />
+        </>
+      );
+    }
+
+    if (selectedOption === 'delivery' && status === 'approved') {
+      return (
+        <>
+          <PoppinsText style={styles.confirmationMessage}>
+            Estamos preparando tu pedido para enviarlo a la dirección indicada.
+          </PoppinsText>
+          <PoppinsText style={styles.confirmationMessage}>
+            Recibirás notificaciones cuando tu pedido esté en camino. En breve,
+            un motorizado tomará tu orden.
+          </PoppinsText>
+          <Button
+            title="Información del repartidor"
+            size="small"
+            style={styles.secondaryButton}
+            variant="secondary"
+            onPress={() => console.log('Información del repartidor')}
+          />
+        </>
+      );
+    }
+
+    if (status === 'rejected') {
+      return (
+        <>
+          <PoppinsText style={styles.confirmationMessage}>
+            Lamentamos informarte que hubo un problema al generar tu pedido.
+          </PoppinsText>
+          <Button
+            title="Volver a Intentar"
+            size="medium"
+            style={styles.primaryButton}
+            variant="primary"
+            onPress={() => console.log('Volver a Intentar')}
+          />
+        </>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -149,10 +228,28 @@ const CheckoutScreen = () => {
           </>
         )}
 
+        {currentStep === stepsLabels.length && (
+          <>
+            <PoppinsText style={styles.purchaseOptionsTitle}>
+              Confirmación de Orden
+            </PoppinsText>
+            <PurchaseStatusMessage
+              status={status}
+              orderNumber="12345"
+              userName="Cliente1"
+            />
+            <View style={styles.confirmationContainer}>
+              {renderConfirmationContent(status)}
+            </View>
+          </>
+        )}
+
         <View style={styles.whiteBackgroundContainer}>
-          <Coupon
-            onApplyCoupon={(code) => console.log('Cupon aplicado:', code)}
-          />
+          {currentStep !== stepsLabels.length && currentStep !== 2 && (
+            <Coupon
+              onApplyCoupon={(code) => console.log('Cupon aplicado:', code)}
+            />
+          )}
           <View style={styles.spacer} />
           <OrderSummary />
           <View style={styles.totalContainer}>
@@ -164,11 +261,23 @@ const CheckoutScreen = () => {
             </View>
           </View>
           <Button
-            title={currentStep < stepsLabels.length ? 'Continuar' : 'Finalizar'}
+            title={
+              currentStep === 2 && !isSimplifiedSteps
+                ? 'Confirmar Pago'
+                : currentStep < stepsLabels.length
+                  ? 'Continuar'
+                  : 'Volver al Home'
+            }
             size="medium"
             style={styles.checkoutButton}
             variant={isButtonEnabled ? 'primary' : 'disabled'}
-            onPress={isButtonEnabled ? handleContinue : undefined}
+            onPress={
+              currentStep < stepsLabels.length
+                ? isButtonEnabled
+                  ? handleContinue
+                  : undefined
+                : handleGoToHome
+            }
           />
         </View>
       </View>
@@ -256,6 +365,36 @@ const styles = StyleSheet.create({
   paymentInfoFormContainer: {
     padding: 20,
     paddingTop: 0,
+  },
+  confirmationContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  confirmationMessage: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.textMain,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  sucursalText: {
+    fontSize: FontSizes.b2.size,
+    lineHeight: FontSizes.b2.lineHeight,
+    color: Colors.textLowContrast,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  secondaryButton: {
+    marginBottom: 10,
+    backgroundColor: Colors.secondaryLight,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  primaryButton: {
+    marginTop: 10,
+    width: '100%',
   },
 });
 
