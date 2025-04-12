@@ -30,7 +30,7 @@ const CheckoutScreen = () => {
   >(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [status] = useState<'approved' | 'rejected'>('approved'); // Remove setStatus
+  const [status] = useState<'approved' | 'rejected'>('approved');
   const { cartItems } = useCart();
 
   const isSimplifiedSteps =
