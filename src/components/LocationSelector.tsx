@@ -19,15 +19,12 @@ const LocationSelector = ({
     'Dirección 2',
     'Dirección 3',
   ]);
-  const [selectedValue, setSelectedValue] = useState<string | null>(null);
   const [dropdownKey, setDropdownKey] = useState(0); // Forzar reinicio del Dropdown
 
   useEffect(() => {
     const resetState = async () => {
-      // Reset value y forzar reinicio visual
-      setSelectedValue(null);
-      setDropdownKey((prev) => prev + 1); // Cambiar key para forzar remount
-      onSelect(null); // Notificar al padre
+      setDropdownKey((prev) => prev + 1);
+      onSelect(null); // Notificar al padre que se reinició
 
       if (selectedOption === 'pickup') {
         try {
@@ -58,14 +55,12 @@ const LocationSelector = ({
           : 'Seleccione la dirección de entrega'}
       </PoppinsText>
       <Dropdown
-        key={dropdownKey} // Forzar remount del Dropdown cuando cambia pickup/delivery
+        key={dropdownKey} // Forzar reinicio del Dropdown cuando cambia pickup/delivery
         options={options}
         placeholder="Selecciona una opción"
         onSelect={(val) => {
-          setSelectedValue(val);
-          onSelect(val);
+          onSelect(val); // Notificar al padre
         }}
-        selectedValue={selectedValue}
         borderColor={Colors.gray_100}
       />
     </View>
