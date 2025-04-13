@@ -30,6 +30,7 @@ import { StateService } from '../services/state';
 import { Inventory, State } from '../types/api';
 import { InventoryService } from '../services/inventory';
 import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
+import BranchMap from '../components/BranchMap';
 
 type Product = {
   id: string;
@@ -163,8 +164,10 @@ const ProductDetailScreen: React.FC = () => {
                 id: inv.branch.id,
                 name: inv.branch.name,
                 address: inv.branch.address,
-                stockQuantity: inv.stockQuantity,
+                latitude: inv.branch.latitude,
+                longitude: inv.branch.longitude,
               },
+              stockQuantity: inv.stockQuantity, // Mover al nivel superior
             }));
 
             setInventory((prevInventory) => {
@@ -233,13 +236,20 @@ const ProductDetailScreen: React.FC = () => {
     );
   };
 
+  console.log('Current inventory state:', inventory); // Log para inspeccionar el estado de inventory
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
       <TopBar />
       {/* Botón de volver */}
       <TouchableOpacity
         onPress={() => navigation.goBack()} // Navega a la pantalla anterior
-        style={{ padding: 10, flexDirection: 'row', alignItems: 'center' }}
+        style={{
+          paddingHorizontal: 10,
+          marginBottom: -4,
+          flexDirection: 'row',
+          alignItems: 'center',
+        }}
       >
         <ChevronLeftIcon
           width={16}
@@ -343,14 +353,29 @@ const ProductDetailScreen: React.FC = () => {
               Disponibilidad en sucursales
             </PoppinsText>
             <View style={styles.quantitySelector}>
-              <View style={styles.mapContainer}>
-                <Image
-                  source={{
-                    uri: 'https://s3-alpha-sig.figma.com/img/e1d4/243c/e04ae0848573e5aec930a59844b09c9d?Expires=1743984000&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=FXKYpecuImVVY6u2fXMUb9gNHckqHMuudCo5P2d8nKpcX4UOIDviLX9axkku~lqIwrFxFrrwi-K1SfHW9Ptvp1YCeRMuw12APbec9X45pxjdXxZZ7B--elUAPERCWzJXmX3WSxW~YIYfqMtK6Ld~3w4JXKif0ajl9zkzojgF-ZxGsddzhXL3Th~tgIrzCy3Nmv5tNFClXiweA3weh~tnqR3xKhsqr0YmPWihV24a40aDrQw-Qk1ilxuDYwZJ3sChx8TPXPIeM3K0dsjGkENGbHmqe5qHt4UWce1PGpPs4TnaCl~DmwdgIYRZP3TywbDsNZbXR9OQdFTB2EToVFmFvQ__',
-                  }}
-                  style={{ width: 300, height: 300, borderRadius: 5 }}
-                  resizeMode="contain"
-                />
+              <View style={{ flex: 1, height: 300 }}>
+                {inventory && inventory.length > 0 ? (
+                  <BranchMap
+                    branches={inventory.map((inv) => ({
+                      id: inv.branch.id,
+                      name: inv.branch.name,
+                      address: inv.branch.address,
+                      latitude: inv.branch.latitude,
+                      longitude: inv.branch.longitude,
+                      stockQuantity: inv.stockQuantity,
+                    }))}
+                  />
+                ) : (
+                  <PoppinsText
+                    style={{
+                      textAlign: 'center',
+                      color: Colors.textLowContrast,
+                      marginVertical: 10,
+                    }}
+                  >
+                    No hay productos disponibles
+                  </PoppinsText>
+                )}
               </View>
             </View>
             <PoppinsText style={styles.sectionTitle}>
@@ -388,27 +413,36 @@ const ProductDetailScreen: React.FC = () => {
                         paddingHorizontal: 20,
                       }}
                     >
-                      <PoppinsText
-                        style={{
-                          fontSize: FontSizes.c1.size,
-                          color: Colors.textLowContrast,
-                        }}
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
                       >
-                        {inv.branch.stockQuantity} unidades{' '}
+                        <PoppinsText
+                          style={{
+                            fontSize: FontSizes.c1.size,
+                            color: Colors.textLowContrast,
+                          }}
+                        >
+                          {inv.stockQuantity} unidades{' '}
+                        </PoppinsText>
                         <CheckCircleIcon
                           size={15}
                           color={Colors.semanticSuccess}
                         />
-                      </PoppinsText>
-                      <PoppinsText
-                        style={{
-                          fontSize: FontSizes.c3.size,
-                          color: Colors.gray_500,
-                        }}
+                      </View>
+                      <View
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
                       >
-                        <TruckIcon size={15} color={Colors.gray_500} /> Envio en
-                        menos de 3h
-                      </PoppinsText>
+                        <TruckIcon size={15} color={Colors.gray_500} />
+                        <PoppinsText
+                          style={{
+                            fontSize: FontSizes.c3.size,
+                            color: Colors.gray_500,
+                            marginLeft: 5,
+                          }}
+                        >
+                          Envio en menos de 3h
+                        </PoppinsText>
+                      </View>
                     </View>
                   </View>
                 ))
@@ -511,11 +545,6 @@ const styles = StyleSheet.create({
   quantitySelector: {
     flexDirection: 'row',
     marginBottom: 15,
-  },
-  footer: {
-    flexDirection: 'row-reverse',
-    padding: 16,
-    backgroundColor: '',
   },
   ratingStarsContainer: {
     flexDirection: 'row',
