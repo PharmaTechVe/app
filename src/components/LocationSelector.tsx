@@ -1,26 +1,50 @@
+import { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Dropdown from './Dropdown';
 import PoppinsText from './PoppinsText';
 import { Colors } from '../styles/theme';
+import { BranchService } from '../services/branches';
+import { extractErrorMessage } from '../utils/errorHandler';
 
 const LocationSelector = ({
   selectedOption,
   onSelect,
 }: {
   selectedOption: 'pickup' | 'delivery' | null;
-  onSelect: (value: string) => void;
+  onSelect: (value: string | null) => void;
 }) => {
-  const pickupData = [
-    { label: 'Sucursal 1', value: '1' },
-    { label: 'Sucursal 2', value: '2' },
-    { label: 'Sucursal 3', value: '3' },
-  ].map((item) => item.label);
+  const [pickupData, setPickupData] = useState<string[]>([]);
+  const [deliveryData] = useState([
+    'Dirección 1',
+    'Dirección 2',
+    'Dirección 3',
+  ]);
+  const [selectedValue, setSelectedValue] = useState<string | null>(null);
+  const [dropdownKey, setDropdownKey] = useState(0); // Forzar reinicio del Dropdown
 
-  const deliveryData = [
-    { label: 'Dirección 1', value: '1' },
-    { label: 'Dirección 2', value: '2' },
-    { label: 'Dirección 3', value: '3' },
-  ].map((item) => item.label);
+  useEffect(() => {
+    const resetState = async () => {
+      // Reset value y forzar reinicio visual
+      setSelectedValue(null);
+      setDropdownKey((prev) => prev + 1); // Cambiar key para forzar remount
+      onSelect(null); // Notificar al padre
+
+      if (selectedOption === 'pickup') {
+        try {
+          const response = await BranchService.findAll({});
+          if (response.success) {
+            setPickupData(response.data.results.map((branch) => branch.name));
+          } else {
+            console.error('Error fetching branches:', response.error);
+          }
+        } catch (error) {
+          console.error('Error fetching branches:', extractErrorMessage(error));
+        }
+      }
+    };
+
+    resetState();
+  }, [selectedOption]);
 
   const options = selectedOption === 'pickup' ? pickupData : deliveryData;
 
@@ -34,9 +58,14 @@ const LocationSelector = ({
           : 'Seleccione la dirección de entrega'}
       </PoppinsText>
       <Dropdown
+        key={dropdownKey} // Forzar remount del Dropdown cuando cambia pickup/delivery
         options={options}
         placeholder="Selecciona una opción"
-        onSelect={(val) => onSelect(val)}
+        onSelect={(val) => {
+          setSelectedValue(val);
+          onSelect(val);
+        }}
+        selectedValue={selectedValue}
         borderColor={Colors.gray_100}
       />
     </View>

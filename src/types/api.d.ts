@@ -86,3 +86,19 @@ type Inventory = BaseModel & {
   branch: BranchResponse;
   productPresentation: ProductPresentation;
 };
+
+export type Branch = {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+};
+
+export type CreateBranchRequest = Branch & {
+  cityId: string;
+};
+
+export type BranchResponse = Branch &
+  BaseModel & {
+    city: CityResponse;
+  };
