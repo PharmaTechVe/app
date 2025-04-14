@@ -195,12 +195,12 @@ export default function RegisterScreen() {
         }, 2000);
       } else {
         setShowErrorAlert(true);
-        setErrorMessage('Error al crear la cuenta, intenta de nuevo');
+        setErrorMessage(result.error); // Usamos el mensaje de error proporcionado por AuthService
       }
     } catch (error) {
       console.error(error);
       setShowErrorAlert(true);
-      setErrorMessage('Error al crear la cuenta, intenta de nuevo');
+      setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.'); // Mensaje genérico para errores no esperados
     } finally {
       setLoading(false);
     }
