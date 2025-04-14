@@ -101,6 +101,7 @@ export default function RootLayout() {
           name="change-password"
           options={{ headerTitle: '', headerTransparent: true }}
         />
+        <Stack.Screen name="(delivery-tabs)" options={{ headerShown: false }} />
       </Stack>
     </Provider>
   );
