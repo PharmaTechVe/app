@@ -17,7 +17,8 @@ export interface BadgeProps {
     | 'danger'
     | 'success'
     | 'info'
-    | 'secondary_300';
+    | 'secondary_300'
+    | 'primary_300';
   size: 'tiny' | 'small' | 'medium' | 'large';
   borderRadius?: 'rounded' | 'square';
   textColor?: string;
@@ -63,8 +64,14 @@ const Badge: React.FC<BadgeProps> = ({
         color: Colors.textWhite,
       },
       info: { backgroundColor: Colors.semanticInfo, color: Colors.textWhite },
+
       secondary_300: {
         backgroundColor: Colors.secondary_300,
+        color: Colors.textWhite,
+      },
+
+      primary_300: {
+        backgroundColor: Colors.primary_300,
         color: Colors.textWhite,
       },
     },
@@ -99,6 +106,11 @@ const Badge: React.FC<BadgeProps> = ({
         borderWidth: 1,
         color: Colors.secondary_300,
       },
+      primary_300: {
+        borderColor: Colors.primary_300,
+        borderWidth: 1,
+        color: Colors.primary_300,
+      },
     },
     text: {
       primary: { color: Colors.primary },
@@ -107,6 +119,7 @@ const Badge: React.FC<BadgeProps> = ({
       success: { color: Colors.semanticSuccess },
       info: { color: Colors.semanticInfo },
       secondary_300: { color: Colors.secondary_300 },
+      primary_300: { color: Colors.primary_300 },
     },
   };
 

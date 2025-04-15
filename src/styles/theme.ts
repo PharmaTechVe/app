@@ -37,6 +37,8 @@ export const Colors = {
   gray_500: '#6E6D6C',
 
   secondary_300: '#8BEAB3',
+
+  primary_300: '#A2BEEE',
 };
 
 export const Fonts = {
