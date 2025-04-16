@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import PoppinsText from './PoppinsText';
 import Input from './Input';
@@ -7,6 +7,7 @@ import { FontSizes, Colors } from '../styles/theme';
 const PaymentInfoForm = ({
   paymentMethod,
   total,
+  onValidationChange,
 }: {
   paymentMethod:
     | 'punto_de_venta'
@@ -15,7 +16,27 @@ const PaymentInfoForm = ({
     | 'pago_movil'
     | null;
   total: string;
+  onValidationChange: (isValid: boolean) => void;
 }) => {
+  const [bank, setBank] = useState('');
+  const [reference, setReference] = useState('');
+  const [documentNumber, setDocumentNumber] = useState('');
+  const [phone, setPhone] = useState('');
+
+  useEffect(() => {
+    const isValid =
+      paymentMethod !== null &&
+      (paymentMethod === 'pago_movil' || paymentMethod === 'transferencia')
+        ? bank.trim() !== '' &&
+          /^\d+$/.test(reference) &&
+          reference.trim() !== '' &&
+          /^\d{1,8}$/.test(documentNumber) &&
+          /^\d{11}$/.test(phone)
+        : true;
+
+    onValidationChange(isValid);
+  }, [bank, reference, documentNumber, phone, paymentMethod]);
+
   if (!paymentMethod) {
     return null;
   }
@@ -28,6 +49,17 @@ const PaymentInfoForm = ({
 
   const editableInputProps = {
     backgroundColor: Colors.iconWhite,
+  };
+
+  const handleNumericChange = (
+    setter: (val: string) => void,
+    limit?: number,
+  ) => {
+    return (val: string) => {
+      let filtered = val.replace(/\D/g, '');
+      if (limit) filtered = filtered.slice(0, limit);
+      setter(filtered);
+    };
   };
 
   return (
@@ -80,24 +112,29 @@ const PaymentInfoForm = ({
           <PoppinsText style={styles.label}>
             Ingrese los datos para validar el pago
           </PoppinsText>
+
           <Input
             label="Banco"
-            placeholder="Ingrese el banco"
+            value={bank}
+            getValue={setBank}
             {...editableInputProps}
           />
           <Input
             label="Referencia"
-            placeholder="Ingrese la referencia"
+            value={reference}
+            getValue={handleNumericChange(setReference)}
             {...editableInputProps}
           />
           <Input
             label="Número de documento"
-            placeholder="Ingrese su número de documento"
+            value={documentNumber}
+            getValue={handleNumericChange(setDocumentNumber, 8)}
             {...editableInputProps}
           />
           <Input
             label="Teléfono"
-            placeholder="Ingrese su número de teléfono"
+            value={phone}
+            getValue={handleNumericChange(setPhone, 11)}
             {...editableInputProps}
           />
         </>

@@ -32,6 +32,7 @@ const CheckoutScreen = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [status] = useState<'approved' | 'rejected'>('approved');
   const { cartItems } = useCart();
+  const [isPaymentInfoValid, setIsPaymentInfoValid] = useState(false); // Default to false
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -79,7 +80,8 @@ const CheckoutScreen = () => {
     selectedPayment !== null &&
     selectedLocation !== null;
 
-  const isStep2Complete = isSimplifiedSteps || selectedPayment !== null;
+  const isStep2Complete =
+    isSimplifiedSteps || (selectedPayment !== null && isPaymentInfoValid); // Include payment info validation
 
   const isButtonEnabled =
     currentStep === 1
@@ -223,6 +225,7 @@ const CheckoutScreen = () => {
               <PaymentInfoForm
                 paymentMethod={selectedPayment}
                 total={total.toFixed(2)}
+                onValidationChange={setIsPaymentInfoValid} // Pass validation callback
               />
             </View>
           </>
