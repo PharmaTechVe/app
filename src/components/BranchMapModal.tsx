@@ -76,6 +76,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     position: 'relative',
+    elevation: 8,
   },
   closeButton: {
     position: 'absolute',

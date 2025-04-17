@@ -7,6 +7,7 @@ import { BranchService } from '../services/branches';
 import { extractErrorMessage } from '../utils/errorHandler';
 import { MapPinIcon } from 'react-native-heroicons/solid';
 import BranchMapModal from './BranchMapModal';
+import AddAddressModal from './AddAddressModal';
 
 type Branch = {
   id: string;
@@ -30,6 +31,7 @@ const LocationSelector = ({
   ]);
   const [dropdownKey, setDropdownKey] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
+  const [addAddressModalVisible, setAddAddressModalVisible] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
@@ -86,8 +88,12 @@ const LocationSelector = ({
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => setModalVisible(true)}
-        disabled={!selectedBranch}
+        onPress={() =>
+          selectedOption === 'pickup'
+            ? setModalVisible(true)
+            : setAddAddressModalVisible(true)
+        }
+        disabled={selectedOption === 'pickup' && !selectedBranch}
       >
         {selectedOption === 'pickup' && (
           <MapPinIcon
@@ -99,7 +105,9 @@ const LocationSelector = ({
           style={[
             styles.buttonText,
             selectedOption === 'pickup' && styles.textWithIcon,
-            !selectedBranch && styles.disabledText,
+            selectedOption === 'pickup' &&
+              !selectedBranch &&
+              styles.disabledText,
           ]}
         >
           {selectedOption === 'pickup'
@@ -120,6 +128,11 @@ const LocationSelector = ({
               }
             : null
         }
+      />
+
+      <AddAddressModal
+        visible={addAddressModalVisible}
+        onClose={() => setAddAddressModalVisible(false)}
       />
     </View>
   );
