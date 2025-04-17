@@ -48,7 +48,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </View>
 
       {/* Order Code */}
-      <PoppinsText style={styles.orderCode}>
+      <PoppinsText weight="medium" style={styles.orderCode}>
         {orderType === 'pedido' ? 'Orden' : 'Reubicación'} #{orderCode}
       </PoppinsText>
 
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
   },
   orderCode: {
     fontSize: FontSizes.h5.size,
-    fontWeight: 'bold',
     color: Colors.primary,
     marginBottom: 8,
   },

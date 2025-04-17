@@ -47,11 +47,10 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
         >
           {`${elapsedTime}, ${completionTime}`}
         </Badge>
-        <PoppinsText style={styles.elapsedTime}>{elapsedTime}</PoppinsText>
       </View>
 
       {/* Order Code */}
-      <PoppinsText style={styles.orderCode}>
+      <PoppinsText weight="medium" style={styles.orderCode}>
         <CheckCircleIcon size={20} color={Colors.semanticSuccess} />{' '}
         {orderType === 'pedido' ? 'Orden' : 'Reubicación'} #{orderCode}
       </PoppinsText>
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
   },
   orderCode: {
     fontSize: FontSizes.h5.size,
-    fontWeight: 'bold',
     color: Colors.primary,
     marginBottom: 8,
   },
