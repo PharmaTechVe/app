@@ -32,7 +32,9 @@ const CheckoutScreen = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [status] = useState<'approved' | 'rejected'>('approved');
   const { cartItems } = useCart();
-  const [isPaymentInfoValid, setIsPaymentInfoValid] = useState(false); // Default to false
+  const [isPaymentInfoValid, setIsPaymentInfoValid] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -45,13 +47,19 @@ const CheckoutScreen = () => {
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
-  );
+  ); // Total price sum
+
   const totalDiscount = cartItems.reduce(
     (sum, item) => sum + item.price * (item.quantity * 0.1),
     0,
-  );
-  const iva = (subtotal - totalDiscount) * 0.12;
-  const total = subtotal - totalDiscount + iva;
+  ); // Discount sum
+
+  const subtotalAfterDiscount = subtotal - totalDiscount;
+  const subtotalAfterCoupon = isCouponApplied
+    ? subtotalAfterDiscount - couponDiscount
+    : subtotalAfterDiscount;
+  const iva = subtotalAfterCoupon * 0.12;
+  const total = subtotalAfterCoupon + iva;
 
   const renderFooterMessage = () => {
     if (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') {
@@ -81,7 +89,7 @@ const CheckoutScreen = () => {
     selectedLocation !== null;
 
   const isStep2Complete =
-    isSimplifiedSteps || (selectedPayment !== null && isPaymentInfoValid); // Include payment info validation
+    isSimplifiedSteps || (selectedPayment !== null && isPaymentInfoValid);
 
   const isButtonEnabled =
     currentStep === 1
@@ -225,7 +233,7 @@ const CheckoutScreen = () => {
               <PaymentInfoForm
                 paymentMethod={selectedPayment}
                 total={total.toFixed(2)}
-                onValidationChange={setIsPaymentInfoValid} // Pass validation callback
+                onValidationChange={setIsPaymentInfoValid}
               />
             </View>
           </>
@@ -248,14 +256,33 @@ const CheckoutScreen = () => {
         )}
 
         <View style={styles.whiteBackgroundContainer}>
-          {currentStep !== stepsLabels.length && currentStep !== 2 && (
-            <Coupon
-              onApplyCoupon={(code) => console.log('Cupon aplicado:', code)}
-            />
-          )}
-          <View style={styles.spacer} />
+          <Coupon
+            onApplyCoupon={(discountAmount) => {
+              setCouponDiscount(discountAmount);
+              setIsCouponApplied(true);
+            }}
+            onCouponApplied={() => setIsCouponApplied(true)}
+          />
           <OrderSummary />
           <View style={styles.totalContainer}>
+            {isCouponApplied && (
+              <>
+                <View style={styles.totalRow}>
+                  <PoppinsText style={styles.descuentoLabel}>
+                    Subtotal después del Cupón:
+                  </PoppinsText>
+                  <PoppinsText style={styles.descuentoAmount}>
+                    ${subtotalAfterCoupon.toFixed(2)}
+                  </PoppinsText>
+                </View>
+              </>
+            )}
+            <View style={styles.totalRow}>
+              <PoppinsText style={styles.descuentoLabel}>IVA:</PoppinsText>
+              <PoppinsText style={styles.descuentoAmount}>
+                +${iva.toFixed(2)}
+              </PoppinsText>
+            </View>
             <View style={styles.totalRow}>
               <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
               <PoppinsText style={styles.totalAmount}>
@@ -337,7 +364,7 @@ const styles = StyleSheet.create({
   },
   totalContainer: {
     width: '100%',
-    marginTop: 20,
+
     marginBottom: 10,
   },
   totalRow: {
@@ -351,10 +378,26 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.h5.lineHeight,
     color: Colors.textMain,
   },
+  descuentoLabel: {
+    fontSize: FontSizes.b2.size,
+    lineHeight: FontSizes.h5.lineHeight,
+    color: Colors.textMain,
+  },
+  descuentoAmount: {
+    fontSize: FontSizes.b2.size,
+    lineHeight: FontSizes.h5.lineHeight,
+    color: Colors.textMain,
+  },
   totalAmount: {
     fontSize: FontSizes.h5.size,
     lineHeight: FontSizes.h5.lineHeight,
     color: Colors.textMain,
+  },
+  strikethroughAmount: {
+    fontSize: FontSizes.b2.size,
+    lineHeight: FontSizes.h5.lineHeight,
+    color: Colors.textLowContrast,
+    textDecorationLine: 'line-through',
   },
   checkoutButton: {
     marginBottom: 16,

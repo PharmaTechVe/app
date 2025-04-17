@@ -102,3 +102,13 @@ export type BranchResponse = Branch &
   BaseModel & {
     city: CityResponse;
   };
+
+export type Coupon = {
+  code: string;
+  discount: number;
+  minPurchase: number;
+  maxUses: number;
+  expirationDate: Date;
+};
+
+export type CouponResponse = Coupon & BaseModel;

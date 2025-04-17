@@ -18,7 +18,6 @@ const OrderSummary = () => {
     (sum, item) => sum + item.price * (item.quantity * 0.1),
     0,
   );
-  const iva = (subtotal - totalDiscount) * 0.12;
 
   const renderItem = ({ item }: { item: CartItem }) => {
     const discount = 10;
@@ -108,12 +107,6 @@ const OrderSummary = () => {
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
               <PoppinsText style={styles.discountText}>
                 -${totalDiscount.toFixed(2)}
-              </PoppinsText>
-            </View>
-            <View style={styles.row}>
-              <PoppinsText style={styles.ivaText}>IVA</PoppinsText>
-              <PoppinsText style={styles.ivaText}>
-                ${iva.toFixed(2)}
               </PoppinsText>
             </View>
           </View>
