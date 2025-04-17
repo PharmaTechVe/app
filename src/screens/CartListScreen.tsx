@@ -27,7 +27,7 @@ const CartListScreen = () => {
     (sum, item) => sum + item.price * (item.quantity * 0.1), // 12% discount
     0,
   ); // Discount sum
-  const iva = (subtotal - totalDiscount) * 0.12; // 10% subtotal minus discount
+  const iva = (subtotal - totalDiscount) * 0.16; // 10% subtotal minus discount
   const total = subtotal - totalDiscount + iva; // Subtotal, discount and IVA sum
 
   const renderItem = ({ item }: { item: CartItem }) => {

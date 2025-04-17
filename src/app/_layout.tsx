@@ -103,7 +103,12 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="checkout"
-          options={{ headerTitle: '', headerTransparent: true }}
+          options={{
+            headerTitle: '',
+            headerTransparent: true,
+            headerLeft: undefined,
+            headerShown: false,
+          }}
         />
       </Stack>
     </Provider>

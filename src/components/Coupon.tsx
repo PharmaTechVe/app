@@ -39,7 +39,7 @@ const Coupon: React.FC<CouponProps> = ({
         onApplyCoupon(discount);
         onCouponApplied();
       } else {
-        setValidationMessage(response.error || 'Error al validar el cupón.');
+        setValidationMessage('Cupón inválido'); // Mensaje personalizado de error
       }
     }
   };

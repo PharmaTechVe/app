@@ -84,6 +84,12 @@ const PaymentInfoForm = ({
               />
             </View>
             <View style={styles.inputWrapper}>
+              <Input label="RIF" value="J-008720001" {...staticInputProps} />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.inputWrapper, styles.largeInput]}>
               {paymentMethod === 'pago_movil' ? (
                 <Input
                   label="Teléfono"
@@ -98,13 +104,7 @@ const PaymentInfoForm = ({
                 />
               )}
             </View>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.inputWrapper}>
-              <Input label="RIF" value="J-008720001" {...staticInputProps} />
-            </View>
-            <View style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, styles.smallInput]}>
               <Input label="Monto" value={total} {...staticInputProps} />
             </View>
           </View>
@@ -164,6 +164,12 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   inputWrapper: {
+    flex: 1,
+  },
+  largeInput: {
+    flex: 1.5,
+  },
+  smallInput: {
     flex: 1,
   },
 });

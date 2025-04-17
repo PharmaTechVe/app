@@ -1,10 +1,10 @@
-// CheckoutScreen.tsx
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   ShoppingBagIcon,
   TruckIcon,
   MapPinIcon,
+  ChevronLeftIcon,
 } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import RadioCard from '../components/RadioCard';
@@ -47,18 +47,16 @@ const CheckoutScreen = () => {
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
-  ); // Total price sum
-
+  );
   const totalDiscount = cartItems.reduce(
     (sum, item) => sum + item.price * (item.quantity * 0.1),
     0,
-  ); // Discount sum
-
+  );
   const subtotalAfterDiscount = subtotal - totalDiscount;
   const subtotalAfterCoupon = isCouponApplied
     ? subtotalAfterDiscount - couponDiscount
     : subtotalAfterDiscount;
-  const iva = subtotalAfterCoupon * 0.12;
+  const iva = subtotalAfterCoupon * 0.16;
   const total = subtotalAfterCoupon + iva;
 
   const renderFooterMessage = () => {
@@ -77,6 +75,14 @@ const CheckoutScreen = () => {
     }
   };
 
+  const handleGoBack = () => {
+    if (currentStep === 1) {
+      router.back(); // Use router.back() for navigation.goBack() in Expo Router
+    } else if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   const handleGoToHome = () => {
     router.replace({
       pathname: '/(tabs)',
@@ -87,7 +93,6 @@ const CheckoutScreen = () => {
     selectedOption !== null &&
     selectedPayment !== null &&
     selectedLocation !== null;
-
   const isStep2Complete =
     isSimplifiedSteps || (selectedPayment !== null && isPaymentInfoValid);
 
@@ -166,6 +171,11 @@ const CheckoutScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
+        {/* Back Button */}
+        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
+        </TouchableOpacity>
+
         <View style={styles.steps}>
           <Steps
             totalSteps={stepsLabels.length}
@@ -256,13 +266,15 @@ const CheckoutScreen = () => {
         )}
 
         <View style={styles.whiteBackgroundContainer}>
-          <Coupon
-            onApplyCoupon={(discountAmount) => {
-              setCouponDiscount(discountAmount);
-              setIsCouponApplied(true);
-            }}
-            onCouponApplied={() => setIsCouponApplied(true)}
-          />
+          {currentStep !== 2 && currentStep < stepsLabels.length && (
+            <Coupon
+              onApplyCoupon={(discountAmount) => {
+                setCouponDiscount(discountAmount);
+                setIsCouponApplied(true);
+              }}
+              onCouponApplied={() => setIsCouponApplied(true)}
+            />
+          )}
           <OrderSummary />
           <View style={styles.totalContainer}>
             {isCouponApplied && (
@@ -323,33 +335,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
   },
+  backButton: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 1,
+    padding: 8,
+  },
   steps: {
-    marginTop: 40,
+    marginTop: 60,
   },
   purchaseOptionsTitle: {
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
     marginBottom: 24,
     alignSelf: 'flex-start',
-    padding: 20,
+    paddingHorizontal: 20,
   },
   radioContainer: {
     width: '100%',
-    padding: 20,
+    paddingHorizontal: 20,
     marginTop: -30,
   },
   radioItem: {
     marginBottom: 24,
   },
   paymentMethods: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
   footerMessage: {
     fontSize: FontSizes.c1.size,
     color: Colors.textLowContrast,
-    marginBottom: -20,
-    padding: 20,
-    marginTop: -20,
+    marginBottom: 10,
+    paddingHorizontal: 20,
+    marginTop: 10,
   },
   whiteBackgroundContainer: {
     backgroundColor: '#FFFFFF',
@@ -364,7 +383,6 @@ const styles = StyleSheet.create({
   },
   totalContainer: {
     width: '100%',
-
     marginBottom: 10,
   },
   totalRow: {
@@ -409,7 +427,7 @@ const styles = StyleSheet.create({
     marginBottom: -20,
   },
   paymentInfoFormContainer: {
-    padding: 20,
+    paddingHorizontal: 20,
     paddingTop: 0,
   },
   confirmationContainer: {
