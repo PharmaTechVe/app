@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import PoppinsText from '../../components/PoppinsText';
 import OrderCard from '../../components/OrderCard';
 import { Colors, FontSizes } from '../../styles/theme';
 
 export default function DeliveryHomeScreen() {
+  const router = useRouter();
+
   const orders: Array<{
     id: string;
     type: 'pedido' | 'reubicación';
@@ -31,8 +34,16 @@ export default function DeliveryHomeScreen() {
     },
   ];
 
-  const handleTakeOrder = (orderId: string) => {
-    console.log(`Tomar pedido: ${orderId}`);
+  const handleTakeOrder = (order: {
+    id: string;
+    type: 'pedido' | 'reubicación';
+    address: string;
+    branch: string;
+    estimatedTime: string;
+    elapsedTime: string;
+  }) => {
+    const query = encodeURIComponent(JSON.stringify(order));
+    router.push(`/deliveryDetail/${order.id}?data=${query}`);
   };
 
   const handleDiscardOrder = (orderId: string) => {
@@ -54,7 +65,7 @@ export default function DeliveryHomeScreen() {
             branch={order.branch}
             estimatedTime={order.estimatedTime}
             elapsedTime={order.elapsedTime}
-            onTakeOrder={() => handleTakeOrder(order.id)}
+            onTakeOrder={() => handleTakeOrder(order)}
             onDiscardOrder={() => handleDiscardOrder(order.id)}
           />
         ))}

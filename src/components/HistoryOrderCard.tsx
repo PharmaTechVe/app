@@ -2,8 +2,8 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   MapPinIcon,
-  BuildingOfficeIcon,
   ClockIcon,
+  BuildingStorefrontIcon,
 } from 'react-native-heroicons/outline';
 import { CheckCircleIcon } from 'react-native-heroicons/solid';
 import Badge from './Badge';
@@ -67,7 +67,7 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
           <PoppinsText style={styles.detailText}>{userName}</PoppinsText>
         </View>
         <View style={styles.detailRow}>
-          <BuildingOfficeIcon size={20} color={Colors.primary} />
+          <BuildingStorefrontIcon size={20} color={Colors.primary} />
           <PoppinsText style={styles.detailText}>
             Buscar en: {branch}
           </PoppinsText>
@@ -102,7 +102,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     width: '100%',
-    height: 280,
+    minHeight: 280,
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',

@@ -1,20 +1,25 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 import PoppinsText from '../../components/PoppinsText';
 import HistoryOrderCard from '../../components/HistoryOrderCard';
 import { Colors, FontSizes } from '../../styles/theme';
 
-export default function DeliveryHistoryScreen() {
-  const completedOrders: Array<{
-    id: string;
-    type: 'pedido' | 'reubicación';
-    address: string;
-    branch: string;
-    estimatedTime: string;
-    elapsedTime: string;
-    completionTime: string; // Hora de finalización
-    userName: string; // Nombre del usuario
-  }> = [
+interface Order {
+  id: string;
+  type: 'pedido' | 'reubicación';
+  address: string;
+  branch: string;
+  estimatedTime: string;
+  elapsedTime: string;
+  completionTime: string;
+  userName: string;
+}
+
+const DeliveryHistoryScreen: React.FC = () => {
+  const router = useRouter();
+
+  const completedOrders: Array<Order> = [
     {
       id: '12345',
       type: 'pedido',
@@ -37,8 +42,10 @@ export default function DeliveryHistoryScreen() {
     },
   ];
 
-  const handleViewDetails = (orderId: string) => {
-    console.log(`Ver detalles del pedido: ${orderId}`);
+  const handleViewDetails = (order: Order) => {
+    console.log('Datos enviados al detalle del historial:', order);
+    const query = encodeURIComponent(JSON.stringify(order));
+    router.push(`/deliveryHistoryDetail/${order.id}?data=${query}`);
   };
 
   return (
@@ -58,13 +65,13 @@ export default function DeliveryHistoryScreen() {
             elapsedTime={order.elapsedTime}
             completionTime={order.completionTime}
             userName={order.userName}
-            onViewDetails={() => handleViewDetails(order.id)}
+            onViewDetails={() => handleViewDetails(order)}
           />
         ))}
       </ScrollView>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -80,3 +87,5 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 });
+
+export default DeliveryHistoryScreen;
