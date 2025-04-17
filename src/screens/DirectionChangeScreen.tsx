@@ -135,7 +135,7 @@ const ChangeDirectionScreen = () => {
       </View>
       {/* Header */}
       <Return onClose={() => router.push('/')} />
-      <View style={styles.profileHeader}>
+      <View style={styles.addressHeader}>
         {isEditable ? (
           <PoppinsText
             style={{ fontSize: FontSizes.s1.size, marginBottom: 10 }}
@@ -152,7 +152,7 @@ const ChangeDirectionScreen = () => {
       </View>
 
       {/* Información de direccion */}
-      <View style={styles.profileInfo}>
+      <View style={styles.addressInfo}>
         {isEditable ? (
           <Dropdown
             label="Estado"
@@ -264,11 +264,11 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1000,
   },
-  profileHeader: {
+  addressHeader: {
     alignItems: 'center',
     marginVertical: 15,
   },
-  profileImage: {
+  addressImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: Colors.primary,
   },
-  profileInfo: {
+  addressInfo: {
     marginBottom: 20,
   },
   fieldContainer: {

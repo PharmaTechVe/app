@@ -187,4 +187,29 @@ export const UserService = {
       };
     }
   },
+
+  getUserOrders: async () => {
+    try {
+      // Obtén el token JWT desde SecureStore
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+
+      // Decodifica el JWT para obtener el userId
+      const decoded = decodeJWT(token);
+      if (!decoded || !decoded.userId) {
+        throw new Error('No se pudo decodificar el token de autenticación');
+      }
+
+      const userId = decoded.userId;
+      const response = await api.userAdress.getListAddresses(userId, token);
+      return { success: true, data: response };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
 };

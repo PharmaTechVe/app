@@ -38,7 +38,7 @@ const AvatarWithMenu: React.FC = () => {
       id: '4',
       title: 'Mis Pedidos',
       icon: <ShoppingCartIcon color={Colors.iconMainPrimary} />,
-      onPress: () => console.log('Cerrar sesión presionado'),
+      onPress: () => router.push('/orders'),
     },
   ];
 
