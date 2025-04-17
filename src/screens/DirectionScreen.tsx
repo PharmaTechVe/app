@@ -120,7 +120,9 @@ const DirectionScreen = () => {
                 }}
               >
                 <TouchableOpacity
-                  onPress={() => router.push(`/editDirection/${direction.id}`)}
+                  onPress={() =>
+                    router.push(`change-direction/${direction.id}`)
+                  }
                 >
                   <PencilIcon color={Colors.iconMainPrimary} size={20} />
                 </TouchableOpacity>
@@ -138,7 +140,7 @@ const DirectionScreen = () => {
 
       <Button
         title="Agregar nueva dirección"
-        onPress={() => router.push('/editDirection')}
+        onPress={() => router.push('/change-direction')}
       />
     </ScrollView>
   );

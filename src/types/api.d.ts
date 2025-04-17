@@ -102,8 +102,25 @@ type UserAddressResponse = {
   nameCountry: string;
 };
 
+type CreateUserAddressRequest = BaseModel & {
+  adress: string;
+  zipCode?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  cityId?: string;
+  additionalInformation?: string | null;
+  referencePoint?: string | null;
+};
+
 type State = {
+  id: string;
   name: string;
+};
+
+type CityResponse = {
+  id: string;
+  name: string;
+  state: StateResponse;
 };
 
 type Inventory = BaseModel & {
