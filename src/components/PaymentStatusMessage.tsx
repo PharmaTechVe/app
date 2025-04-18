@@ -3,13 +3,13 @@ import { CheckCircleIcon, XCircleIcon } from 'react-native-heroicons/outline';
 import theme from '../styles/theme';
 import { Text, View, StyleSheet } from 'react-native';
 
-interface PurchaseStatusMessageProps {
+interface PaymentStatusMessageProps {
   status: 'approved' | 'rejected';
   orderNumber: string;
   userName: string;
 }
 
-const PurchaseStatusMessage: React.FC<PurchaseStatusMessageProps> = ({
+const PaymentStatusMessage: React.FC<PaymentStatusMessageProps> = ({
   status,
   orderNumber,
   userName,
@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PurchaseStatusMessage;
+export default PaymentStatusMessage;

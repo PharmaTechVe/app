@@ -17,11 +17,14 @@ import PoppinsText from '../components/PoppinsText';
 import LocationSelector from '../components/LocationSelector';
 import PaymentInfoForm from '../components/PaymentInfoForm';
 import Coupon from '../components/Coupon';
-import PurchaseStatusMessage from '../components/PurchaseStatusMessage';
+import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import { useRouter } from 'expo-router';
+import { OrderService } from '../services/order';
+import { OrderType } from '../types/api.d';
 
 const CheckoutScreen = () => {
   const router = useRouter();
+  const { cartItems } = useCart();
   const [selectedOption, setSelectedOption] = useState<
     'pickup' | 'delivery' | null
   >('pickup');
@@ -30,11 +33,11 @@ const CheckoutScreen = () => {
   >(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [status] = useState<'approved' | 'rejected'>('approved');
-  const { cartItems } = useCart();
+  const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
   const [isPaymentInfoValid, setIsPaymentInfoValid] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -69,15 +72,76 @@ const CheckoutScreen = () => {
     return null;
   };
 
-  const handleContinue = () => {
+  const isValidUUID = (value: string | null): boolean => {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return value !== null && uuidRegex.test(value);
+  };
+
+  const handleContinue = async () => {
     if (currentStep < stepsLabels.length) {
+      if (currentStep === stepsLabels.length - 1) {
+        try {
+          if (selectedOption === 'pickup' && !isValidUUID(selectedLocation)) {
+            setErrorMessage('La sucursal seleccionada no es válida.');
+            setStatus('rejected');
+            setCurrentStep(stepsLabels.length);
+            return;
+          }
+
+          if (!selectedOption) {
+            setErrorMessage('Debe seleccionar una opción de compra.');
+            setStatus('rejected');
+            setCurrentStep(stepsLabels.length);
+            return;
+          }
+
+          setErrorMessage(null);
+
+          const orderPayload = {
+            type:
+              selectedOption === 'pickup'
+                ? OrderType.PICKUP
+                : OrderType.DELIVERY,
+            branchId:
+              selectedOption === 'pickup'
+                ? selectedLocation || undefined
+                : undefined,
+            userAddressId:
+              selectedOption === 'delivery'
+                ? selectedLocation || undefined
+                : undefined,
+            products: cartItems.map((item) => ({
+              productPresentationId: item.id,
+              quantity: Math.max(1, item.quantity),
+            })),
+          };
+
+          const orderResponse = await OrderService.create(orderPayload);
+
+          if (!orderResponse.success || !orderResponse.data?.id) {
+            setErrorMessage(
+              'No pudimos procesar tu orden. Inténtalo nuevamente.',
+            );
+            setStatus('rejected');
+            setCurrentStep(stepsLabels.length);
+            return;
+          }
+
+          setStatus('approved');
+          setCurrentStep(stepsLabels.length);
+        } catch {
+          setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
+          setStatus('rejected');
+        }
+      }
       setCurrentStep(currentStep + 1);
     }
   };
 
   const handleGoBack = () => {
     if (currentStep === 1) {
-      router.back(); // Use router.back() for navigation.goBack() in Expo Router
+      router.back();
     } else if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
@@ -171,7 +235,6 @@ const CheckoutScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        {/* Back Button */}
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
           <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
         </TouchableOpacity>
@@ -183,6 +246,10 @@ const CheckoutScreen = () => {
             labels={stepsLabels}
           />
         </View>
+
+        {errorMessage && (
+          <PoppinsText style={styles.errorMessage}>{errorMessage}</PoppinsText>
+        )}
 
         {currentStep === 1 && (
           <>
@@ -244,6 +311,14 @@ const CheckoutScreen = () => {
                 paymentMethod={selectedPayment}
                 total={total.toFixed(2)}
                 onValidationChange={setIsPaymentInfoValid}
+                onBankChange={(value) => console.log('Bank changed:', value)}
+                onReferenceChange={(value) =>
+                  console.log('Reference changed:', value)
+                }
+                onDocumentNumberChange={(value) =>
+                  console.log('Document number changed:', value)
+                }
+                onPhoneChange={(value) => console.log('Phone changed:', value)}
               />
             </View>
           </>
@@ -254,10 +329,10 @@ const CheckoutScreen = () => {
             <PoppinsText style={styles.purchaseOptionsTitle}>
               Confirmación de Orden
             </PoppinsText>
-            <PurchaseStatusMessage
+            <PaymentStatusMessage
               status={status}
-              orderNumber="12345"
-              userName="Cliente1"
+              orderNumber={'N/A'}
+              userName={'Usuario'}
             />
             <View style={styles.confirmationContainer}>
               {renderConfirmationContent(status)}
@@ -459,6 +534,12 @@ const styles = StyleSheet.create({
   primaryButton: {
     marginTop: 10,
     width: '100%',
+  },
+  errorMessage: {
+    color: Colors.semanticDanger,
+    fontSize: FontSizes.b2.size,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
 

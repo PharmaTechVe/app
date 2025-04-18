@@ -8,6 +8,10 @@ const PaymentInfoForm = ({
   paymentMethod,
   total,
   onValidationChange,
+  onBankChange,
+  onReferenceChange,
+  onDocumentNumberChange,
+  onPhoneChange,
 }: {
   paymentMethod:
     | 'punto_de_venta'
@@ -17,11 +21,31 @@ const PaymentInfoForm = ({
     | null;
   total: string;
   onValidationChange: (isValid: boolean) => void;
+  onBankChange: (value: string) => void;
+  onReferenceChange: (value: string) => void;
+  onDocumentNumberChange: (value: string) => void;
+  onPhoneChange: (value: string) => void;
 }) => {
   const [bank, setBank] = useState('');
   const [reference, setReference] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const [phone, setPhone] = useState('');
+
+  useEffect(() => {
+    onBankChange(bank);
+  }, [bank]);
+
+  useEffect(() => {
+    onReferenceChange(reference);
+  }, [reference]);
+
+  useEffect(() => {
+    onDocumentNumberChange(documentNumber);
+  }, [documentNumber]);
+
+  useEffect(() => {
+    onPhoneChange(phone);
+  }, [phone]);
 
   useEffect(() => {
     const isValid =
@@ -49,17 +73,6 @@ const PaymentInfoForm = ({
 
   const editableInputProps = {
     backgroundColor: Colors.iconWhite,
-  };
-
-  const handleNumericChange = (
-    setter: (val: string) => void,
-    limit?: number,
-  ) => {
-    return (val: string) => {
-      let filtered = val.replace(/\D/g, '');
-      if (limit) filtered = filtered.slice(0, limit);
-      setter(filtered);
-    };
   };
 
   return (
@@ -116,25 +129,42 @@ const PaymentInfoForm = ({
           <Input
             label="Banco"
             value={bank}
+            placeholder="Ingrese el banco"
             getValue={setBank}
+            errorText="Este campo no puede estar vacío"
+            validation={(val) => val.trim() !== ''}
             {...editableInputProps}
           />
           <Input
             label="Referencia"
             value={reference}
-            getValue={handleNumericChange(setReference)}
+            placeholder="Ingrese la referencia"
+            getValue={(val) => setReference(val.replace(/\D/g, ''))}
+            fieldType="number"
+            errorText="Debe ser un número válido"
+            validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
             {...editableInputProps}
           />
           <Input
             label="Número de documento"
+            placeholder="Ingrese el número de documento"
             value={documentNumber}
-            getValue={handleNumericChange(setDocumentNumber, 8)}
+            getValue={(val) =>
+              setDocumentNumber(val.replace(/\D/g, '').slice(0, 8))
+            }
+            fieldType="number"
+            errorText="Debe contener hasta 8 dígitos numéricos"
+            validation={(val) => /^\d{1,8}$/.test(val)}
             {...editableInputProps}
           />
           <Input
             label="Teléfono"
+            placeholder="Ingrese el teléfono"
             value={phone}
-            getValue={handleNumericChange(setPhone, 11)}
+            getValue={(val) => setPhone(val.replace(/\D/g, '').slice(0, 11))}
+            fieldType="number"
+            errorText="Debe tener exactamente 11 dígitos"
+            validation={(val) => /^\d{11}$/.test(val)}
             {...editableInputProps}
           />
         </>

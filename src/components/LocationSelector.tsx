@@ -77,10 +77,12 @@ const LocationSelector = ({
         options={options}
         placeholder="Selecciona una opción"
         onSelect={(val) => {
-          onSelect(val);
           if (selectedOption === 'pickup') {
             const branch = pickupBranches.find((b) => b.name === val);
             setSelectedBranch(branch || null);
+            onSelect(branch ? branch.id : null); // Pass the branch ID (UUID) instead of the name
+          } else {
+            onSelect(val); // For delivery, pass the selected address
           }
         }}
         borderColor={Colors.gray_100}
