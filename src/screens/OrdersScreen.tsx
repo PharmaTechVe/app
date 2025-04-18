@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Return from '../components/Return';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
 import Button from '../components/Button';
 
@@ -148,7 +148,13 @@ const OrdersScreen = () => {
                       alignItems: 'center',
                     }}
                   >
-                    <Link href={`orders/${order.id}`}>Ver detalles</Link>
+                    <TouchableOpacity
+                      onPress={() => router.push(`order/${order.id}`)}
+                    >
+                      <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
+                        Ver detalles
+                      </PoppinsText>
+                    </TouchableOpacity>
                     <Button
                       title="Re ordenar"
                       size="small"

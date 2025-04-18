@@ -71,6 +71,7 @@ export default function RootLayout() {
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="direction" options={{ headerShown: false }} />
         <Stack.Screen name="orders" options={{ headerShown: false }} />
+        <Stack.Screen name="order" options={{ headerShown: false }} />
         <Stack.Screen
           name="change-direction"
           options={{ headerShown: false }}
