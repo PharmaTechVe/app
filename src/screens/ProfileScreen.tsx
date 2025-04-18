@@ -8,7 +8,6 @@ import Button from '../components/Button';
 import { UserService } from '../services/user';
 import { UserList } from '../types/api';
 import { PencilIcon } from 'react-native-heroicons/outline';
-import Return from '../components/Return';
 import { useRouter } from 'expo-router';
 import DatePickerInput from '../components/DatePickerInput';
 import {
@@ -27,21 +26,12 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  /*   const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  }; */
-
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const profile = await UserService.getProfile();
 
         if (profile.success) {
-          //profile.data.profile.birthDate = formatDate(profile.data.profile.birthDate);
           setProfile(profile.data);
         }
       } catch (error) {
@@ -130,7 +120,6 @@ const ProfileScreen = () => {
         )}
       </View>
       {/* Header con foto de perfil */}
-      <Return onClose={() => router.push('/')} />
       <View style={styles.profileHeader}>
         {isEditable ? (
           <PoppinsText
@@ -269,6 +258,7 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 15,
   },
   profileImage: {

@@ -6,21 +6,21 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import { UserService } from '../services/user';
 import { UserAddressResponse } from '../types/api';
-import Return from '../components/Return';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { validateRequiredFields } from '../utils/validators';
 import Alert from '../components/Alerts';
-
 import { StateService } from '../services/state';
-import { State, City } from '../types/api';
+import { State, CityResponse } from '../types/api';
 import Dropdown from '../components/Dropdown';
 
 const ChangeDirectionScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const [address, setAddress] = useState<UserAddressResponse>({});
+  const [address, setAddress] = useState<UserAddressResponse>(
+    {} as UserAddressResponse,
+  );
   const [states, setStates] = useState<State[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
+  const [cities, setCities] = useState<CityResponse[]>([]);
   const [selectedState, setSelectedState] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [isEditable, setIsEditable] = useState(false);
@@ -133,8 +133,6 @@ const ChangeDirectionScreen = () => {
           />
         )}
       </View>
-      {/* Header */}
-      <Return onClose={() => router.push('/')} />
       <View style={styles.addressHeader}>
         {isEditable ? (
           <PoppinsText
@@ -266,7 +264,8 @@ const styles = StyleSheet.create({
   },
   addressHeader: {
     alignItems: 'center',
-    marginVertical: 15,
+    marginTop: 30,
+    marginBottom: 15,
   },
   addressImage: {
     width: 120,

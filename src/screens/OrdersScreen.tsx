@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
-import Return from '../components/Return';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
 import Button from '../components/Button';
@@ -64,13 +63,14 @@ const OrdersScreen = () => {
           />
         )}
       </View>
-      <Return onClose={() => router.push('/')} />
       <View style={styles.orderHeader}>
         <PoppinsText style={{ fontSize: FontSizes.s1.size }}>
           Mis Pedidos
         </PoppinsText>
       </View>
-
+      <TouchableOpacity onPress={() => router.push(`order`)}>
+        Ver detalle de orden
+      </TouchableOpacity>
       <View style={styles.orderInfo}>
         {ordersList &&
           ordersList.length > 0 &&
@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
   },
   orderHeader: {
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 15,
   },
   orderImage: {

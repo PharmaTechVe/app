@@ -4,7 +4,6 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Button from '../components/Button';
 import { UserList } from '../types/api';
-import Return from '../components/Return';
 import { useRouter } from 'expo-router';
 import { StarIcon } from 'react-native-heroicons/solid';
 import Alert from '../components/Alerts';
@@ -58,7 +57,6 @@ const OrderDetailScreen = () => {
           />
         )}
       </View>
-      <Return onClose={() => router.push('/')} />
       <View style={styles.orderHeader}>
         <PoppinsText style={{ fontSize: FontSizes.s1.size, marginBottom: 10 }}>
           Detalle del pedido
@@ -165,6 +163,7 @@ const styles = StyleSheet.create({
   },
   orderHeader: {
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 15,
   },
   orderImage: {

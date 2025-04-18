@@ -1,3 +1,5 @@
+import { BaseModel } from '@pharmatech/sdk';
+
 export interface ApiError extends Error {
   response?: {
     data?: {
@@ -123,7 +125,7 @@ type CityResponse = {
   state: StateResponse;
 };
 
-type OrderResponse = {
+type OrderResponse = BaseModel & {
   type: OrderType;
   status: OrderStatus;
   totalPrice: number;

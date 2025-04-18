@@ -11,7 +11,6 @@ import {
   PencilIcon,
   TrashIcon,
 } from 'react-native-heroicons/outline';
-import Return from '../components/Return';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
 
@@ -72,7 +71,6 @@ const DirectionScreen = () => {
         )}
       </View>
       {/* Header con foto de perfil */}
-      <Return onClose={() => router.push('/')} />
       <View style={styles.directionHeader}>
         <PoppinsText style={{ fontSize: FontSizes.s1.size, marginBottom: 10 }}>
           Mis Direcciones
@@ -163,6 +161,7 @@ const styles = StyleSheet.create({
   },
   directionHeader: {
     alignItems: 'center',
+    marginTop: 30,
     marginBottom: 15,
   },
   directionImage: {
