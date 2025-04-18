@@ -32,7 +32,7 @@ const AvatarWithMenu: React.FC = () => {
       id: '3',
       title: 'Seguridad',
       icon: <ShieldCheckIcon color={Colors.iconMainPrimary} />,
-      onPress: () => console.log('Cerrar sesión presionado'),
+      onPress: () => router.push('/change-password'),
     },
     {
       id: '4',

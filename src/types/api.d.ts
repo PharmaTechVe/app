@@ -123,6 +123,12 @@ type CityResponse = {
   state: StateResponse;
 };
 
+type OrderResponse = {
+  type: OrderType;
+  status: OrderStatus;
+  totalPrice: number;
+};
+
 type Inventory = BaseModel & {
   stockQuantity: number;
   branch: BranchResponse;

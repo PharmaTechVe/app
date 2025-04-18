@@ -9,6 +9,7 @@ import {
 } from '../types/api.d';
 import { extractErrorMessage } from '../utils/errorHandler';
 import { decodeJWT } from '../helper/jwtHelper';
+import { OrderResponse, Pagination } from '@pharmatech/sdk';
 
 export const UserService = {
   getProfile: async (): Promise<ServiceResponse<UserList>> => {
@@ -188,7 +189,9 @@ export const UserService = {
     }
   },
 
-  getUserOrders: async () => {
+  getUserOrders: async (): Promise<
+    ServiceResponse<Pagination<OrderResponse>>
+  > => {
     try {
       // Obtén el token JWT desde SecureStore
       const token = await SecureStore.getItemAsync('auth_token');
@@ -203,7 +206,11 @@ export const UserService = {
       }
 
       const userId = decoded.userId;
-      const response = await api.userAdress.getListAddresses(userId, token);
+      const response = await await api.order.findAll({
+        page: 1,
+        limit: 10,
+        userId: userId,
+      });
       return { success: true, data: response };
     } catch (error) {
       return {

@@ -6,16 +6,13 @@ import Return from '../components/Return';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
 import Button from '../components/Button';
-
-type order = {
-  id: string;
-  date: string;
-  status: string;
-  total: number;
-};
+import { UserService } from '../services/user';
+import { OrderResponse } from '../types/api';
 
 const OrdersScreen = () => {
-  const [ordersList, setOrdersList] = useState<order[] | undefined>(undefined);
+  const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
+    undefined,
+  );
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -24,29 +21,15 @@ const OrdersScreen = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        /* const order = await UserService.getUserOrders();
-
+        const order = await UserService.getUserOrders();
+        console.log(order);
         if (order.success) {
-          if (order.data.length > 0) {
-            setOrdersList(order.data);
+          if (order.data.results.length > 0) {
+            setOrdersList(order.data.results);
           } else {
             setShowInfoAlert(true);
           }
-        } */
-        setOrdersList([
-          {
-            id: '#R353453',
-            date: '43534543',
-            status: 'Pagado',
-            total: 12.45,
-          },
-          {
-            id: '#R353453',
-            date: '43534543',
-            status: 'Pagado',
-            total: 12.45,
-          },
-        ]);
+        }
       } catch (error) {
         console.log(error);
         setErrorMessage('Ha ocurrido un error');
@@ -113,12 +96,12 @@ const OrdersScreen = () => {
                   }}
                 >
                   <View>
-                    <PoppinsText>{order.id}</PoppinsText>
+                    <PoppinsText>{order.type}</PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
-                      {order.date}
+                      {order.createdAt}
                     </PoppinsText>
                   </View>
-                  <PoppinsText>${order.total}</PoppinsText>
+                  <PoppinsText>${order.totalPrice}</PoppinsText>
                 </View>
                 <View
                   style={{
