@@ -8,6 +8,7 @@ import {
   Pagination,
   UserAddressResponse,
   CreateUserAddressRequest,
+  OrderDetailedResponse,
 } from '@pharmatech/sdk';
 
 export const UserService = {
@@ -231,11 +232,25 @@ export const UserService = {
       }
 
       const userId = decoded.userId;
-      const response = await await api.order.findAll({
+      const response = await api.order.findAll({
         page: 1,
         limit: 10,
         userId: userId,
       });
+      return { success: true, data: response };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
+  getOrder: async (
+    id: string,
+  ): Promise<ServiceResponse<OrderDetailedResponse>> => {
+    try {
+      const response = await api.order.getById(id);
       return { success: true, data: response };
     } catch (error) {
       return {

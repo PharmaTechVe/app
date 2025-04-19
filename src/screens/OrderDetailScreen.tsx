@@ -1,15 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+} from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Button from '../components/Button';
-import { UserList } from '../types/api';
-import { useRouter } from 'expo-router';
 import { StarIcon } from 'react-native-heroicons/solid';
 import Alert from '../components/Alerts';
+import { UserService } from '../services/user';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { OrderDetailedResponse } from '@pharmatech/sdk';
 
 const OrderDetailScreen = () => {
-  const [order, setOrder] = useState<UserList>({});
+  const { id } = useLocalSearchParams<{ id: string }>();
+
+  const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
+    undefined,
+  );
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -18,7 +29,7 @@ const OrderDetailScreen = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        //const order = await UserService.getOrder();
+        const order = await UserService.getOrder(id);
 
         if (order.success) {
           setOrder(order.data);
@@ -31,6 +42,10 @@ const OrderDetailScreen = () => {
 
     fetchOrder();
   }, []);
+
+  const handleReorder = async () => {
+    setShowSuccessAlert(true);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -48,10 +63,10 @@ const OrderDetailScreen = () => {
           <Alert
             type="success"
             title="Éxito"
-            message="Cuenta creada correctamente"
+            message="Pedido agregado al carrito"
             onClose={() => {
               setShowSuccessAlert(false);
-              router.replace('/success');
+              router.replace('/cart');
             }}
             borderColor
           />
@@ -76,69 +91,99 @@ const OrderDetailScreen = () => {
         >
           <View>
             <PoppinsText>Número de pedido:</PoppinsText>
-            <PoppinsText>#430960</PoppinsText>
+            <PoppinsText>{order?.id}</PoppinsText>
           </View>
           <Button
             title="Re ordenar"
             size="small"
             style={{ paddingVertical: 0 }}
+            onPress={handleReorder}
           />
         </View>
-        <View>
-          <View style={{ flexDirection: 'row', marginVertical: 10 }}>
+        <ScrollView style={{ height: 400 }}>
+          {order?.details.map((detail, index) => (
             <View
-              style={{
-                width: 100,
-                backgroundColor: Colors.gray_100,
-                marginRight: 5,
-                borderRadius: 10,
-              }}
-            ></View>
-            <View style={{ flex: 1 }}>
-              <PoppinsText>Omeprazol</PoppinsText>
+              key={index}
+              style={{ flexDirection: 'row', marginVertical: 10 }}
+            >
               <View
                 style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  margin: 10,
+                  width: 100,
+                  backgroundColor: Colors.gray_100,
+                  marginRight: 5,
+                  borderRadius: 10,
                 }}
               >
-                <PoppinsText>$5.00</PoppinsText>
-                <PoppinsText>Cantidad: 1</PoppinsText>
+                <Image
+                  source={{
+                    uri: detail.productPresentation.product.images[0].url,
+                  }}
+                  style={{ flex: 1 }}
+                />
               </View>
-              <View style={{ flexDirection: 'row', alignContent: 'center' }}>
-                <StarIcon color={Colors.gray_100} />
-                <TouchableOpacity>
-                  <PoppinsText>Ir al producto</PoppinsText>
-                </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <PoppinsText>
+                  {detail.productPresentation.presentation.name}
+                </PoppinsText>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    margin: 10,
+                  }}
+                >
+                  <PoppinsText>${detail.subtotal}</PoppinsText>
+                  <PoppinsText>Cantidad: {detail.quantity}</PoppinsText>
+                </View>
+                <View style={{ flexDirection: 'row', alignContent: 'center' }}>
+                  <StarIcon color={Colors.gray_100} />
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push(`products/${detail.productPresentation.id}`)
+                    }
+                  >
+                    <PoppinsText>Ir al producto</PoppinsText>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
-        </View>
-        <View style={{ marginHorizontal: 20 }}>
+          ))}
+        </ScrollView>
+        <View
+          style={{
+            marginHorizontal: 20,
+            backgroundColor: '#f1f5fd',
+            padding: 10,
+            borderRadius: 10,
+          }}
+        >
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>Subtotal</PoppinsText>
-            <PoppinsText>$0</PoppinsText>
+            <PoppinsText>${order?.totalPrice}</PoppinsText>
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
-            <PoppinsText>Descuentos</PoppinsText>
-            <PoppinsText>-$0</PoppinsText>
+            <PoppinsText style={{ color: Colors.semanticSuccess }}>
+              Descuentos
+            </PoppinsText>
+            <PoppinsText style={{ color: Colors.semanticSuccess }}>
+              -${order?.totalPrice}
+            </PoppinsText>
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>IVA</PoppinsText>
-            <PoppinsText>$0</PoppinsText>
+            <PoppinsText>${order?.totalPrice}</PoppinsText>
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>Total</PoppinsText>
-            <PoppinsText>$0</PoppinsText>
+            <PoppinsText>${order?.totalPrice}</PoppinsText>
           </View>
         </View>
       </View>
