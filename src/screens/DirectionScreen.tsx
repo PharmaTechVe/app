@@ -5,7 +5,7 @@ import PoppinsText from '../components/PoppinsText';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { UserService } from '../services/user';
-import { UserAddressResponse } from '../types/api';
+import { UserAddressResponse } from '@pharmatech/sdk';
 import {
   MagnifyingGlassIcon,
   PencilIcon,
@@ -13,6 +13,7 @@ import {
 } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
+import Popup from '../components/Popup'; // Importamos el componente Popup
 
 const DirectionScreen = () => {
   const [searchDirection, setSearchDirection] = useState('');
@@ -22,6 +23,10 @@ const DirectionScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedDirectionId, setSelectedDirectionId] = useState<string | null>(
+    null,
+  ); // Dirección seleccionada para eliminar
+  const [showDeletePopup, setShowDeletePopup] = useState(false); // Controla la visibilidad del popup
   const router = useRouter();
 
   useEffect(() => {
@@ -45,6 +50,23 @@ const DirectionScreen = () => {
 
     fetchDirection();
   }, []);
+
+  const handleDeleteDirection = async () => {
+    if (!selectedDirectionId) return;
+
+    try {
+      // Llamada al endpoint para eliminar la dirección
+      await UserService.deleteAddress(selectedDirectionId);
+      setDirectionList((prev) =>
+        prev?.filter((direction) => direction.id !== selectedDirectionId),
+      );
+      setShowDeletePopup(false); // Cierra el popup
+    } catch (error) {
+      console.error('Error al eliminar la dirección:', error);
+      setErrorMessage('No se pudo eliminar la dirección');
+      setShowErrorAlert(true);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -91,32 +113,36 @@ const DirectionScreen = () => {
         {directionsList &&
           directionsList.length > 0 &&
           directionsList.map((direction, index) => (
-            <View
-              key={index}
-              style={{
-                flexDirection: 'row',
-                padding: 10,
-                borderBottomWidth: 1,
-                borderColor: Colors.gray_100,
-              }}
-            >
-              <View style={{ paddingVertical: 10 }}>
-                <PoppinsText>{direction.adress}, </PoppinsText>
-                <PoppinsText>
+            <View key={index} style={styles.cardContainer}>
+              {/* Contenedor del texto */}
+              <View style={styles.textContainer}>
+                <PoppinsText style={styles.addressText} weight="regular">
+                  {direction.adress}
+                </PoppinsText>
+                <PoppinsText style={styles.cityText} weight="regular">
                   {direction.nameCity}, {direction.nameState},{' '}
                   {direction.zipCode}
                 </PoppinsText>
-                <PoppinsText>{direction.additionalInformation}</PoppinsText>
-                <PoppinsText>{direction.referencePoint}</PoppinsText>
+                {direction.additionalInformation && (
+                  <PoppinsText
+                    style={styles.additionalInfoText}
+                    weight="regular"
+                  >
+                    {direction.additionalInformation}
+                  </PoppinsText>
+                )}
+                {direction.referencePoint && (
+                  <PoppinsText
+                    style={styles.referencePointText}
+                    weight="regular"
+                  >
+                    {direction.referencePoint}
+                  </PoppinsText>
+                )}
               </View>
-              <View
-                style={{
-                  flex: 1,
-                  flexDirection: 'row',
-                  justifyContent: 'space-evenly',
-                  alignItems: 'center',
-                }}
-              >
+
+              {/* Contenedor de los íconos */}
+              <View style={styles.iconContainer}>
                 <TouchableOpacity
                   onPress={() =>
                     router.push(`change-direction/${direction.id}`)
@@ -125,9 +151,10 @@ const DirectionScreen = () => {
                   <PencilIcon color={Colors.iconMainPrimary} size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() =>
-                    console.log(`Delete direction with id: ${direction.id}`)
-                  }
+                  onPress={() => {
+                    setSelectedDirectionId(direction.id); // Establece la dirección seleccionada
+                    setShowDeletePopup(true); // Muestra el popup
+                  }}
                 >
                   <TrashIcon color={Colors.iconMainPrimary} size={20} />
                 </TouchableOpacity>
@@ -138,7 +165,23 @@ const DirectionScreen = () => {
 
       <Button
         title="Agregar nueva dirección"
-        onPress={() => router.push('/change-direction')}
+        onPress={() => router.push('/selectLocation')}
+      />
+
+      {/* Popup de confirmación */}
+      <Popup
+        visible={showDeletePopup}
+        headerText="Eliminar Dirección"
+        bodyText="¿Está seguro de que desea eliminar esta dirección?"
+        primaryButton={{
+          text: 'Eliminar',
+          onPress: handleDeleteDirection,
+        }}
+        secondaryButton={{
+          text: 'Cancelar',
+          onPress: () => setShowDeletePopup(false),
+        }}
+        onClose={() => setShowDeletePopup(false)}
       />
     </ScrollView>
   );
@@ -164,22 +207,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
     marginBottom: 15,
   },
-  directionImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-  },
-  editButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: Colors.primary,
-  },
   directionInfo: {
     marginVertical: 20,
     borderWidth: 1,
@@ -187,30 +214,46 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: Colors.textWhite,
   },
-  fieldContainer: {
-    marginBottom: 15,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  fieldValue: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 10,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 15,
-  },
-  bottomEditButton: {
-    alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-    width: '50%',
+  cardContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderColor: Colors.gray_100,
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 10, // Espaciado entre el texto y los íconos
+  },
+  addressText: {
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  cityText: {
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  additionalInfoText: {
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  referencePointText: {
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
+    color: Colors.primary,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: 50,
   },
 });
 

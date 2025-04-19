@@ -77,6 +77,14 @@ export default function RootLayout() {
           options={{ headerTitle: '', headerTransparent: true }}
         />
         <Stack.Screen
+          name="selectLocation"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="createDirection"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
           name="orders"
           options={{ headerTitle: '', headerTransparent: true }}
         />

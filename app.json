@@ -17,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/PharmaTech-icon.png",
         "backgroundColor": "#1C2143"

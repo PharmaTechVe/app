@@ -1,15 +1,14 @@
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../lib/sdkConfig';
-import {
-  ServiceResponse,
-  UpdateUser,
-  UserList,
-  UserAddressResponse,
-  CreateUserAddressRequest,
-} from '../types/api.d';
+import { ServiceResponse, UpdateUser, UserList } from '../types/api.d';
 import { extractErrorMessage } from '../utils/errorHandler';
 import { decodeJWT } from '../helper/jwtHelper';
-import { OrderResponse, Pagination } from '@pharmatech/sdk';
+import {
+  OrderResponse,
+  Pagination,
+  UserAddressResponse,
+  CreateUserAddressRequest,
+} from '@pharmatech/sdk';
 
 export const UserService = {
   getProfile: async (): Promise<ServiceResponse<UserList>> => {
@@ -182,6 +181,32 @@ export const UserService = {
       );
       return { success: true, data: response };
     } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
+  deleteAddress: async (
+    id: string,
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+
+      const decoded = decodeJWT(token);
+      if (!decoded || !decoded.userId) {
+        throw new Error('No se pudo decodificar el token de autenticación');
+      }
+
+      const userId = decoded.userId;
+      await api.userAdress.deleteAddress(userId, id, token);
+      return { success: true };
+    } catch (error) {
+      console.error('Error al eliminar la dirección:', error);
       return {
         success: false,
         error: extractErrorMessage(error),
