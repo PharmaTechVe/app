@@ -62,7 +62,7 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
           <PoppinsText style={styles.detailText}>{address}</PoppinsText>
         </View>
         <View style={styles.detailRow}>
-          <Avatar model="small" />
+          <Avatar scale={20} />
           <PoppinsText style={styles.detailText}>{userName}</PoppinsText>
         </View>
         <View style={styles.detailRow}>
