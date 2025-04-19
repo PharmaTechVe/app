@@ -12,6 +12,7 @@ import Alert from '../components/Alerts';
 import { StateService } from '../services/state';
 import { State, CityResponse } from '../types/api';
 import Dropdown from '../components/Dropdown';
+import { CreateUserAddressRequest } from '@pharmatech/sdk';
 
 const ChangeDirectionScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -83,12 +84,14 @@ const ChangeDirectionScreen = () => {
 
     setLoading(true);
     try {
-      const updatedAddress = {
+      const updatedAddress: CreateUserAddressRequest = {
         adress: address.adress,
         zipCode: address.zipCode,
         cityId: selectedCity,
         additionalInformation: address.additionalInformation,
         referencePoint: address.referencePoint,
+        latitude: null,
+        longitude: null,
       };
 
       const response = id
@@ -211,7 +214,11 @@ const ChangeDirectionScreen = () => {
         />
         <Input
           label="Información adicional:"
-          value={address?.additionalInformation}
+          value={
+            address.additionalInformation
+              ? address.additionalInformation
+              : undefined
+          }
           isEditable={isEditable}
           border={isEditable ? 'default' : 'none'}
           getValue={(value) =>
@@ -222,7 +229,7 @@ const ChangeDirectionScreen = () => {
         />
         <Input
           label="Punto de referencia:"
-          value={address?.referencePoint}
+          value={address.referencePoint ? address.referencePoint : undefined}
           isEditable={isEditable}
           border={isEditable ? 'default' : 'none'}
           getValue={(value) =>

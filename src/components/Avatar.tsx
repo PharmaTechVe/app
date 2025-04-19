@@ -40,7 +40,8 @@ const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
 
       const response = await UserService.getProfile();
       if (response.success) {
-        const { firstName, lastName, profilePicture } = response.data!;
+        const { firstName, lastName } = response.data!;
+        const profilePicture = response.data.profile.profilePicture;
         setProfile({
           uri: profilePicture,
           name: `${firstName} ${lastName}`,

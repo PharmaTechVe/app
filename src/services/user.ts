@@ -1,9 +1,10 @@
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../lib/sdkConfig';
-import { ServiceResponse, UpdateUser, UserList } from '../types/api.d';
+import { ServiceResponse, UpdateUser } from '../types/api.d';
 import { extractErrorMessage } from '../utils/errorHandler';
 import { decodeJWT } from '../helper/jwtHelper';
 import {
+  UserList,
   OrderResponse,
   Pagination,
   UserAddressResponse,
