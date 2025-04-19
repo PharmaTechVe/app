@@ -64,10 +64,43 @@ export default function RootLayout() {
       >
         {/* Cambia la pantalla inicial al SplashScreen personalizado */}
         <Stack.Screen name="index" options={{ headerShown: false }} />
+
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="splash" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="products" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="profile"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="menu"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="direction"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="selectLocation"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="createDirection"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="orders"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="order"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
+          name="change-direction"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
         <Stack.Screen
           name="register"
           options={{ headerTitle: '', headerTransparent: true }}
