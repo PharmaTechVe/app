@@ -184,6 +184,7 @@ export interface CreateOrderDetail {
 export interface CreateOrder {
   type: OrderType;
   branchId?: string;
+  userAddressId?: string;
   products: {
     productPresentationId: string;
     quantity: number;

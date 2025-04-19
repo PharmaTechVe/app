@@ -20,9 +20,11 @@ type Branch = {
 const LocationSelector = ({
   selectedOption,
   onSelect,
+  setSelectedBranch,
 }: {
   selectedOption: 'pickup' | 'delivery' | null;
   onSelect: (value: string | null) => void;
+  setSelectedBranch: (branch: Branch | null) => void; // Prop type
 }) => {
   const router = useRouter();
   const [pickupBranches, setPickupBranches] = useState<Branch[]>([]);
@@ -31,13 +33,15 @@ const LocationSelector = ({
   >([]); // Store both UUID and address
   const [dropdownKey, setDropdownKey] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [selectedBranch, setSelectedBranchState] = useState<Branch | null>(
+    null,
+  );
 
   useEffect(() => {
     const resetState = async () => {
       setDropdownKey((prev) => prev + 1);
       onSelect(null);
-      setSelectedBranch(null);
+      setSelectedBranchState(null);
 
       if (selectedOption === 'pickup') {
         try {
@@ -97,7 +101,8 @@ const LocationSelector = ({
         onSelect={(val) => {
           if (selectedOption === 'pickup') {
             const branch = pickupBranches.find((b) => b.name === val);
-            setSelectedBranch(branch || null);
+            setSelectedBranch(branch || null); // Update branch in parent
+            setSelectedBranchState(branch || null);
             onSelect(branch ? branch.id : null);
           } else {
             const selectedAddress = deliveryAddresses.find(

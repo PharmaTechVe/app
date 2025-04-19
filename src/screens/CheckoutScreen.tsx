@@ -20,7 +20,8 @@ import Coupon from '../components/Coupon';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import { useRouter } from 'expo-router';
 import { OrderService } from '../services/order';
-import { OrderType } from '../types/api.d';
+import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
+import BranchMapModal from '../components/BranchMapModal';
 
 const CheckoutScreen = () => {
   const router = useRouter();
@@ -39,6 +40,12 @@ const CheckoutScreen = () => {
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>('Usuario');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<{
+    name: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -116,7 +123,23 @@ const CheckoutScreen = () => {
 
           setErrorMessage(null);
 
-          const orderPayload = {
+          const products: CreateOrderDetail[] = cartItems
+            .filter((item) => item.quantity > 0) // Filtrar productos con cantidad válida
+            .map((item) => ({
+              productPresentationId: item.id, // Asegúrate de que `id` sea el identificador correcto
+              quantity: item.quantity, // Usar la cantidad directamente
+            }));
+
+          if (products.length === 0) {
+            console.error('No hay productos válidos para procesar el pedido.'); // Depuración
+            setErrorMessage('No hay productos válidos en el carrito.');
+            setStatus('rejected');
+            return;
+          }
+
+          console.log('Productos enviados al backend:', products); // Depuración
+
+          const orderPayload: CreateOrder = {
             type:
               selectedOption === 'pickup'
                 ? OrderType.PICKUP
@@ -129,13 +152,14 @@ const CheckoutScreen = () => {
               selectedOption === 'delivery'
                 ? selectedLocation || undefined
                 : undefined,
-            products: cartItems.map((item) => ({
-              productPresentationId: item.id,
-              quantity: Math.max(1, item.quantity),
-            })),
+            products,
           };
 
+          console.log('Payload enviado al backend:', orderPayload); // Depuración
+
           const orderResponse = await OrderService.create(orderPayload);
+
+          console.log('Respuesta del backend:', orderResponse); // Depuración
 
           if (!orderResponse.success || !orderResponse.data?.id) {
             setErrorMessage(
@@ -148,7 +172,8 @@ const CheckoutScreen = () => {
 
           setStatus('approved');
           setCurrentStep(stepsLabels.length);
-        } catch {
+        } catch (error) {
+          console.error('Error al procesar la orden:', error); // Depuración
           setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
           setStatus('rejected');
         }
@@ -169,6 +194,14 @@ const CheckoutScreen = () => {
     router.replace({
       pathname: '/(tabs)',
     });
+  };
+
+  const handleOpenMapModal = () => {
+    if (selectedBranch) {
+      setModalVisible(true); // Open the modal only if a branch is selected
+    } else {
+      console.error('No branch selected to display on the map.');
+    }
   };
 
   const isStep1Complete =
@@ -195,7 +228,8 @@ const CheckoutScreen = () => {
             llegues sin problemas.
           </PoppinsText>
           <PoppinsText style={styles.sucursalText}>
-            Sucursal de retiro: [Nombre de la sucursal]
+            Sucursal de retiro:{' '}
+            {selectedBranch?.name || '[Nombre de la sucursal]'}
           </PoppinsText>
           <Button
             title="Ver Ubicación en el Mapa"
@@ -203,7 +237,7 @@ const CheckoutScreen = () => {
             style={styles.secondaryButton}
             variant="secondary"
             icon={<MapPinIcon width={16} height={16} color={Colors.textMain} />}
-            onPress={() => console.log('Ver ubicación en el mapa')}
+            onPress={handleOpenMapModal} // Open the modal
           />
         </>
       );
@@ -301,6 +335,7 @@ const CheckoutScreen = () => {
             <LocationSelector
               selectedOption={selectedOption}
               onSelect={(val) => setSelectedLocation(val)}
+              setSelectedBranch={setSelectedBranch}
             />
             <View style={styles.paymentMethods}>
               <PaymentMethods
@@ -415,6 +450,19 @@ const CheckoutScreen = () => {
             }
           />
         </View>
+        <BranchMapModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          branchName={selectedBranch?.name || null}
+          branchCoordinates={
+            selectedBranch
+              ? {
+                  latitude: selectedBranch.latitude,
+                  longitude: selectedBranch.longitude,
+                }
+              : null
+          }
+        />
       </View>
     </ScrollView>
   );
