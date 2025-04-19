@@ -74,6 +74,10 @@ export default function RootLayout() {
           options={{ headerTitle: '', headerTransparent: true }}
         />
         <Stack.Screen
+          name="notifications"
+          options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen
           name="menu"
           options={{ headerTitle: '', headerTransparent: true }}
         />

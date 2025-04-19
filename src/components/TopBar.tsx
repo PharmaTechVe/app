@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { ShoppingCartIcon } from 'react-native-heroicons/outline';
+import { BellIcon, ShoppingCartIcon } from 'react-native-heroicons/outline';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
@@ -58,6 +58,22 @@ const TopBar = () => {
         <View style={styles.logoContainer}>
           <Logo width={118} height={48} />
         </View>
+
+        <TouchableOpacity
+          style={{ paddingRight: 10 }}
+          onPress={() => {
+            router.push('/notifications');
+          }}
+        >
+          <BellIcon size={26} color={Colors.textMain} />
+          {totalCartQuantity > 0 && (
+            <View style={styles.badgeContainer}>
+              <Badge variant="filled" color="primary" size="tiny">
+                {totalCartQuantity}
+              </Badge>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* Right cart icon with badge */}
         <TouchableOpacity
