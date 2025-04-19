@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Image, View, StyleSheet, ActivityIndicator } from 'react-native';
-import { Colors } from '../styles/theme';
+import { Colors, FontSizes } from '../styles/theme';
 import { UserService } from '../services/user';
 import PoppinsText from './PoppinsText';
 import * as SecureStore from 'expo-secure-store';
 
-interface AvatarProps {
-  size?: number; // Propiedad para definir el tamaño del avatar
-  model?: 'default' | 'small'; // Propiedad para diferenciar entre modelos
-}
+type AvatarProps = {
+  scale?: number;
+};
 
-const Avatar: React.FC<AvatarProps> = ({ size = 32, model = 'default' }) => {
+const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
   const [profile, setProfile] = useState<{ uri?: string; name?: string }>({});
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +23,7 @@ const Avatar: React.FC<AvatarProps> = ({ size = 32, model = 'default' }) => {
           'No se encontró el token de autenticación. Usando datos locales.',
         );
 
+        // Data from secureStore
         const userData = await SecureStore.getItemAsync('user_data');
         if (userData) {
           const { firstName, lastName } = JSON.parse(userData);
@@ -40,7 +40,8 @@ const Avatar: React.FC<AvatarProps> = ({ size = 32, model = 'default' }) => {
 
       const response = await UserService.getProfile();
       if (response.success) {
-        const { firstName, lastName, profilePicture } = response.data!;
+        const { firstName, lastName } = response.data!;
+        const profilePicture = response.data.profile.profilePicture;
         setProfile({
           uri: profilePicture,
           name: `${firstName} ${lastName}`,
@@ -55,60 +56,26 @@ const Avatar: React.FC<AvatarProps> = ({ size = 32, model = 'default' }) => {
   }, []);
 
   const getInitials = (fullName: string): string => {
+    console.log('Full Name:', fullName);
     const words = fullName.trim().split(' ');
     if (words.length === 1) return words[0].charAt(0).toUpperCase();
     return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
   };
 
-  const avatarSize = model === 'small' ? 20 : size;
-  const fontSize = avatarSize / 2.5;
-  const lineHeight = fontSize + 1;
-  const marginTop = avatarSize / 10;
   if (loading) {
     return (
-      <View
-        style={[
-          styles.avatarContainer,
-          styles.loadingContainer,
-          {
-            width: avatarSize,
-            height: avatarSize,
-            borderRadius: avatarSize / 2,
-          },
-        ]}
-      >
+      <View style={[styles.avatarContainer, styles.loadingContainer]}>
         <ActivityIndicator color={Colors.textWhite} />
       </View>
     );
   }
 
   return (
-    <View
-      style={[
-        styles.avatar,
-        { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 },
-      ]}
-    >
+    <View style={[styles.avatar, { width: scale, height: scale }]}>
       {profile.uri ? (
-        <Image
-          source={{ uri: profile.uri }}
-          style={[
-            styles.avatarImage,
-            { width: avatarSize, height: avatarSize },
-          ]}
-        />
+        <Image source={{ uri: profile.uri }} style={styles.avatarImage} />
       ) : (
-        <PoppinsText
-          style={[
-            styles.initials,
-            {
-              fontSize: fontSize,
-              lineHeight: lineHeight,
-              marginTop: marginTop,
-            },
-          ]}
-          weight="semibold"
-        >
+        <PoppinsText style={styles.initials} weight="semibold">
           {profile.name ? getInitials(profile.name) : ''}
         </PoppinsText>
       )}
@@ -118,17 +85,21 @@ const Avatar: React.FC<AvatarProps> = ({ size = 32, model = 'default' }) => {
 
 const styles = StyleSheet.create({
   avatar: {
+    borderRadius: 100,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   avatarImage: {
+    width: 32,
+    height: 32,
     resizeMode: 'cover',
   },
   initials: {
+    fontSize: FontSizes.label.size,
+    lineHeight: FontSizes.label.lineHeight,
     color: Colors.textWhite,
-    textAlign: 'center',
   },
   avatarContainer: {
     backgroundColor: Colors.primary,
