@@ -1,9 +1,12 @@
 import { api } from '../lib/sdkConfig';
 import {
-  ServiceResponse,
   Pagination,
   ProductPresentation,
-} from '../types/api.d';
+  GenericProductResponse,
+  ProductPresentationResponse,
+  ProductImage,
+} from '@pharmatech/sdk';
+import { ServiceResponse } from '../types/api';
 import { extractErrorMessage } from '../utils/errorHandler';
 
 export const ProductService = {
@@ -26,13 +29,43 @@ export const ProductService = {
     }
   },
 
-  getProduct: async (id: string): Promise<ProductPresentation> => {
+  getGenericProduct: async (
+    id: string,
+  ): Promise<ServiceResponse<GenericProductResponse>> => {
     try {
-      const product: ProductPresentation = await api.genericProduct.getById(id);
-      product.presentation = await api.productPresentation.getByProductId(id);
-      product.images = await api.productImage.getByProductId(id);
+      const product = await api.genericProduct.getById(id);
 
       return { success: true, data: product };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
+  getProductPresentations: async (
+    id: string,
+  ): Promise<ServiceResponse<ProductPresentationResponse[]>> => {
+    try {
+      const presentation = await api.productPresentation.getByProductId(id);
+
+      return { success: true, data: presentation };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
+  getProductImages: async (
+    id: string,
+  ): Promise<ServiceResponse<ProductImage[]>> => {
+    try {
+      const images = await api.productImage.getByProductId(id);
+
+      return { success: true, data: images };
     } catch (error) {
       return {
         success: false,

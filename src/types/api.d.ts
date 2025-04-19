@@ -1,3 +1,5 @@
+import { BaseModel } from '@pharmatech/sdk';
+
 export interface ApiError extends Error {
   response?: {
     data?: {
@@ -77,8 +79,56 @@ type UserList = BaseModel & {
   profile: Profile;
 };
 
+type UpdateUser = {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email: string;
+  profilePicture?: string;
+  birthDate: string;
+  gender?: UserGender;
+  role?: UserRole;
+};
+
+type UserAddressResponse = {
+  adress: string;
+  zipCode: string;
+  latitude: number | null;
+  longitude: number | null;
+  cityId: string;
+  id: string;
+  additionalInformation: string | null;
+  referencePoint: string | null;
+  nameCity: string;
+  nameState: string;
+  nameCountry: string;
+};
+
+type CreateUserAddressRequest = BaseModel & {
+  adress: string;
+  zipCode?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  cityId?: string;
+  additionalInformation?: string | null;
+  referencePoint?: string | null;
+};
+
 type State = {
+  id: string;
   name: string;
+};
+
+type CityResponse = {
+  id: string;
+  name: string;
+  state: StateResponse;
+};
+
+type OrderResponse = BaseModel & {
+  type: OrderType;
+  status: OrderStatus;
+  totalPrice: number;
 };
 
 type Inventory = BaseModel & {

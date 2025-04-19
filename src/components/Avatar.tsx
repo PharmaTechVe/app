@@ -5,7 +5,11 @@ import { UserService } from '../services/user';
 import PoppinsText from './PoppinsText';
 import * as SecureStore from 'expo-secure-store';
 
-const Avatar: React.FC = () => {
+type AvatarProps = {
+  scale?: number;
+};
+
+const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
   const [profile, setProfile] = useState<{ uri?: string; name?: string }>({});
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +40,8 @@ const Avatar: React.FC = () => {
 
       const response = await UserService.getProfile();
       if (response.success) {
-        const { firstName, lastName, profilePicture } = response.data!;
+        const { firstName, lastName } = response.data!;
+        const profilePicture = response.data.profile.profilePicture;
         setProfile({
           uri: profilePicture,
           name: `${firstName} ${lastName}`,
@@ -66,7 +71,7 @@ const Avatar: React.FC = () => {
   }
 
   return (
-    <View style={styles.avatar}>
+    <View style={[styles.avatar, { width: scale, height: scale }]}>
       {profile.uri ? (
         <Image source={{ uri: profile.uri }} style={styles.avatarImage} />
       ) : (
@@ -80,9 +85,7 @@ const Avatar: React.FC = () => {
 
 const styles = StyleSheet.create({
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    borderRadius: 100,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
