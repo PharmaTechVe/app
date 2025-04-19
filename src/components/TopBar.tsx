@@ -5,11 +5,11 @@ import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
 import { useRouter } from 'expo-router';
-import Avatar from './Avatar';
 import Popup from './Popup';
 import { AuthService } from '../services/auth';
 import Badge from './Badge';
 import { useCart } from '../hooks/useCart';
+import AvatarWithMenu from './AvatarWithMenu';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
@@ -51,9 +51,7 @@ const TopBar = () => {
       <View style={styles.topSection}>
         {/* Left user icon */}
         <View>
-          <TouchableOpacity onPress={() => setIsPopupVisible(true)}>
-            <Avatar />
-          </TouchableOpacity>
+          <AvatarWithMenu />
         </View>
 
         {/* Logo */}

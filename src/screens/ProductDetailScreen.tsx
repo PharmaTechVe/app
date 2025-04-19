@@ -35,7 +35,7 @@ import BranchMap from '../components/BranchMap';
 type Product = {
   id: string;
   name: string;
-  description: string;
+  description: string | undefined;
   rating: number;
   discount: number;
   presentation: { id: string; description: string; price: number }[];
@@ -109,7 +109,11 @@ const ProductDetailScreen: React.FC = () => {
 
   useEffect(() => {
     const obtainProducts = async () => {
-      const productsData = await ProductService.getProduct(id);
+      const productsData = await ProductService.getGenericProduct(id);
+      const productsPresentation =
+        await ProductService.getProductPresentations(id);
+      const productsImage = await ProductService.getProductImages(id);
+
       const states = await StateService.getStates(1, 40);
 
       if (states.success) {
@@ -120,28 +124,32 @@ const ProductDetailScreen: React.FC = () => {
         setProduct({
           id: productsData.data.id,
           name: productsData.data.name,
-          description: productsData.data.description,
-          rating: productsData.data.rating,
-          images: productsData.data.images.map(
-            (image: { url: string }) => image.url,
-          ),
+          description: productsPresentation.success
+            ? productsData.data.description
+            : undefined,
+          rating: 0,
+          images: productsImage.success
+            ? productsImage.data.map((image: { url: string }) => image.url)
+            : [],
           discount: 10,
-          presentation: productsData.data.presentation.map(
-            (presentation: {
-              id: string;
-              presentation: { description: string };
-              price: number;
-            }) => ({
-              id: presentation.id,
-              description: presentation.presentation.description,
-              price: presentation.price,
-            }),
-          ),
+          presentation: productsPresentation.success
+            ? productsPresentation.data.map(
+                (presentation: {
+                  id: string;
+                  presentation: { description: string };
+                  price: number;
+                }) => ({
+                  id: presentation.id,
+                  description: presentation.presentation.description,
+                  price: presentation.price,
+                }),
+              )
+            : [],
         });
 
-        setCurrentPrice(productsData.data.presentation[0].price);
-      } else {
-        console.log(productsData.error);
+        setCurrentPrice(
+          productsPresentation.success ? productsPresentation.data[0].price : 0,
+        );
       }
     };
 
@@ -174,7 +182,7 @@ const ProductDetailScreen: React.FC = () => {
               const updatedInventory = [...prevInventory];
               newInventory.forEach((newItem) => {
                 if (!prevInventory.some((item) => item.id === newItem.id)) {
-                  updatedInventory.push(newItem);
+                  updatedInventory.push(newItem as Inventory);
                 }
               });
               return updatedInventory;

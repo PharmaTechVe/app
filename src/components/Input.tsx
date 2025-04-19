@@ -146,7 +146,7 @@ const Input: React.FC<InputProps> = ({
             backgroundColor: backgroundColor
               ? backgroundColor
               : !isEditable
-                ? Colors.disableText
+                ? Colors.gray_100
                 : 'transparent',
           },
         ]}

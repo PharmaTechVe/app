@@ -20,7 +20,7 @@ export default function HomeScreen() {
     useLocalSearchParams();
   const { cartItems, addToCart, updateCartQuantity, setCartUserId } = useCart();
 
-  const getItemQuantity = (productId: number) => {
+  const getItemQuantity = (productId: string) => {
     const cartItem = cartItems.find((item) => item.id === productId.toString());
     return cartItem ? cartItem.quantity : 0;
   };
