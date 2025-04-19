@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   ShoppingBagIcon,
@@ -38,6 +38,17 @@ const CheckoutScreen = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>('Usuario');
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const storedUserName = await localStorage.getItem('userName');
+      if (storedUserName) {
+        setUserName(storedUserName);
+      }
+    };
+    fetchUserName();
+  }, []);
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -84,6 +95,13 @@ const CheckoutScreen = () => {
         try {
           if (selectedOption === 'pickup' && !isValidUUID(selectedLocation)) {
             setErrorMessage('La sucursal seleccionada no es válida.');
+            setStatus('rejected');
+            setCurrentStep(stepsLabels.length);
+            return;
+          }
+
+          if (selectedOption === 'delivery' && !isValidUUID(selectedLocation)) {
+            setErrorMessage('La dirección seleccionada no es válida.');
             setStatus('rejected');
             setCurrentStep(stepsLabels.length);
             return;
@@ -332,7 +350,7 @@ const CheckoutScreen = () => {
             <PaymentStatusMessage
               status={status}
               orderNumber={'N/A'}
-              userName={'Usuario'}
+              userName={userName || 'Usuario'} // Ensure the correct userName is passed
             />
             <View style={styles.confirmationContainer}>
               {renderConfirmationContent(status)}
@@ -423,7 +441,7 @@ const styles = StyleSheet.create({
   purchaseOptionsTitle: {
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
-    marginBottom: 24,
+    marginBottom: 30,
     alignSelf: 'flex-start',
     paddingHorizontal: 20,
   },
@@ -514,7 +532,7 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b1.size,
     lineHeight: FontSizes.b1.lineHeight,
     color: Colors.textMain,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 10,
   },
   sucursalText: {

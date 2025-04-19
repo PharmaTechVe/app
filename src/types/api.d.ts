@@ -190,13 +190,6 @@ export interface CreateOrder {
   }[];
 }
 
-export interface OrderResponse extends BaseModel {
-  id: string;
-  type: OrderType;
-  status: OrderStatus;
-  totalPrice: number;
-}
-
 export enum PaymentMethod {
   CARD = 'card',
   MOBILE_PAYMENT = 'mobile_payment',

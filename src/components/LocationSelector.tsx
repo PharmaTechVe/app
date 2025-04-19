@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import Dropdown from './Dropdown';
 import PoppinsText from './PoppinsText';
 import { Colors } from '../styles/theme';
@@ -7,7 +8,7 @@ import { BranchService } from '../services/branches';
 import { extractErrorMessage } from '../utils/errorHandler';
 import { MapPinIcon } from 'react-native-heroicons/solid';
 import BranchMapModal from './BranchMapModal';
-import AddAddressModal from './AddAddressModal';
+import { UserService } from '../services/user';
 
 type Branch = {
   id: string;
@@ -23,15 +24,13 @@ const LocationSelector = ({
   selectedOption: 'pickup' | 'delivery' | null;
   onSelect: (value: string | null) => void;
 }) => {
+  const router = useRouter();
   const [pickupBranches, setPickupBranches] = useState<Branch[]>([]);
-  const [deliveryData] = useState([
-    'Dirección 1',
-    'Dirección 2',
-    'Dirección 3',
-  ]);
+  const [deliveryAddresses, setDeliveryAddresses] = useState<
+    { id: string; address: string }[]
+  >([]); // Store both UUID and address
   const [dropdownKey, setDropdownKey] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [addAddressModalVisible, setAddAddressModalVisible] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   useEffect(() => {
@@ -51,6 +50,25 @@ const LocationSelector = ({
         } catch (error) {
           console.error('Error fetching branches:', extractErrorMessage(error));
         }
+      } else if (selectedOption === 'delivery') {
+        try {
+          const response = await UserService.getUserDirections();
+          if (response.success) {
+            setDeliveryAddresses(
+              response.data.map((address) => ({
+                id: address.id,
+                address: address.adress,
+              })),
+            );
+          } else {
+            console.error('Error fetching addresses:', response.error);
+          }
+        } catch (error) {
+          console.error(
+            'Error fetching addresses:',
+            extractErrorMessage(error),
+          );
+        }
       }
     };
 
@@ -60,7 +78,7 @@ const LocationSelector = ({
   const options =
     selectedOption === 'pickup'
       ? pickupBranches.map((branch) => branch.name)
-      : deliveryData;
+      : deliveryAddresses.map((item) => item.address);
 
   if (!selectedOption) return null;
 
@@ -80,9 +98,12 @@ const LocationSelector = ({
           if (selectedOption === 'pickup') {
             const branch = pickupBranches.find((b) => b.name === val);
             setSelectedBranch(branch || null);
-            onSelect(branch ? branch.id : null); // Pass the branch ID (UUID) instead of the name
+            onSelect(branch ? branch.id : null);
           } else {
-            onSelect(val); // For delivery, pass the selected address
+            const selectedAddress = deliveryAddresses.find(
+              (item) => item.address === val,
+            );
+            onSelect(selectedAddress ? selectedAddress.id : null);
           }
         }}
         borderColor={Colors.gray_100}
@@ -93,7 +114,10 @@ const LocationSelector = ({
         onPress={() =>
           selectedOption === 'pickup'
             ? setModalVisible(true)
-            : setAddAddressModalVisible(true)
+            : router.push({
+                pathname: '/selectLocation',
+                params: { fromCheckout: 'true' }, // Convertimos a cadena
+              })
         }
         disabled={selectedOption === 'pickup' && !selectedBranch}
       >
@@ -130,11 +154,6 @@ const LocationSelector = ({
               }
             : null
         }
-      />
-
-      <AddAddressModal
-        visible={addAddressModalVisible}
-        onClose={() => setAddAddressModalVisible(false)}
       />
     </View>
   );

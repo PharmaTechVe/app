@@ -14,7 +14,7 @@ import { State, CityResponse } from '../types/api';
 import Dropdown from '../components/Dropdown';
 
 const DirectionCreateScreen = () => {
-  const { latitude, longitude } = useLocalSearchParams();
+  const { latitude, longitude, fromCheckout } = useLocalSearchParams();
 
   console.log('Parámetros recibidos en DirectionCreateScreen:', {
     latitude,
@@ -99,7 +99,11 @@ const DirectionCreateScreen = () => {
       if (response.success) {
         setShowSuccessAlert(true);
         setTimeout(() => {
-          router.replace('/direction'); // Redirige al listado de direcciones después de 2 segundos
+          if (fromCheckout === 'true') {
+            router.push('/checkout');
+          } else {
+            router.replace('/direction');
+          }
         }, 2000);
       } else {
         setShowErrorAlert(true);
