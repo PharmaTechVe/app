@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+} from 'react-native';
 import Avatar from '../components/Avatar';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { UserService } from '../services/user';
-import { UserList } from '../types/api';
-import { PencilIcon } from 'react-native-heroicons/outline';
+import { UserList } from '@pharmatech/sdk';
+import { PencilIcon, TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import DatePickerInput from '../components/DatePickerInput';
+import * as ImagePicker from 'expo-image-picker';
 import {
   validateDateFormat,
   validatePhoneNumberLength,
@@ -17,8 +24,17 @@ import {
 } from '../utils/validators';
 import Alert from '../components/Alerts';
 
+const formatDate = (dateString: Date): string => {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${year}-${month}-${day}`;
+};
+
 const ProfileScreen = () => {
-  const [profile, setProfile] = useState<UserList>({});
+  const [profile, setProfile] = useState<UserList>({} as UserList);
+  const [image, setImage] = useState<string | null>(null);
   const [isEditable, setIsEditable] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -48,14 +64,14 @@ const ProfileScreen = () => {
         profile.firstName,
         profile.lastName,
         profile.phoneNumber,
-        profile.profile?.birthDate,
+        formatDate(profile.profile?.birthDate),
       ])
     ) {
       setShowErrorAlert(true);
       setErrorMessage('Por favor completa todos los campos');
       return;
     }
-    if (!validateDateFormat(profile.profile?.birthDate)) {
+    if (!validateDateFormat(formatDate(profile.profile?.birthDate))) {
       setShowErrorAlert(true);
       setErrorMessage('Formato de fecha inválido (Use YYYY-MM-DD)');
       return;
@@ -74,9 +90,8 @@ const ProfileScreen = () => {
       const updatedProfile = {
         firstName: profile.firstName,
         lastName: profile.lastName,
-        birthDate: profile.profile?.birthDate,
+        birthDate: profile.profile?.birthDate.toString(),
         phoneNumber: profile.phoneNumber,
-        email: profile.email,
       };
 
       const response = await UserService.updateProfile(updatedProfile);
@@ -91,6 +106,21 @@ const ProfileScreen = () => {
     } catch (error) {
       console.error('Error al actualizar el perfil:', error);
       alert('Ocurrió un error al intentar actualizar el perfil');
+    }
+  };
+
+  const handleImageUpload = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
@@ -135,7 +165,29 @@ const ProfileScreen = () => {
           </PoppinsText>
         )}
 
-        <Avatar scale={80} />
+        {isEditable ? (
+          <View>
+            <TouchableOpacity
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 100,
+                backgroundColor: 'rgba(52, 52, 52, 0.5)',
+                padding: 30,
+                position: 'absolute',
+                zIndex: 999,
+              }}
+            >
+              <TrashIcon color={Colors.iconWhite} size={20} />
+            </TouchableOpacity>
+            <Image
+              source={{ uri: image ? image : profile.profile.profilePicture }}
+              style={{ width: 80, height: 80, borderRadius: 100 }}
+            />
+          </View>
+        ) : (
+          <Avatar scale={80} />
+        )}
         {isEditable ? (
           <TouchableOpacity
             style={{
@@ -149,6 +201,7 @@ const ProfileScreen = () => {
               justifyContent: 'center',
               paddingStart: 5,
             }}
+            onPress={handleImageUpload}
           >
             <PencilIcon color={Colors.iconWhite} size={20} />
           </TouchableOpacity>
@@ -198,18 +251,18 @@ const ProfileScreen = () => {
           <DatePickerInput
             label="Fecha de Nacimiento"
             placeholder="Selecciona tu fecha"
-            value={profile?.profile?.birthDate}
+            value={profile?.profile?.birthDate.toString()}
             getValue={(value) =>
               setProfile({
                 ...profile,
-                profile: { ...profile.profile, birthDate: value },
+                profile: { ...profile.profile, birthDate: new Date(value) },
               })
             }
           />
         ) : (
           <Input
             label="Fecha de nacimiento"
-            value={profile?.profile?.birthDate}
+            value={formatDate(profile?.profile?.birthDate)}
             isEditable={isEditable}
             border={isEditable ? 'default' : 'none'}
           />
