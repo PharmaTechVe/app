@@ -21,7 +21,6 @@ const OrdersScreen = () => {
     const fetchOrders = async () => {
       try {
         const order = await UserService.getUserOrders();
-        console.log(order);
         if (order.success) {
           if (order.data.results.length > 0) {
             setOrdersList(order.data.results);
@@ -69,7 +68,7 @@ const OrdersScreen = () => {
         </PoppinsText>
       </View>
       <TouchableOpacity onPress={() => router.push(`order`)}>
-        Ver detalle de orden
+        <PoppinsText>Ver detalle de orden</PoppinsText>
       </TouchableOpacity>
       <View style={styles.orderInfo}>
         {ordersList &&
@@ -96,7 +95,7 @@ const OrdersScreen = () => {
                   }}
                 >
                   <View>
-                    <PoppinsText>{order.type}</PoppinsText>
+                    <PoppinsText>{order.id}</PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
                       {order.createdAt}
                     </PoppinsText>
