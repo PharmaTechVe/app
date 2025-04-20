@@ -113,11 +113,12 @@ const CheckoutScreen = () => {
 
           setErrorMessage(null);
 
+          // Validar los productos del carrito
           const products: CreateOrderDetail[] = cartItems
             .filter((item) => item.quantity > 0)
             .map((item) => ({
-              productPresentationId: item.id, //
-              quantity: item.quantity,
+              productPresentationId: item.id,
+              quantity: item.quantity, // Solo incluir los campos esperados
             }));
 
           if (products.length === 0) {
@@ -127,8 +128,11 @@ const CheckoutScreen = () => {
             return;
           }
 
-          console.log('Productos enviados al backend:', products); // Depuración
+          // Log del carrito y los productos seleccionados
+          console.log('Productos en el carrito:', cartItems);
+          console.log('Productos seleccionados para la orden:', products);
 
+          // Construir el payload de la orden
           const orderPayload: CreateOrder = {
             type:
               selectedOption === 'pickup'
@@ -145,9 +149,17 @@ const CheckoutScreen = () => {
             products,
           };
 
+          // Log del payload que se enviará al backend
+          console.log('Payload enviado al backend:', orderPayload);
+
+          // Enviar la orden al backend
           const orderResponse = await OrderService.create(orderPayload);
 
-          if (!orderResponse.success || !orderResponse.data?.id) {
+          // Log de la respuesta del backend
+          console.log('Respuesta del backend:', orderResponse);
+
+          // Validar la respuesta
+          if (!orderResponse?.id) {
             setErrorMessage(
               'No pudimos procesar tu orden. Inténtalo nuevamente.',
             );
@@ -156,6 +168,8 @@ const CheckoutScreen = () => {
             return;
           }
 
+          console.log('Orden creada exitosamente:', orderResponse);
+
           setStatus('approved');
           setCurrentStep(stepsLabels.length);
         } catch (error) {
@@ -163,8 +177,9 @@ const CheckoutScreen = () => {
           setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
           setStatus('rejected');
         }
+      } else {
+        setCurrentStep(currentStep + 1);
       }
-      setCurrentStep(currentStep + 1);
     }
   };
 
@@ -319,7 +334,7 @@ const CheckoutScreen = () => {
               </View>
             </View>
             <LocationSelector
-              selectedOption={selectedOption}
+              selectedOption={selectedOption || 'pickup'}
               onSelect={(val) => setSelectedLocation(val)}
               setSelectedBranch={setSelectedBranch}
             />

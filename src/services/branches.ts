@@ -1,6 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
 import { api } from '../lib/sdkConfig';
-import { ServiceResponse, Pagination, BranchResponse } from '../types/api.d';
+import { Pagination, BranchResponse } from '@pharmatech/sdk';
 import { extractErrorMessage } from '../utils/errorHandler';
 
 type FindAllParams = {
@@ -16,32 +15,14 @@ export const BranchService = {
     limit = 100,
     q,
     stateId,
-  }: FindAllParams): Promise<ServiceResponse<Pagination<BranchResponse>>> => {
+  }: FindAllParams): Promise<Pagination<BranchResponse>> => {
     try {
-      // Obtener token JWT desde SecureStore
-      const jwt = await SecureStore.getItemAsync('auth_token');
-      if (!jwt) {
-        return {
-          success: false,
-          error: 'No se encontró el token de autenticación.',
-        };
-      }
+      const response = await api.branch.findAll({ page, limit, q, stateId });
 
-      // Llamar a la API usando los parámetros recibidos
-      const response = await api.branch.findAll(
-        { page, limit, q, stateId },
-        jwt,
-      );
-
-      return {
-        success: true,
-        data: response,
-      };
+      return response;
     } catch (error) {
-      return {
-        success: false,
-        error: extractErrorMessage(error),
-      };
+      console.error('Error en BranchService.findAll:', error);
+      throw new Error(extractErrorMessage(error));
     }
   },
 };

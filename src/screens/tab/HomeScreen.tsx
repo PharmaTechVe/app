@@ -32,9 +32,10 @@ export default function HomeScreen() {
       const pd = productsData.data.results;
       const carouselProducts = pd.map((p) => ({
         id: p.product.id,
-        imageUrl: p.product.images[0].url,
+        imageUrl:
+          p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
         name: p.product.name,
-        category: p.product.categories[0].name,
+        category: p.product.categories?.[0]?.name || 'Sin categoría',
         originalPrice: p.price,
         discount: 10,
         finalPrice: p.price - p.price * 0.1,
@@ -45,7 +46,8 @@ export default function HomeScreen() {
             name: p.product.name,
             price: p.price,
             quantity,
-            image: p.product.images[0].url,
+            image:
+              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
           });
           updateCartQuantity(p.product.id, quantity);
         },
