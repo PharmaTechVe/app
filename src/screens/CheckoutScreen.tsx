@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   ShoppingBagIcon,
@@ -39,23 +39,13 @@ const CheckoutScreen = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>('Usuario');
+  const [userName] = useState<string | null>('Usuario');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<{
     name: string;
     latitude: number;
     longitude: number;
   } | null>(null);
-
-  useEffect(() => {
-    const fetchUserName = async () => {
-      const storedUserName = await localStorage.getItem('userName');
-      if (storedUserName) {
-        setUserName(storedUserName);
-      }
-    };
-    fetchUserName();
-  }, []);
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -124,14 +114,14 @@ const CheckoutScreen = () => {
           setErrorMessage(null);
 
           const products: CreateOrderDetail[] = cartItems
-            .filter((item) => item.quantity > 0) // Filtrar productos con cantidad válida
+            .filter((item) => item.quantity > 0)
             .map((item) => ({
-              productPresentationId: item.id, // Asegúrate de que `id` sea el identificador correcto
-              quantity: item.quantity, // Usar la cantidad directamente
+              productPresentationId: item.id, //
+              quantity: item.quantity,
             }));
 
           if (products.length === 0) {
-            console.error('No hay productos válidos para procesar el pedido.'); // Depuración
+            console.error('No hay productos válidos para procesar el pedido.');
             setErrorMessage('No hay productos válidos en el carrito.');
             setStatus('rejected');
             return;
@@ -155,11 +145,7 @@ const CheckoutScreen = () => {
             products,
           };
 
-          console.log('Payload enviado al backend:', orderPayload); // Depuración
-
           const orderResponse = await OrderService.create(orderPayload);
-
-          console.log('Respuesta del backend:', orderResponse); // Depuración
 
           if (!orderResponse.success || !orderResponse.data?.id) {
             setErrorMessage(
@@ -173,7 +159,7 @@ const CheckoutScreen = () => {
           setStatus('approved');
           setCurrentStep(stepsLabels.length);
         } catch (error) {
-          console.error('Error al procesar la orden:', error); // Depuración
+          console.error('Error al procesar la orden:', error);
           setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
           setStatus('rejected');
         }
@@ -385,7 +371,7 @@ const CheckoutScreen = () => {
             <PaymentStatusMessage
               status={status}
               orderNumber={'N/A'}
-              userName={userName || 'Usuario'} // Ensure the correct userName is passed
+              userName={userName || 'Usuario'}
             />
             <View style={styles.confirmationContainer}>
               {renderConfirmationContent(status)}

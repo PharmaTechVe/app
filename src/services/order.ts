@@ -18,10 +18,10 @@ export const OrderService = {
       }
 
       console.log('Sending order creation request:', order);
+
       const response = await api.order.create(order, token);
 
       if (!response?.id) {
-        // Use the corrected property name
         console.error('Order creation response missing id:', response);
         return {
           success: false,
