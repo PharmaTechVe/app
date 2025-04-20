@@ -7,9 +7,6 @@ import { NotificationService } from '../services/notifications';
 import { NotificationResponse } from '@pharmatech/sdk';
 
 export default function NotificationsScreen() {
-  /* const [notificationsList, setNotificationsList] = useState<OrderResponse[] | undefined>(
-		undefined,
-	); */
   const [notificationsList, setNotificationsList] = useState<
     Partial<NotificationResponse>[] | undefined
   >([
