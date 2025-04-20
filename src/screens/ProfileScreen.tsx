@@ -12,7 +12,7 @@ import PoppinsText from '../components/PoppinsText';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { UserService } from '../services/user';
-import { UserList } from '@pharmatech/sdk';
+import { UpdateUser, UserList } from '@pharmatech/sdk';
 import { PencilIcon, TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import DatePickerInput from '../components/DatePickerInput';
@@ -23,6 +23,7 @@ import {
   validateRequiredFields,
 } from '../utils/validators';
 import Alert from '../components/Alerts';
+import { ImageService } from '../services/images';
 
 const formatDate = (dateString: Date): string => {
   const date = new Date(dateString);
@@ -49,6 +50,7 @@ const ProfileScreen = () => {
 
         if (profile.success) {
           setProfile(profile.data);
+          setImage(profile.data.profile.profilePicture);
         }
       } catch (error) {
         console.log(error);
@@ -87,12 +89,19 @@ const ProfileScreen = () => {
     }
     setLoading(true);
     try {
-      const updatedProfile = {
+      const updatedProfile: Partial<UpdateUser> = {
         firstName: profile.firstName,
         lastName: profile.lastName,
         birthDate: profile.profile?.birthDate.toString(),
         phoneNumber: profile.phoneNumber,
+        profilePicture: undefined,
       };
+
+      if (image !== null) {
+        const imageResponse = await ImageService.uploadImage(image);
+        if (imageResponse)
+          updatedProfile.profilePicture = imageResponse.secure_url;
+      }
 
       const response = await UserService.updateProfile(updatedProfile);
 
@@ -177,11 +186,14 @@ const ProfileScreen = () => {
                 position: 'absolute',
                 zIndex: 999,
               }}
+              onPress={() => {
+                setImage(null);
+              }}
             >
               <TrashIcon color={Colors.iconWhite} size={20} />
             </TouchableOpacity>
             <Image
-              source={{ uri: image ? image : profile.profile.profilePicture }}
+              source={{ uri: image ? image : '' }}
               style={{ width: 80, height: 80, borderRadius: 100 }}
             />
           </View>
