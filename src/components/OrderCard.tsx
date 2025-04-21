@@ -44,7 +44,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         >
           {orderType === 'pedido' ? 'Pedido' : 'Reubicación de productos'}
         </Badge>
-        <PoppinsText style={styles.elapsedTime}>{elapsedTime}</PoppinsText>
+        <PoppinsText style={styles.elapsedTime}>Hace {elapsedTime}</PoppinsText>
       </View>
 
       {/* Order Code */}
@@ -66,7 +66,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
         </View>
         <View style={styles.detailRow}>
           <ClockIcon size={20} color={Colors.primary} />
-          <PoppinsText style={styles.detailText}>{estimatedTime}</PoppinsText>
+          <PoppinsText style={styles.detailText}>
+            Hora de entrega: {estimatedTime}
+          </PoppinsText>
         </View>
       </View>
 
