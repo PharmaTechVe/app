@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { MagnifyingGlassIcon, XMarkIcon } from 'react-native-heroicons/outline';
+import {
+  ArrowRightIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
+import PoppinsText from './PoppinsText';
 
 interface SearchInputProps {
   placeholder?: string;
@@ -20,37 +25,76 @@ const SearchInput: React.FC<SearchInputProps> = ({
   style,
   showClearButton = true,
 }) => {
+  const [search, setSearch] = useState('');
   return (
-    <View style={[styles.container, style]}>
-      <TouchableOpacity
-        onPress={onSearchPress}
-        style={styles.iconContainer}
-        testID="search-icon"
-      >
-        <MagnifyingGlassIcon size={20} color={Colors.textLowContrast} />
-      </TouchableOpacity>
-
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor={Colors.textLowContrast}
-        value={value}
-        onChangeText={onChangeText}
-        returnKeyType="search"
-        onSubmitEditing={onSearchPress}
-      />
-
-      {showClearButton && value.length > 0 && (
+    <>
+      <View style={[styles.container, style]}>
         <TouchableOpacity
-          onPress={() => onChangeText('')}
-          style={styles.clearButton}
-          testID="clear-button"
-          accessibilityLabel="Limpiar búsqueda"
+          onPress={onSearchPress}
+          style={styles.iconContainer}
+          testID="search-icon"
         >
-          <XMarkIcon size={20} color={Colors.textLowContrast} />
+          <MagnifyingGlassIcon size={20} color={Colors.textLowContrast} />
         </TouchableOpacity>
+
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder}
+          placeholderTextColor={Colors.textLowContrast}
+          value={search}
+          onChangeText={(value) => setSearch(value)}
+          returnKeyType="search"
+          onSubmitEditing={onSearchPress}
+        />
+
+        {showClearButton && value.length > 0 && (
+          <TouchableOpacity
+            onPress={() => onChangeText('')}
+            style={styles.clearButton}
+            testID="clear-button"
+            accessibilityLabel="Limpiar búsqueda"
+          >
+            <XMarkIcon size={20} color={Colors.textLowContrast} />
+          </TouchableOpacity>
+        )}
+      </View>
+      {search && (
+        <View
+          style={{
+            zIndex: 999,
+            position: 'absolute',
+            top: 110,
+            left: 20,
+            width: 325,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: Colors.textWhite,
+              padding: 10,
+              borderRadius: 5,
+              flex: 1,
+            }}
+          >
+            <View style={{ flexDirection: 'row' }}>
+              <PoppinsText>Sugerencias</PoppinsText>
+              <PoppinsText style={{ flex: 1, flexWrap: 'wrap' }}>
+                Productos que coinciden con &quot;{search}&quot;
+              </PoppinsText>
+            </View>
+            <View></View>
+            <View
+              style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+            >
+              <PoppinsText style={{ flex: 1, flexWrap: 'wrap' }}>
+                Buscar &quot;{search}&quot;
+              </PoppinsText>
+              <ArrowRightIcon size={20} color={Colors.gray_500} />
+            </View>
+          </View>
+        </View>
       )}
-    </View>
+    </>
   );
 };
 
