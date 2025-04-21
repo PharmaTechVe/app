@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 
 const ProductCard: React.FC<Product> = ({
   id,
+  presentationId,
   productId,
   imageUrl,
   name,
@@ -24,7 +25,9 @@ const ProductCard: React.FC<Product> = ({
   return (
     <TouchableOpacity
       onPress={() =>
-        router.push('/products/' + productId + '/presentation/' + id)
+        router.push(
+          '/products/' + productId + '/presentation/' + presentationId,
+        )
       }
     >
       <View style={styles.card}>

@@ -32,6 +32,7 @@ export default function HomeScreen() {
       const pd = productsData.data.results;
       const carouselProducts = pd.map((p) => ({
         id: p.id,
+        presentationId: p.presentation.id,
         productId: p.product.id,
         imageUrl: p.product.images[0].url,
         name:
