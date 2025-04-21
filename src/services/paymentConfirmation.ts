@@ -1,7 +1,6 @@
 import { api } from '../lib/sdkConfig';
 import * as SecureStore from 'expo-secure-store';
 import {
-  ServiceResponse,
   PaymentConfirmation,
   PaymentConfirmationResponse,
 } from '../types/api.d';
@@ -10,34 +9,26 @@ import { extractErrorMessage } from '../utils/errorHandler';
 export const PaymentConfirmationService = {
   create: async (
     paymentConfirmation: PaymentConfirmation,
-  ): Promise<ServiceResponse<PaymentConfirmationResponse>> => {
+  ): Promise<PaymentConfirmationResponse> => {
     try {
       const token = await SecureStore.getItemAsync('auth_token');
       if (!token) {
-        console.warn('Auth token not found in SecureStore');
-        return {
-          success: false,
-          error: 'Token de autenticación no encontrado',
-        };
+        throw new Error('Token de autenticación no encontrado');
       }
 
-      console.log('Sending payment confirmation request:', paymentConfirmation);
+      console.log('Enviando confirmación de pago:', paymentConfirmation);
 
-      // Validate paymentConfirmation
-      if (
-        !paymentConfirmation.documentId ||
-        !paymentConfirmation.phoneNumber ||
-        !paymentConfirmation.bank ||
-        !paymentConfirmation.reference
-      ) {
-        console.error(
-          'Invalid payment confirmation payload:',
-          paymentConfirmation,
-        );
-        return {
-          success: false,
-          error: 'Datos de confirmación de pago inválidos',
-        };
+      // Validar el payload
+      const requiredFields: (keyof PaymentConfirmation)[] = [
+        'documentId',
+        'phoneNumber',
+        'bank',
+        'reference',
+      ];
+      for (const field of requiredFields) {
+        if (!paymentConfirmation[field]) {
+          throw new Error(`El campo ${field} es obligatorio`);
+        }
       }
 
       const response = await api.paymentConfirmation.create(
@@ -45,27 +36,17 @@ export const PaymentConfirmationService = {
         token,
       );
 
-      // Adjust validation based on actual response structure
-      if (!response || !response.id) {
-        console.error(
-          'Payment confirmation failed: Missing ID in response',
-          response,
+      if (!response?.id) {
+        throw new Error(
+          'La respuesta no contiene un ID de confirmación válido',
         );
-        return {
-          success: false,
-          error:
-            'Error en la confirmación del pago: Falta el ID en la respuesta',
-        };
       }
 
-      console.log('Payment confirmation response:', response);
-      return { success: true, data: response };
+      console.log('Respuesta de confirmación de pago:', response);
+      return response;
     } catch (error) {
-      console.error('Error in PaymentConfirmationService.create:', error);
-      return {
-        success: false,
-        error: extractErrorMessage(error),
-      };
+      console.error('Error en PaymentConfirmationService.create:', error);
+      throw new Error(extractErrorMessage(error));
     }
   },
 };

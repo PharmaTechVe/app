@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import {
   ShoppingBagIcon,
@@ -20,7 +20,8 @@ import Coupon from '../components/Coupon';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import { useRouter } from 'expo-router';
 import { OrderService } from '../services/order';
-import { OrderType } from '../types/api.d';
+import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
+import BranchMapModal from '../components/BranchMapModal';
 
 const CheckoutScreen = () => {
   const router = useRouter();
@@ -38,17 +39,13 @@ const CheckoutScreen = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>('Usuario');
-
-  useEffect(() => {
-    const fetchUserName = async () => {
-      const storedUserName = await localStorage.getItem('userName');
-      if (storedUserName) {
-        setUserName(storedUserName);
-      }
-    };
-    fetchUserName();
-  }, []);
+  const [userName] = useState<string | null>('Usuario');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<{
+    name: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -116,7 +113,27 @@ const CheckoutScreen = () => {
 
           setErrorMessage(null);
 
-          const orderPayload = {
+          // Validar los productos del carrito
+          const products: CreateOrderDetail[] = cartItems
+            .filter((item) => item.quantity > 0)
+            .map((item) => ({
+              productPresentationId: item.id,
+              quantity: item.quantity, // Solo incluir los campos esperados
+            }));
+
+          if (products.length === 0) {
+            console.error('No hay productos válidos para procesar el pedido.');
+            setErrorMessage('No hay productos válidos en el carrito.');
+            setStatus('rejected');
+            return;
+          }
+
+          // Log del carrito y los productos seleccionados
+          console.log('Productos en el carrito:', cartItems);
+          console.log('Productos seleccionados para la orden:', products);
+
+          // Construir el payload de la orden
+          const orderPayload: CreateOrder = {
             type:
               selectedOption === 'pickup'
                 ? OrderType.PICKUP
@@ -129,15 +146,20 @@ const CheckoutScreen = () => {
               selectedOption === 'delivery'
                 ? selectedLocation || undefined
                 : undefined,
-            products: cartItems.map((item) => ({
-              productPresentationId: item.id,
-              quantity: Math.max(1, item.quantity),
-            })),
+            products,
           };
 
+          // Log del payload que se enviará al backend
+          console.log('Payload enviado al backend:', orderPayload);
+
+          // Enviar la orden al backend
           const orderResponse = await OrderService.create(orderPayload);
 
-          if (!orderResponse.success || !orderResponse.data?.id) {
+          // Log de la respuesta del backend
+          console.log('Respuesta del backend:', orderResponse);
+
+          // Validar la respuesta
+          if (!orderResponse?.id) {
             setErrorMessage(
               'No pudimos procesar tu orden. Inténtalo nuevamente.',
             );
@@ -146,14 +168,18 @@ const CheckoutScreen = () => {
             return;
           }
 
+          console.log('Orden creada exitosamente:', orderResponse);
+
           setStatus('approved');
           setCurrentStep(stepsLabels.length);
-        } catch {
+        } catch (error) {
+          console.error('Error al procesar la orden:', error);
           setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
           setStatus('rejected');
         }
+      } else {
+        setCurrentStep(currentStep + 1);
       }
-      setCurrentStep(currentStep + 1);
     }
   };
 
@@ -169,6 +195,14 @@ const CheckoutScreen = () => {
     router.replace({
       pathname: '/(tabs)',
     });
+  };
+
+  const handleOpenMapModal = () => {
+    if (selectedBranch) {
+      setModalVisible(true); // Open the modal only if a branch is selected
+    } else {
+      console.error('No branch selected to display on the map.');
+    }
   };
 
   const isStep1Complete =
@@ -195,7 +229,8 @@ const CheckoutScreen = () => {
             llegues sin problemas.
           </PoppinsText>
           <PoppinsText style={styles.sucursalText}>
-            Sucursal de retiro: [Nombre de la sucursal]
+            Sucursal de retiro:{' '}
+            {selectedBranch?.name || '[Nombre de la sucursal]'}
           </PoppinsText>
           <Button
             title="Ver Ubicación en el Mapa"
@@ -203,7 +238,7 @@ const CheckoutScreen = () => {
             style={styles.secondaryButton}
             variant="secondary"
             icon={<MapPinIcon width={16} height={16} color={Colors.textMain} />}
-            onPress={() => console.log('Ver ubicación en el mapa')}
+            onPress={handleOpenMapModal} // Open the modal
           />
         </>
       );
@@ -299,8 +334,9 @@ const CheckoutScreen = () => {
               </View>
             </View>
             <LocationSelector
-              selectedOption={selectedOption}
+              selectedOption={selectedOption || 'pickup'}
               onSelect={(val) => setSelectedLocation(val)}
+              setSelectedBranch={setSelectedBranch}
             />
             <View style={styles.paymentMethods}>
               <PaymentMethods
@@ -350,7 +386,7 @@ const CheckoutScreen = () => {
             <PaymentStatusMessage
               status={status}
               orderNumber={'N/A'}
-              userName={userName || 'Usuario'} // Ensure the correct userName is passed
+              userName={userName || 'Usuario'}
             />
             <View style={styles.confirmationContainer}>
               {renderConfirmationContent(status)}
@@ -415,6 +451,19 @@ const CheckoutScreen = () => {
             }
           />
         </View>
+        <BranchMapModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          branchName={selectedBranch?.name || null}
+          branchCoordinates={
+            selectedBranch
+              ? {
+                  latitude: selectedBranch.latitude,
+                  longitude: selectedBranch.longitude,
+                }
+              : null
+          }
+        />
       </View>
     </ScrollView>
   );

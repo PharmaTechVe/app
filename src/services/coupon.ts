@@ -1,27 +1,21 @@
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../lib/sdkConfig';
-import { ServiceResponse, CouponResponse } from '../types/api.d';
+import { CouponResponse } from '@pharmatech/sdk';
 import { extractErrorMessage } from '../utils/errorHandler';
 
 export const CouponService = {
-  validateCoupon: async (
-    code: string,
-  ): Promise<ServiceResponse<CouponResponse>> => {
+  validateCoupon: async (code: string): Promise<CouponResponse> => {
     try {
-      // Retrieve the JWT token from SecureStore
       const jwt = await SecureStore.getItemAsync('auth_token');
       if (!jwt) {
-        return {
-          success: false,
-          error: 'No se encontró el token de autenticación.',
-        };
+        throw new Error('No se encontró el token de autenticación.');
       }
 
-      // Call the SDK's getByCode method
       const response = await api.coupon.getByCode(code, jwt);
-      return { success: true, data: response };
+      return response;
     } catch (error) {
-      return { success: false, error: extractErrorMessage(error) };
+      console.error('Error en CouponService.validateCoupon:', error);
+      throw new Error(extractErrorMessage(error));
     }
   },
 };

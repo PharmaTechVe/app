@@ -61,7 +61,8 @@ export default function HomeScreen() {
               p.presentation.measurementUnit,
             price: p.price,
             quantity,
-            image: p.product.images[0].url,
+            image:
+              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
           });
           updateCartQuantity(p.id, quantity);
         },

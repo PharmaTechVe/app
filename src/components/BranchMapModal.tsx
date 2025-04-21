@@ -45,16 +45,10 @@ const BranchMapModal = ({
             )}
           </View>
 
-          {branchName ? (
-            <View style={styles.branchInfo}>
-              <MapPinIcon size={18} color={Colors.textMain} />
-              <PoppinsText style={styles.branchName}>{branchName}</PoppinsText>
-            </View>
-          ) : (
-            <PoppinsText style={styles.branchName}>
-              Seleccione una sucursal para ver su ubicación.
-            </PoppinsText>
-          )}
+          <View style={styles.branchInfo}>
+            <MapPinIcon size={18} color={Colors.textMain} />
+            <PoppinsText style={styles.branchName}>{branchName}</PoppinsText>
+          </View>
         </View>
       </View>
     </Modal>

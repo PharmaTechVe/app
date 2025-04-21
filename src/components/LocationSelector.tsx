@@ -20,54 +20,72 @@ type Branch = {
 const LocationSelector = ({
   selectedOption,
   onSelect,
+  setSelectedBranch,
 }: {
-  selectedOption: 'pickup' | 'delivery' | null;
+  selectedOption: 'pickup' | 'delivery';
   onSelect: (value: string | null) => void;
+  setSelectedBranch: (branch: Branch | null) => void;
 }) => {
   const router = useRouter();
   const [pickupBranches, setPickupBranches] = useState<Branch[]>([]);
   const [deliveryAddresses, setDeliveryAddresses] = useState<
     { id: string; address: string }[]
-  >([]); // Store both UUID and address
+  >([]);
   const [dropdownKey, setDropdownKey] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [selectedBranch, setSelectedBranchState] = useState<Branch | null>(
+    null,
+  );
+  const [noAddresses, setNoAddresses] = useState(false);
 
   useEffect(() => {
     const resetState = async () => {
       setDropdownKey((prev) => prev + 1);
       onSelect(null);
-      setSelectedBranch(null);
+      setSelectedBranchState(null);
 
       if (selectedOption === 'pickup') {
         try {
           const response = await BranchService.findAll({});
-          if (response.success) {
-            setPickupBranches(response.data.results);
-          } else {
-            console.error('Error fetching branches:', response.error);
-          }
+
+          // Mapear las sucursales al formato esperado
+          const branches = response.results.map((branch) => ({
+            id: branch.id,
+            name: branch.name,
+            latitude: branch.latitude,
+            longitude: branch.longitude,
+          }));
+
+          setPickupBranches(branches);
         } catch (error) {
-          console.error('Error fetching branches:', extractErrorMessage(error));
+          console.error(
+            'Error al obtener sucursales:',
+            extractErrorMessage(error),
+          );
+          setPickupBranches([]); // Asegúrate de limpiar el estado en caso de error
         }
       } else if (selectedOption === 'delivery') {
         try {
           const response = await UserService.getUserDirections();
-          if (response.success) {
-            setDeliveryAddresses(
-              response.data.map((address) => ({
-                id: address.id,
-                address: address.adress,
-              })),
-            );
+
+          if (!response.success || response.data.length === 0) {
+            setNoAddresses(true);
+            setDeliveryAddresses([]);
           } else {
-            console.error('Error fetching addresses:', response.error);
+            setNoAddresses(false);
+            const addresses = response.data.map((address) => ({
+              id: address.id,
+              address: address.adress,
+            }));
+            setDeliveryAddresses(addresses);
           }
         } catch (error) {
           console.error(
-            'Error fetching addresses:',
+            'Error al obtener direcciones:',
             extractErrorMessage(error),
           );
+          setNoAddresses(true);
+          setDeliveryAddresses([]);
         }
       }
     };
@@ -80,34 +98,45 @@ const LocationSelector = ({
       ? pickupBranches.map((branch) => branch.name)
       : deliveryAddresses.map((item) => item.address);
 
-  if (!selectedOption) return null;
-
   return (
     <View style={styles.container}>
       <PoppinsText style={styles.label}>
         {selectedOption === 'pickup'
           ? 'Seleccione la sucursal'
-          : 'Seleccione la dirección de entrega'}
+          : noAddresses
+            ? 'No se encontraron direcciones registradas'
+            : 'Seleccione la dirección de entrega'}
       </PoppinsText>
 
-      <Dropdown
-        key={dropdownKey}
-        options={options}
-        placeholder="Selecciona una opción"
-        onSelect={(val) => {
-          if (selectedOption === 'pickup') {
+      {selectedOption === 'pickup' && pickupBranches.length > 0 && (
+        <Dropdown
+          key={dropdownKey}
+          options={options}
+          placeholder="Selecciona una opción"
+          onSelect={(val) => {
             const branch = pickupBranches.find((b) => b.name === val);
             setSelectedBranch(branch || null);
+            setSelectedBranchState(branch || null);
             onSelect(branch ? branch.id : null);
-          } else {
+          }}
+          borderColor={Colors.gray_100}
+        />
+      )}
+
+      {!noAddresses && selectedOption === 'delivery' && (
+        <Dropdown
+          key={dropdownKey}
+          options={options}
+          placeholder="Selecciona una opción"
+          onSelect={(val) => {
             const selectedAddress = deliveryAddresses.find(
               (item) => item.address === val,
             );
             onSelect(selectedAddress ? selectedAddress.id : null);
-          }
-        }}
-        borderColor={Colors.gray_100}
-      />
+          }}
+          borderColor={Colors.gray_100}
+        />
+      )}
 
       <TouchableOpacity
         style={styles.button}
@@ -116,7 +145,7 @@ const LocationSelector = ({
             ? setModalVisible(true)
             : router.push({
                 pathname: '/selectLocation',
-                params: { fromCheckout: 'true' }, // Convertimos a cadena
+                params: { fromCheckout: 'true' },
               })
         }
         disabled={selectedOption === 'pickup' && !selectedBranch}
@@ -131,9 +160,6 @@ const LocationSelector = ({
           style={[
             styles.buttonText,
             selectedOption === 'pickup' && styles.textWithIcon,
-            selectedOption === 'pickup' &&
-              !selectedBranch &&
-              styles.disabledText,
           ]}
         >
           {selectedOption === 'pickup'
