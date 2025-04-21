@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 
 const ProductCard: React.FC<Product> = ({
   id,
+  productId,
   imageUrl,
   name,
   category,
@@ -21,7 +22,11 @@ const ProductCard: React.FC<Product> = ({
   const { getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
   return (
-    <TouchableOpacity onPress={() => router.push('/products/' + id)}>
+    <TouchableOpacity
+      onPress={() =>
+        router.push('/products/' + productId + '/presentation/' + id)
+      }
+    >
       <View style={styles.card}>
         <View
           style={{
@@ -92,8 +97,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     maxWidth: 140,
     minWidth: 140,
-    minHeight: 270,
-    maxHeight: 300,
+    minHeight: 315,
+    maxHeight: 315,
   },
   tag: {
     backgroundColor: Colors.semanticInfo,
@@ -125,6 +130,8 @@ const styles = StyleSheet.create({
   name: {
     fontSize: FontSizes.s2.size,
     marginBottom: 6,
+    minHeight: 70,
+    maxHeight: 70,
   },
   priceContainer: {
     flexDirection: 'row',

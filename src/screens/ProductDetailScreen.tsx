@@ -43,7 +43,10 @@ type Product = {
 };
 
 const ProductDetailScreen: React.FC = () => {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { productId } = useLocalSearchParams<{
+    id: string;
+    productId: string;
+  }>();
   const navigation = useNavigation(); // Obtén la instancia de navegación
 
   const [inventory, setInventory] = useState<Inventory[]>([]);
@@ -69,9 +72,17 @@ const ProductDetailScreen: React.FC = () => {
     if (productsData.success) {
       const pd = productsData.data.results;
       const carouselProducts = pd.map((p) => ({
-        id: p.product.id,
+        id: p.id,
+        productId: p.product.id,
         imageUrl: p.product.images[0].url,
-        name: p.product.name,
+        name:
+          p.product.name +
+          ' ' +
+          p.presentation.name +
+          ' ' +
+          p.presentation.quantity +
+          ' ' +
+          p.presentation.measurementUnit,
         category: p.product.categories[0].name,
         originalPrice: p.price,
         discount: 10,
@@ -79,13 +90,20 @@ const ProductDetailScreen: React.FC = () => {
         quantity: getItemQuantity(p.product.id),
         getQuantity: (quantity: number) => {
           addToCart({
-            id: p.product.id,
-            name: p.product.name,
+            id: p.id,
+            name:
+              p.product.name +
+              ' ' +
+              p.presentation.name +
+              ' ' +
+              p.presentation.quantity +
+              ' ' +
+              p.presentation.measurementUnit,
             price: p.price,
             quantity,
             image: p.product.images[0].url,
           });
-          updateCartQuantity(p.product.id, quantity);
+          updateCartQuantity(p.id, quantity);
         },
       }));
 
@@ -109,10 +127,10 @@ const ProductDetailScreen: React.FC = () => {
 
   useEffect(() => {
     const obtainProducts = async () => {
-      const productsData = await ProductService.getGenericProduct(id);
+      const productsData = await ProductService.getGenericProduct(productId);
       const productsPresentation =
-        await ProductService.getProductPresentations(id);
-      const productsImage = await ProductService.getProductImages(id);
+        await ProductService.getProductPresentations(productId);
+      const productsImage = await ProductService.getProductImages(productId);
 
       const states = await StateService.getStates(1, 40);
 
