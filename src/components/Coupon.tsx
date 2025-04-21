@@ -28,18 +28,32 @@ const Coupon: React.FC<CouponProps> = ({
       setLoading(true);
       setValidationMessage(null);
 
-      const response = await CouponService.validateCoupon(couponCode.trim());
-      setLoading(false);
+      try {
+        // Llamar al servicio para validar el cupón
+        const response = await CouponService.validateCoupon(couponCode.trim());
 
-      if (response.success) {
-        const discount = response.data.discount;
-        setValidationMessage(
-          `Cupón válido. Se aplicó un descuento de ${discount}$ .`,
-        );
-        onApplyCoupon(discount);
-        onCouponApplied();
-      } else {
-        setValidationMessage('Cupón inválido'); // Mensaje personalizado de error
+        // Manejar la respuesta del servicio
+        if (response) {
+          const { discount, expirationDate } = response;
+          const isExpired = new Date(expirationDate) < new Date();
+
+          if (isExpired) {
+            setValidationMessage('El cupón ha expirado.');
+          } else {
+            setValidationMessage(
+              `Cupón válido. Se aplicó un descuento de ${discount}$.`,
+            );
+            onApplyCoupon(discount);
+            onCouponApplied();
+          }
+        } else {
+          setValidationMessage('Cupón inválido.');
+        }
+      } catch (error) {
+        setValidationMessage('Error al validar el cupón.');
+        console.error('Error en handleApply:', error);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -50,20 +64,7 @@ const Coupon: React.FC<CouponProps> = ({
     <View style={styles.container}>
       <PoppinsText style={styles.label}>Ingresa el Cupón</PoppinsText>
       <View style={styles.row}>
-        <View
-          style={[
-            styles.inputWrapper,
-            {
-              borderColor: Colors.gray_100,
-              borderWidth: 1,
-              borderRadius: 8,
-              height: 44,
-              paddingHorizontal: 10,
-              justifyContent: 'center',
-              backgroundColor: Colors.menuWhite,
-            },
-          ]}
-        >
+        <View style={styles.inputWrapper}>
           <Input
             placeholder="Código de Cupón"
             value={couponCode}
@@ -116,6 +117,13 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flex: 0.8,
     marginRight: 8,
+    borderColor: Colors.gray_100,
+    borderWidth: 1,
+    borderRadius: 8,
+    height: 44,
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    backgroundColor: Colors.menuWhite,
   },
   button: {
     flex: 0.2,

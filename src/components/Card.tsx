@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 
 const ProductCard: React.FC<Product> = ({
   id,
+  productId, // productId
   imageUrl,
   name,
   category,
@@ -21,7 +22,14 @@ const ProductCard: React.FC<Product> = ({
   const { getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
   return (
-    <TouchableOpacity onPress={() => router.push('/products/' + id)}>
+    <TouchableOpacity
+      onPress={() =>
+        router.push({
+          pathname: '/products/' + productId, // Usar el productId en el path
+          params: { productPresentationId: id }, // Pasar el productPresentationId como parámetro
+        })
+      }
+    >
       <View style={styles.card}>
         <View
           style={{

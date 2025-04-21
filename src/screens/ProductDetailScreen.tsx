@@ -54,13 +54,19 @@ const ProductDetailScreen: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [currentPresentationDescription, setCurrentPresentationDescription] =
+    useState<string | null>(null);
   const imagesScrollRef = useRef<ScrollView>(null);
 
   const { cartItems, addToCart, getItemQuantity, updateCartQuantity } =
     useCart();
 
   const getQuantity = (): number => {
-    return product?.id ? getItemQuantity(product.id) : 0;
+    const selectedPresentationId = product?.presentation.find(
+      (p) => p.description === currentPresentationDescription,
+    )?.id;
+
+    return selectedPresentationId ? getItemQuantity(selectedPresentationId) : 0;
   };
 
   const obtainProducts = async () => {
@@ -69,7 +75,8 @@ const ProductDetailScreen: React.FC = () => {
     if (productsData.success) {
       const pd = productsData.data.results;
       const carouselProducts = pd.map((p) => ({
-        id: p.product.id,
+        id: p.id,
+        productId: p.product.id, // productId
         imageUrl: p.product.images[0].url,
         name: p.product.name,
         category: p.product.categories[0].name,
@@ -79,13 +86,13 @@ const ProductDetailScreen: React.FC = () => {
         quantity: getItemQuantity(p.product.id),
         getQuantity: (quantity: number) => {
           addToCart({
-            id: p.product.id,
+            id: p.id,
             name: p.product.name,
             price: p.price,
             quantity,
             image: p.product.images[0].url,
           });
-          updateCartQuantity(p.product.id, quantity);
+          updateCartQuantity(p.id, quantity);
         },
       }));
 
@@ -96,11 +103,14 @@ const ProductDetailScreen: React.FC = () => {
   };
 
   const changePresentation = (description: string) => {
+    setCurrentPresentationDescription(description);
     const presentation = product?.presentation.find(
       (p) => p.description === description,
     );
-    if (presentation && 'price' in presentation)
+
+    if (presentation) {
       setCurrentPrice(presentation.price);
+    }
   };
 
   useEffect(() => {
@@ -479,7 +489,13 @@ const ProductDetailScreen: React.FC = () => {
           <CardButton
             size={10}
             getValue={(quantity) => {
-              if (product?.id) updateCartQuantity(product.id, quantity);
+              const selectedPresentationId = product?.presentation.find(
+                (p) => p.description === currentPresentationDescription,
+              )?.id;
+
+              if (selectedPresentationId) {
+                updateCartQuantity(selectedPresentationId, quantity);
+              }
             }}
             initialValue={getQuantity()}
           />
