@@ -7,7 +7,7 @@ import {
 } from 'react-native-heroicons/outline';
 import { CheckCircleIcon } from 'react-native-heroicons/solid';
 import Badge from './Badge';
-import Avatar from './Avatar';
+import CustomerAvatar from './CustomerAvatar';
 import Button from './Button';
 import PoppinsText from './PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
@@ -35,6 +35,9 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
   userName,
   onViewDetails,
 }) => {
+  // Separar el nombre y apellido del cliente
+  const [firstName, lastName] = userName.split(' ');
+
   return (
     <View style={styles.card}>
       {/* Header */}
@@ -45,15 +48,17 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
           size="small"
           borderRadius="square"
         >
-          {`${elapsedTime}, ${completionTime}`}
+          Hace {`${elapsedTime}, ${completionTime}`}
         </Badge>
       </View>
 
       {/* Order Code */}
-      <PoppinsText weight="medium" style={styles.orderCode}>
-        <CheckCircleIcon size={20} color={Colors.semanticSuccess} />{' '}
-        {orderType === 'pedido' ? 'Orden' : 'Reubicación'} #{orderCode}
-      </PoppinsText>
+      <View style={styles.orderCodeContainer}>
+        <CheckCircleIcon size={20} color={Colors.semanticSuccess} />
+        <PoppinsText weight="medium" style={styles.orderCodeText}>
+          {orderType === 'pedido' ? 'Orden' : 'Reubicación'} #{orderCode}
+        </PoppinsText>
+      </View>
 
       {/* Details */}
       <View style={styles.details}>
@@ -62,7 +67,11 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
           <PoppinsText style={styles.detailText}>{address}</PoppinsText>
         </View>
         <View style={styles.detailRow}>
-          <Avatar scale={20} />
+          <CustomerAvatar
+            firstName={firstName}
+            lastName={lastName}
+            scale={20}
+          />
           <PoppinsText style={styles.detailText}>{userName}</PoppinsText>
         </View>
         <View style={styles.detailRow}>
@@ -73,7 +82,9 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
         </View>
         <View style={styles.detailRow}>
           <ClockIcon size={20} color={Colors.primary} />
-          <PoppinsText style={styles.detailText}>{estimatedTime}</PoppinsText>
+          <PoppinsText style={styles.detailText}>
+            Tiempo de entrega: {estimatedTime}
+          </PoppinsText>
         </View>
       </View>
 
@@ -110,10 +121,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  orderCode: {
+  orderCodeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  orderCodeText: {
     fontSize: FontSizes.h5.size,
     color: Colors.primary,
-    marginBottom: 8,
+    marginLeft: 8,
   },
   elapsedTime: {
     fontSize: FontSizes.label.size,

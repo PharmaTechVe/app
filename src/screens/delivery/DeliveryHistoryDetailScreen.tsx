@@ -1,33 +1,58 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { PhoneIcon, EnvelopeIcon } from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
 import PoppinsText from '../../components/PoppinsText';
+import CustomerAvatar from '../../components/CustomerAvatar';
+import DeliveryMap from '../../components/DeliveryMap';
 import { Colors, FontSizes } from '../../styles/theme';
-import Avatar from '../../components/Avatar';
-
-interface Product {
-  id: string;
-  name: string;
-  quantity: number;
-}
+import { DeliveryService } from '../../services/delivery';
+import { BranchService } from '../../services/branches';
+import { OrderDeliveryDetailedResponse, BranchResponse } from '@pharmatech/sdk';
 
 const DeliveryHistoryDetailScreen: React.FC = () => {
-  const { data } = useLocalSearchParams();
-
-  console.log(
-    'Datos recibidos en la pantalla del historial (sin procesar):',
-    data,
+  const { id } = useLocalSearchParams();
+  const [orderDetails, setOrderDetails] =
+    useState<OrderDeliveryDetailedResponse | null>(null);
+  const [branchDetails, setBranchDetails] = useState<BranchResponse | null>(
+    null,
   );
+  const [loading, setLoading] = useState(true);
+  const [deliveryState] = useState(0);
 
-  const orderData = data
-    ? JSON.parse(decodeURIComponent(data as string))
-    : null;
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        if (!id) {
+          throw new Error('ID del pedido no proporcionado');
+        }
 
-  console.log('Datos decodificados en la pantalla del historial:', orderData);
+        // Obtener detalles completos del pedido
+        const details = await DeliveryService.getOrderDetails(id as string);
+        setOrderDetails(details);
 
-  if (!orderData) {
+        // Obtener detalles de la sucursal
+        const branches = await BranchService.findAll({ page: 1, limit: 100 });
+        const branch = branches.results.find(
+          (branch) => branch.id === details.branchId,
+        );
+        setBranchDetails(branch || null);
+      } catch (error) {
+        console.error('Error al obtener los detalles del pedido:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [id]);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={Colors.primary} />;
+  }
+
+  if (!orderDetails || !branchDetails) {
     return (
       <View style={styles.errorContainer}>
         <PoppinsText style={styles.errorText}>
@@ -36,6 +61,39 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
       </View>
     );
   }
+
+  const branchLocation = {
+    latitude: branchDetails.latitude,
+    longitude: branchDetails.longitude,
+  };
+
+  const customerLocation = {
+    latitude: orderDetails.address.latitude || 0,
+    longitude: orderDetails.address.longitude || 0,
+  };
+
+  // Calcular tiempos usando la función reutilizada
+  const elapsedTime = calculateElapsedTime(orderDetails.createdAt);
+  const completionTime = new Date(orderDetails.updatedAt).toLocaleTimeString(
+    'es-VE',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  );
+  const creationTime = new Date(orderDetails.createdAt).toLocaleTimeString(
+    'es-VE',
+    {
+      hour: '2-digit',
+      minute: '2-digit',
+    },
+  );
+  const creationTimePlusOneHour = new Date(
+    new Date(orderDetails.createdAt).getTime() + 60 * 43 * 1000,
+  ).toLocaleTimeString('es-VE', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -51,7 +109,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
             size="small"
             borderRadius="square"
           >
-            {`${orderData.elapsedTime}, ${orderData.completionTime}`}
+            Hace {`${elapsedTime}, ${completionTime}`}
           </Badge>
         </View>
 
@@ -60,15 +118,20 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
           {/* Información del cliente */}
           <View style={styles.cardRow}>
             <View style={styles.avatar}>
-              <Avatar />
+              <CustomerAvatar
+                firstName={orderDetails.user.firstName}
+                lastName={orderDetails.user.lastName}
+              />
             </View>
             <PoppinsText weight="medium" style={styles.userName}>
-              {orderData.userName}
+              {orderDetails.user.firstName} {orderDetails.user.lastName}
             </PoppinsText>
           </View>
           <View style={styles.cardRow}>
             <PhoneIcon size={20} color={Colors.primary} style={styles.icon} />
-            <PoppinsText style={styles.cardSubtitle}>+123456789</PoppinsText>
+            <PoppinsText style={styles.cardSubtitle}>
+              {orderDetails.user.phoneNumber || 'Sin teléfono'}
+            </PoppinsText>
           </View>
           <View style={styles.cardRow}>
             <EnvelopeIcon
@@ -97,11 +160,11 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
             <View style={styles.sectionContainer}>
               <View style={styles.cardRow}>
                 <PoppinsText style={styles.cardTitle}>
-                  {orderData.branch}
+                  {branchDetails.name}
                 </PoppinsText>
               </View>
               <PoppinsText style={styles.cardSubtitle}>
-                {orderData.address}
+                {branchDetails.address}
               </PoppinsText>
             </View>
 
@@ -111,7 +174,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
                 <PoppinsText style={styles.cardTitle}>Entrega</PoppinsText>
               </View>
               <PoppinsText style={styles.cardSubtitle}>
-                {orderData.address}
+                {orderDetails.address.adress}
               </PoppinsText>
             </View>
           </View>
@@ -144,7 +207,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
               </View>
               <PoppinsText
                 style={styles.historySubtitle}
-              >{`${orderData.elapsedTime}, ${orderData.completionTime}`}</PoppinsText>
+              >{`${creationTime}`}</PoppinsText>
             </View>
 
             <View style={styles.sectionContainer}>
@@ -154,7 +217,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
                 </PoppinsText>
               </View>
               <PoppinsText style={styles.historySubtitle}>
-                {`${orderData.elapsedTime}`}, hora de recogida
+                {`${creationTimePlusOneHour}`}
               </PoppinsText>
             </View>
 
@@ -163,7 +226,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
                 <PoppinsText style={styles.historyTitle}>Entregado</PoppinsText>
               </View>
               <PoppinsText style={styles.historySubtitle}>
-                {`${orderData.elapsedTime}`}, hora de entrega
+                {`${completionTime}`}
               </PoppinsText>
             </View>
           </View>
@@ -173,9 +236,13 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
         <PoppinsText weight="medium" style={styles.sectionTitle}>
           Recorrido de entrega
         </PoppinsText>
-        <View style={styles.mapPlaceholder} />
+        <DeliveryMap
+          deliveryState={deliveryState}
+          branchLocation={branchLocation}
+          customerLocation={customerLocation}
+        />
 
-        {/* Pedido */}
+        {/* Pedido 
         <PoppinsText weight="medium" style={styles.sectionTitle}>
           Pedido
         </PoppinsText>
@@ -194,11 +261,30 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
               </PoppinsText>
             </View>
           </View>
-        ))}
+        ))}*/}
         <View style={styles.scrollSpacer} />
       </ScrollView>
     </View>
   );
+};
+
+// Función reutilizada para calcular el tiempo transcurrido
+const calculateElapsedTime = (createdAt: string): string => {
+  const now = new Date();
+  const createdDate = new Date(createdAt);
+  const diffInMinutes = Math.floor(
+    (now.getTime() - createdDate.getTime()) / (1000 * 60),
+  );
+
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minutos`;
+  } else if (diffInMinutes < 1440) {
+    const hours = Math.floor(diffInMinutes / 60);
+    return `${hours} horas`;
+  } else {
+    const days = Math.floor(diffInMinutes / 1440);
+    return `${days} días`;
+  }
 };
 
 const styles = StyleSheet.create({
