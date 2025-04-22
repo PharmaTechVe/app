@@ -21,6 +21,7 @@ interface HistoryOrderCardProps {
   elapsedTime: string;
   completionTime: string;
   userName: string;
+  profilePicture?: string; // Nueva propiedad para la imagen de perfil
   onViewDetails: () => void;
 }
 
@@ -33,6 +34,7 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
   elapsedTime,
   completionTime,
   userName,
+  profilePicture,
   onViewDetails,
 }) => {
   // Separar el nombre y apellido del cliente
@@ -70,6 +72,7 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
           <CustomerAvatar
             firstName={firstName}
             lastName={lastName}
+            profilePicture={profilePicture} // Pasar la imagen de perfil
             scale={20}
           />
           <PoppinsText style={styles.detailText}>{userName}</PoppinsText>

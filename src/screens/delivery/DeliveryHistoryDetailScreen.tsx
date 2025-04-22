@@ -121,6 +121,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
               <CustomerAvatar
                 firstName={orderDetails.user.firstName}
                 lastName={orderDetails.user.lastName}
+                profilePicture={orderDetails.user.profilePicture} // Pasar la imagen de perfil
               />
             </View>
             <PoppinsText weight="medium" style={styles.userName}>

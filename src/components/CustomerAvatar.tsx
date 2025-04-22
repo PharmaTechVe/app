@@ -1,17 +1,19 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import PoppinsText from './PoppinsText';
 import { Colors } from '../styles/theme';
 
 type CustomerAvatarProps = {
   firstName: string;
   lastName: string;
+  profilePicture?: string; // Nueva propiedad para la imagen de perfil
   scale?: number; // Propiedad opcional para definir el tamaño del avatar
 };
 
 const CustomerAvatar: React.FC<CustomerAvatarProps> = ({
   firstName,
   lastName,
+  profilePicture,
   scale = 32,
 }) => {
   const getInitials = (firstName: string, lastName: string): string => {
@@ -37,19 +39,33 @@ const CustomerAvatar: React.FC<CustomerAvatarProps> = ({
         },
       ]}
     >
-      <PoppinsText
-        style={[
-          styles.initials,
-          {
-            fontSize: fontSize,
-            lineHeight: lineHeight,
-            marginTop: marginTop,
-          },
-        ]}
-        weight="semibold"
-      >
-        {initials}
-      </PoppinsText>
+      {profilePicture ? (
+        <Image
+          source={{ uri: profilePicture }}
+          style={[
+            styles.avatarImage,
+            {
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: avatarSize / 2,
+            },
+          ]}
+        />
+      ) : (
+        <PoppinsText
+          style={[
+            styles.initials,
+            {
+              fontSize: fontSize,
+              lineHeight: lineHeight,
+              marginTop: marginTop,
+            },
+          ]}
+          weight="semibold"
+        >
+          {initials}
+        </PoppinsText>
+      )}
     </View>
   );
 };
@@ -59,6 +75,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    resizeMode: 'cover',
   },
   initials: {
     color: Colors.textWhite,

@@ -138,6 +138,7 @@ const DeliveryHistoryScreen: React.FC = () => {
               userName={`${order.user?.firstName || 'Usuario'} ${
                 order.user?.lastName || ''
               }`}
+              profilePicture={order.user?.profilePicture}
               onViewDetails={() => handleViewDetails(order)}
             />
           ))

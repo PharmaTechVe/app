@@ -261,6 +261,7 @@ const DeliveryDetailScreen: React.FC = () => {
               <CustomerAvatar
                 firstName={orderDetails.user.firstName}
                 lastName={orderDetails.user.lastName}
+                profilePicture={orderDetails.user.profilePicture}
                 scale={20}
               />
             </View>
