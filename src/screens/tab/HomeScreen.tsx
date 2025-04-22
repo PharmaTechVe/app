@@ -31,23 +31,40 @@ export default function HomeScreen() {
     if (productsData.success) {
       const pd = productsData.data.results;
       const carouselProducts = pd.map((p) => ({
-        id: p.product.id,
+        id: p.id,
+        presentationId: p.presentation.id,
+        productId: p.product.id,
         imageUrl: p.product.images[0].url,
-        name: p.product.name,
+        name:
+          p.product.name +
+          ' ' +
+          p.presentation.name +
+          ' ' +
+          p.presentation.quantity +
+          ' ' +
+          p.presentation.measurementUnit,
         category: p.product.categories[0].name,
         originalPrice: p.price,
         discount: 10,
         finalPrice: p.price - p.price * 0.1,
-        quantity: getItemQuantity(p.product.id),
+        quantity: getItemQuantity(p.id),
         getQuantity: (quantity: number) => {
           addToCart({
-            id: p.product.id,
-            name: p.product.name,
+            id: p.id,
+            name:
+              p.product.name +
+              ' ' +
+              p.presentation.name +
+              ' ' +
+              p.presentation.quantity +
+              ' ' +
+              p.presentation.measurementUnit,
             price: p.price,
             quantity,
-            image: p.product.images[0].url,
+            image:
+              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
           });
-          updateCartQuantity(p.product.id, quantity);
+          updateCartQuantity(p.id, quantity);
         },
       }));
 

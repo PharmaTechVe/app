@@ -14,6 +14,9 @@
       "backgroundColor": "#1C2143"
     },
     "ios": {
+      "config": {
+        "googleMapsApiKey": "process.env.GOOGLE_MAPS_API_KEY"
+      },
       "supportsTablet": true
     },
     "android": {

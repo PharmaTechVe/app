@@ -33,6 +33,8 @@ export const Colors = {
 
   yellow: '#FFBA2E0',
 
+  primary_600: '#415FCF',
+
   gray_100: '#E7E7E6',
   gray_500: '#6E6D6C',
 };
