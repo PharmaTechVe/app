@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View,
   TouchableOpacity,
-  TouchableHighlight,
   StyleSheet,
+  TouchableWithoutFeedback, // Importa TouchableWithoutFeedback
 } from 'react-native';
 import { ChevronDownIcon } from 'react-native-heroicons/outline';
 import PoppinsText from './PoppinsText';
@@ -34,7 +34,9 @@ const Dropdown: React.FC<DropdownProps> = ({
   const handleSelect = (option: string) => {
     setSelectedOption(option);
     onSelect(option);
-    setIsOpen(false);
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 150); // Retraso de 200ms antes de cerrar el menú
   };
 
   const getBorderWidth = () => {
@@ -66,28 +68,36 @@ const Dropdown: React.FC<DropdownProps> = ({
       {isOpen && (
         <View style={[styles.optionsContainer]}>
           {options.map((option, index) => (
-            <TouchableHighlight
+            <TouchableWithoutFeedback
               key={index}
-              onPress={() => handleSelect(option)}
-              style={[
-                {
-                  backgroundColor:
-                    option === selectedOption ? Colors.primary : '',
-                },
-                styles.option,
-              ]}
-              activeOpacity={1}
-              underlayColor={Colors.primary}
+              onPress={() => handleSelect(option)} // Selecciona la opción al presionar
             >
-              <PoppinsText
+              <View
                 style={[
-                  { color: option === selectedOption ? Colors.textWhite : '' },
-                  styles.optionText,
+                  {
+                    backgroundColor:
+                      option === selectedOption
+                        ? Colors.primary
+                        : Colors.textWhite, // Solo cambia el fondo si está seleccionado
+                  },
+                  styles.option,
                 ]}
               >
-                {option}
-              </PoppinsText>
-            </TouchableHighlight>
+                <PoppinsText
+                  style={[
+                    {
+                      color:
+                        option === selectedOption
+                          ? Colors.textWhite
+                          : Colors.textLowContrast, // Cambia el color del texto solo si está seleccionado
+                    },
+                    styles.optionText,
+                  ]}
+                >
+                  {option}
+                </PoppinsText>
+              </View>
+            </TouchableWithoutFeedback>
           ))}
         </View>
       )}

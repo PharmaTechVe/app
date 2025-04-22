@@ -1,5 +1,11 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import {
   ShoppingBagIcon,
   TruckIcon,
@@ -20,11 +26,15 @@ import Coupon from '../components/Coupon';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import { useRouter } from 'expo-router';
 import { OrderService } from '../services/order';
+import { UserService } from '../services/user';
 import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
 import BranchMapModal from '../components/BranchMapModal';
+import { useDispatch } from 'react-redux';
+import { clearCart } from '../redux/slices/cartSlice';
 
 const CheckoutScreen = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { cartItems } = useCart();
   const [selectedOption, setSelectedOption] = useState<
     'pickup' | 'delivery' | null
@@ -39,13 +49,31 @@ const CheckoutScreen = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [userName] = useState<string | null>('Usuario');
+  const [userName, setUserName] = useState<string | null>('Usuario');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<{
     name: string;
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const response = await UserService.getProfile();
+      if (response.success && response.data) {
+        const { firstName } = response.data; // Solo obtenemos el primer nombre
+        setUserName(firstName);
+      } else if (!response.success) {
+        console.error(
+          'Error al obtener el nombre del usuario:',
+          response.error,
+        );
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -168,7 +196,13 @@ const CheckoutScreen = () => {
             return;
           }
 
+          // Guardar el número de orden generado
+          setOrderNumber(orderResponse.id);
+
           console.log('Orden creada exitosamente:', orderResponse);
+
+          // Limpiar el carrito
+          dispatch(clearCart());
 
           setStatus('approved');
           setCurrentStep(stepsLabels.length);
@@ -184,6 +218,11 @@ const CheckoutScreen = () => {
   };
 
   const handleGoBack = () => {
+    if (currentStep === stepsLabels.length) {
+      // Si estamos en el último paso, no permitir retroceder
+      return;
+    }
+
     if (currentStep === 1) {
       router.back();
     } else if (currentStep > 1) {
@@ -192,6 +231,7 @@ const CheckoutScreen = () => {
   };
 
   const handleGoToHome = () => {
+    router.dismissAll();
     router.replace({
       pathname: '/(tabs)',
     });
@@ -288,16 +328,20 @@ const CheckoutScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
-        </TouchableOpacity>
+        {currentStep < stepsLabels.length && (
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.steps}>
-          <Steps
-            totalSteps={stepsLabels.length}
-            currentStep={currentStep}
-            labels={stepsLabels}
-          />
+          <Animated.View style={{ opacity: 1 }}>
+            <Steps
+              totalSteps={stepsLabels.length}
+              currentStep={currentStep}
+              labels={stepsLabels}
+            />
+          </Animated.View>
         </View>
 
         {errorMessage && (
@@ -385,7 +429,7 @@ const CheckoutScreen = () => {
             </PoppinsText>
             <PaymentStatusMessage
               status={status}
-              orderNumber={'N/A'}
+              orderNumber={orderNumber ? orderNumber.split('-')[0] : 'N/A'}
               userName={userName || 'Usuario'}
             />
             <View style={styles.confirmationContainer}>
@@ -488,6 +532,7 @@ const styles = StyleSheet.create({
     marginTop: 60,
   },
   purchaseOptionsTitle: {
+    paddingVertical: 16,
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
     marginBottom: 30,

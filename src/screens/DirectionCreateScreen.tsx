@@ -100,7 +100,8 @@ const DirectionCreateScreen = () => {
         setShowSuccessAlert(true);
         setTimeout(() => {
           if (fromCheckout === 'true') {
-            router.push('/checkout');
+            router.dismiss(2);
+            router.replace('/checkout');
           } else {
             router.replace('/direction');
           }

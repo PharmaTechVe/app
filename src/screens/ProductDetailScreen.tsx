@@ -9,6 +9,7 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
@@ -316,13 +317,11 @@ const ProductDetailScreen: React.FC = () => {
           </View>
 
           <PoppinsText style={styles.productName}>
-            {product?.product.name +
-              ' ' +
-              product?.presentation.name +
-              ' ' +
-              product?.presentation.quantity +
-              ' ' +
-              product?.presentation.measurementUnit}
+            {product ? (
+              `${product.product.name} ${product.presentation.name} ${product.presentation.quantity} ${product.presentation.measurementUnit}`
+            ) : (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            )}
           </PoppinsText>
 
           <RatingStars />
