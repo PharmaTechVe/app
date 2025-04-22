@@ -1,42 +1,37 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   InformationCircleIcon,
   BuildingStorefrontIcon,
   MapPinIcon,
   PhoneIcon,
-  EnvelopeIcon,
 } from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
 import PoppinsText from '../../components/PoppinsText';
 import Button from '../../components/Button';
+import DeliveryMap from '../../components/DeliveryMap';
+import CustomerAvatar from '../../components/CustomerAvatar';
 import { Colors, FontSizes } from '../../styles/theme';
-
-interface Product {
-  id: string;
-  name: string;
-  quantity: number;
-}
+import { DeliveryService } from '../../services/delivery';
+import { BranchService } from '../../services/branches';
+import {
+  OrderDeliveryDetailedResponse,
+  OrderDeliveryStatus,
+  BranchResponse,
+} from '@pharmatech/sdk';
 
 const DeliveryDetailScreen: React.FC = () => {
-  const { data } = useLocalSearchParams();
-
-  const orderData = data
-    ? JSON.parse(decodeURIComponent(data as string))
-    : null;
-
-  if (!orderData) {
-    return (
-      <View style={styles.errorContainer}>
-        <PoppinsText style={styles.errorText}>
-          No se encontraron datos del pedido.
-        </PoppinsText>
-      </View>
-    );
-  }
-
+  const { id } = useLocalSearchParams();
+  const [orderDetails, setOrderDetails] =
+    useState<OrderDeliveryDetailedResponse | null>(null);
+  const [branchNames, setBranchNames] = useState<
+    Record<string, { name: string; latitude: number; longitude: number }>
+  >({});
+  const [loading, setLoading] = useState(true);
   const [deliveryState, setDeliveryState] = useState(0);
+  const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
+  const router = useRouter();
 
   const deliveryStates = [
     'Buscando pedido en sucursal de origen',
@@ -52,11 +47,134 @@ const DeliveryDetailScreen: React.FC = () => {
     'Finalizar entrega',
   ];
 
-  const handleNextState = () => {
-    if (deliveryState < buttonStates.length - 1) {
-      setDeliveryState(deliveryState + 1);
+  const branchLocation = {
+    latitude: branchNames[orderDetails?.branchId ?? '']?.latitude || 0,
+    longitude: branchNames[orderDetails?.branchId ?? '']?.longitude || 0,
+  };
+
+  const customerLocation = {
+    latitude: 0,
+    longitude: 0,
+  };
+
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      try {
+        console.log('Fetching order details for delivery ID:', id);
+        const details = await DeliveryService.getOrderDetails(id as string);
+        console.log('Order details fetched:', details);
+
+        setOrderDetails(details);
+
+        // Obtener todas las sucursales y mapear sus nombres y coordenadas
+        const branches = await BranchService.findAll({ page: 1, limit: 100 });
+        const branchMap = branches.results.reduce(
+          (
+            acc: Record<
+              string,
+              { name: string; latitude: number; longitude: number }
+            >,
+            branch: BranchResponse,
+          ) => {
+            acc[branch.id] = {
+              name: branch.name,
+              latitude: branch.latitude,
+              longitude: branch.longitude,
+            };
+            return acc;
+          },
+          {},
+        );
+
+        setBranchNames(branchMap);
+      } catch (error) {
+        console.error('Error al obtener los detalles del pedido:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [id]);
+
+  const handleNextState = async () => {
+    console.log(
+      'handleNextState called, current deliveryState:',
+      deliveryState,
+    );
+    console.log('Current button state:', buttonStates[deliveryState]);
+    console.log('deliveryState:', deliveryState);
+    console.log('buttonStates[deliveryState]:', buttonStates[deliveryState]);
+    console.log(
+      'Comparison result:',
+      buttonStates[deliveryState] === 'Finalizar entrega',
+    );
+
+    try {
+      if (deliveryState === 5) {
+        console.log('Forcing Finalizar entrega case');
+        router.replace('/(delivery-tabs)');
+        return;
+      }
+
+      if (deliveryState < buttonStates.length - 1) {
+        // Verifica si el estado actual es "Finalizar entrega"
+        if (buttonStates[deliveryState] === 'Finalizar entrega') {
+          console.log('Finalizar entrega case triggered');
+          router.replace('/login');
+          return;
+        }
+
+        // Actualizar el estado en el backend según el botón actual
+        switch (buttonStates[deliveryState]) {
+          case 'Comenzar entrega':
+            await DeliveryService.updateOrderStatus(
+              orderDetails!.id,
+              OrderDeliveryStatus.WAITING_CONFIRMATION,
+            );
+            break;
+          case 'Ya tengo los productos del pedido':
+            await DeliveryService.updateOrderStatus(
+              orderDetails!.id,
+              OrderDeliveryStatus.PICKED_UP,
+            );
+            break;
+          case 'Ir a destino de entrega':
+            await DeliveryService.updateOrderStatus(
+              orderDetails!.id,
+              OrderDeliveryStatus.IN_ROUTE,
+            );
+            setDeliveryStateBadge(1); // Cambiar a "Haciendo entrega del pedido"
+            break;
+          case 'Ya hice la entrega':
+            await DeliveryService.updateOrderStatus(
+              orderDetails!.id,
+              OrderDeliveryStatus.DELIVERED,
+            );
+            break;
+        }
+
+        // Avanzar al siguiente estado del botón
+        setDeliveryState(deliveryState + 1);
+      }
+    } catch (error) {
+      console.error('Error al actualizar el estado del delivery:', error);
     }
   };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={Colors.primary} />;
+  }
+
+  if (!orderDetails) {
+    return (
+      <View style={styles.errorContainer}>
+        <PoppinsText style={styles.errorText}>
+          No se encontraron datos del pedido.
+        </PoppinsText>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -72,12 +190,12 @@ const DeliveryDetailScreen: React.FC = () => {
           <PoppinsText style={styles.statusLabel}>Estado:</PoppinsText>
           <Badge
             variant="filled"
-            color={orderData.type === 'pedido' ? 'info' : 'secondary_300'}
+            color="info"
             size="small"
             borderRadius="square"
             textColor={Colors.primary}
           >
-            {deliveryStates[deliveryState < 3 ? 0 : 1]}
+            {deliveryStates[deliveryStateBadge]}
           </Badge>
         </View>
 
@@ -104,11 +222,12 @@ const DeliveryDetailScreen: React.FC = () => {
                 style={styles.icon}
               />
               <PoppinsText style={styles.cardTitle}>
-                {orderData.branch}
+                Sucursal de origen
               </PoppinsText>
             </View>
             <PoppinsText style={styles.cardSubtitle}>
-              {orderData.address}
+              {branchNames[orderDetails.branchId]?.name ||
+                'Sucursal no disponible'}
             </PoppinsText>
           </View>
 
@@ -123,7 +242,10 @@ const DeliveryDetailScreen: React.FC = () => {
               <PoppinsText style={styles.cardTitle}>Entrega</PoppinsText>
             </View>
             <PoppinsText style={styles.cardSubtitle}>
-              {orderData.address}
+              {orderDetails.address.adress}
+            </PoppinsText>
+            <PoppinsText style={styles.cardSubtitle}>
+              {orderDetails.address.referencePoint || 'Sin referencia'}
             </PoppinsText>
           </View>
         </View>
@@ -133,21 +255,25 @@ const DeliveryDetailScreen: React.FC = () => {
           Información de contacto
         </PoppinsText>
         <View style={styles.card3}>
+          {/* Avatar del cliente */}
+          <View style={styles.cardRow}>
+            <View style={styles.icon}>
+              <CustomerAvatar
+                firstName={orderDetails.user.firstName}
+                lastName={orderDetails.user.lastName}
+                scale={20}
+              />
+            </View>
+            <PoppinsText style={styles.cardSubtitle1}>
+              {orderDetails.user.firstName} {orderDetails.user.lastName}
+            </PoppinsText>
+          </View>
+
           {/* Teléfono */}
           <View style={styles.cardRow}>
             <PhoneIcon size={20} color={Colors.primary} style={styles.icon} />
-            <PoppinsText style={styles.cardSubtitle1}>+123456789</PoppinsText>
-          </View>
-
-          {/* Correo */}
-          <View style={styles.cardRow}>
-            <EnvelopeIcon
-              size={20}
-              color={Colors.primary}
-              style={styles.icon}
-            />
             <PoppinsText style={styles.cardSubtitle1}>
-              cliente@correo.com
+              {orderDetails.user.phoneNumber}
             </PoppinsText>
           </View>
         </View>
@@ -156,28 +282,35 @@ const DeliveryDetailScreen: React.FC = () => {
         <PoppinsText weight="medium" style={styles.sectionTitle}>
           Recorrido de entrega
         </PoppinsText>
-        <View style={styles.mapPlaceholder} />
+        <DeliveryMap
+          deliveryState={deliveryState}
+          branchLocation={branchLocation}
+          customerLocation={customerLocation}
+        />
 
-        {/* Pedido */}
-        <PoppinsText weight="medium" style={styles.sectionTitle}>
+        {/* Pedido (contenido comentado) */}
+        {/* <PoppinsText weight="medium" style={styles.sectionTitle}>
           Pedido
         </PoppinsText>
         <PoppinsText style={styles.totalProducts}>
-          Total: {orderData.products?.length || 0} productos
+          Total: {products.length} productos
         </PoppinsText>
-        {orderData.products?.map((product: Product) => (
+        {products.map((product) => (
           <View key={product.id} style={styles.productCard}>
             <View style={styles.productImagePlaceholder} />
             <View>
               <PoppinsText style={styles.productName}>
-                {product.name}
+                {product.productPresentation.product.name}
               </PoppinsText>
               <PoppinsText style={styles.productQuantity}>
                 Cantidad: {product.quantity}
               </PoppinsText>
+              <PoppinsText style={styles.productPrice}>
+                Subtotal: ${product.subtotal.toFixed(2)}
+              </PoppinsText>
             </View>
           </View>
-        ))}
+        ))} */}
 
         {/* Espaciado adicional al final */}
         <View style={styles.scrollSpacer} />
@@ -340,6 +473,10 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b3.size,
     color: Colors.textLowContrast,
   },
+  productPrice: {
+    fontSize: FontSizes.b3.size,
+    color: Colors.textLowContrast,
+  },
   floatingButton: {
     position: 'absolute',
     bottom: 16,
@@ -356,7 +493,7 @@ const styles = StyleSheet.create({
     color: Colors.semanticDanger,
   },
   scrollSpacer: {
-    height: 64,
+    height: 64 + 16,
   },
 });
 

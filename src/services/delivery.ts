@@ -6,6 +6,7 @@ import {
   OrderDeliveryDetailedResponse,
   Pagination,
   OrderDeliveryPaginationRequest,
+  OrderDetailResponse,
 } from '@pharmatech/sdk';
 import { extractErrorMessage } from '../utils/errorHandler';
 
@@ -21,13 +22,11 @@ export const DeliveryService = {
     status: OrderDeliveryStatus = OrderDeliveryStatus.ASSIGNED,
   ): Promise<Pagination<OrderDeliveryResponse>> => {
     try {
-      // Obtener el JWT del SecureStore
       const jwt = await SecureStore.getItemAsync('auth_token');
       if (!jwt) {
         throw new Error('Token de autenticación no encontrado');
       }
 
-      // Llamar al método findAll con el JWT
       const response = await api.deliveryService.findAll(
         {
           employeeId,
@@ -35,7 +34,7 @@ export const DeliveryService = {
           page: 1,
           limit: 10,
         } as OrderDeliveryPaginationRequest,
-        jwt, // Pasar el JWT como segundo argumento
+        jwt,
       );
       return response;
     } catch (error) {
@@ -53,17 +52,38 @@ export const DeliveryService = {
     orderId: string,
   ): Promise<OrderDeliveryDetailedResponse> => {
     try {
-      // Obtener el JWT del SecureStore
       const jwt = await SecureStore.getItemAsync('auth_token');
       if (!jwt) {
         throw new Error('Token de autenticación no encontrado');
       }
 
-      // Llamar al método getById con el JWT
-      const response = await api.deliveryService.getById(orderId, jwt); // Pasar el JWT como segundo argumento
+      const response = await api.deliveryService.getById(orderId, jwt);
       return response;
     } catch (error) {
       console.error('Error al obtener los detalles de la orden:', error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Obtener los productos de una orden específica.
+   * @param orderId - ID de la orden.
+   * @returns Lista de productos de la orden.
+   */
+  getOrderProducts: async (orderId: string): Promise<OrderDetailResponse[]> => {
+    try {
+      const jwt = await SecureStore.getItemAsync('auth_token');
+      if (!jwt) {
+        throw new Error('Token de autenticación no encontrado');
+      }
+
+      console.log('Fetching products for order ID:', orderId);
+      const orderDetails = await api.order.getById(orderId, jwt);
+      console.log('Order details fetched:', orderDetails);
+
+      return orderDetails.details; // Retornar solo los productos
+    } catch (error) {
+      console.error('Error al obtener los productos de la orden:', error);
       throw new Error(extractErrorMessage(error));
     }
   },
@@ -79,13 +99,11 @@ export const DeliveryService = {
     status: OrderDeliveryStatus,
   ): Promise<OrderDeliveryResponse> => {
     try {
-      // Obtener el JWT del SecureStore
       const jwt = await SecureStore.getItemAsync('auth_token');
       if (!jwt) {
         throw new Error('Token de autenticación no encontrado');
       }
 
-      // Llamar al método update del SDK con el JWT
       const response = await api.deliveryService.update(
         orderId,
         { deliveryStatus: status },
