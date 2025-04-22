@@ -5,7 +5,7 @@ import { PhoneIcon, EnvelopeIcon } from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
 import PoppinsText from '../../components/PoppinsText';
 import CustomerAvatar from '../../components/CustomerAvatar';
-import DeliveryMap from '../../components/DeliveryMap';
+import HistoryMap from '../../components/HistoryMap';
 import { Colors, FontSizes } from '../../styles/theme';
 import { DeliveryService } from '../../services/delivery';
 import { BranchService } from '../../services/branches';
@@ -19,7 +19,6 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const [deliveryState] = useState(0);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -61,16 +60,6 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
       </View>
     );
   }
-
-  const branchLocation = {
-    latitude: branchDetails.latitude,
-    longitude: branchDetails.longitude,
-  };
-
-  const customerLocation = {
-    latitude: orderDetails.address.latitude || 0,
-    longitude: orderDetails.address.longitude || 0,
-  };
 
   // Calcular tiempos usando la función reutilizada
   const elapsedTime = calculateElapsedTime(orderDetails.createdAt);
@@ -141,7 +130,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
               style={styles.icon}
             />
             <PoppinsText style={styles.cardSubtitle}>
-              cliente@correo.com
+              {orderDetails.user.email || 'Sin correo'}
             </PoppinsText>
           </View>
 
@@ -237,10 +226,19 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
         <PoppinsText weight="medium" style={styles.sectionTitle}>
           Recorrido de entrega
         </PoppinsText>
-        <DeliveryMap
-          deliveryState={deliveryState}
-          branchLocation={branchLocation}
-          customerLocation={customerLocation}
+        <HistoryMap
+          deliveryLocation={{
+            latitude: 10.068522,
+            longitude: -69.282318,
+          }}
+          branchLocation={{
+            latitude: branchDetails.latitude,
+            longitude: branchDetails.longitude,
+          }}
+          customerLocation={{
+            latitude: orderDetails.address.latitude,
+            longitude: orderDetails.address.longitude,
+          }}
         />
 
         {/* Pedido 

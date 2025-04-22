@@ -53,8 +53,8 @@ const DeliveryDetailScreen: React.FC = () => {
   };
 
   const customerLocation = {
-    latitude: 0,
-    longitude: 0,
+    latitude: orderDetails?.address?.latitude || 0,
+    longitude: orderDetails?.address?.longitude || 0,
   };
 
   useEffect(() => {
@@ -65,6 +65,11 @@ const DeliveryDetailScreen: React.FC = () => {
         console.log('Order details fetched:', details);
 
         setOrderDetails(details);
+
+        // Validar si las coordenadas del cliente están disponibles
+        if (!details.address.latitude || !details.address.longitude) {
+          console.warn('Las coordenadas del cliente no están disponibles.');
+        }
 
         // Obtener todas las sucursales y mapear sus nombres y coordenadas
         const branches = await BranchService.findAll({ page: 1, limit: 100 });
