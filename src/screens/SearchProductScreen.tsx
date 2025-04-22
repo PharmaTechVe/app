@@ -1,497 +1,114 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
-  Image,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
-import { useCart } from '../hooks/useCart';
-import { Product as CardProduct } from '../types/Product';
-import {
-  CheckCircleIcon,
-  StarIcon,
-  ChevronLeftIcon,
-} from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
-import Dropdown from '../components/Dropdown';
-import CardButton from '../components/CardButton';
 import PoppinsText from '../components/PoppinsText';
 import { ProductService } from '../services/products';
-import {
-  AdjustmentsHorizontalIcon,
-  TruckIcon,
-} from 'react-native-heroicons/outline';
-import Carousel from '../components/Carousel';
-import { StateService } from '../services/state';
-import { Inventory, State } from '../types/api';
-import { InventoryService } from '../services/inventory';
-import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
-import BranchMap from '../components/BranchMap';
-
-type Product = {
-  id: string;
-  name: string;
-  description: string | undefined;
-  rating: number;
-  discount: number;
-  presentation: { id: string; description: string; price: number }[];
-  images: string[];
-};
+import { AdjustmentsHorizontalIcon } from 'react-native-heroicons/solid';
+import FilterOptions from '../components/FilterOptions';
+import { ManufacturerResponse, ProductPresentation } from '@pharmatech/sdk';
+import Checkbox from '../components/Checkbox';
+import Steps from '../components/Steps';
+import Button from '../components/Button';
 
 export default function SearchProductScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const navigation = useNavigation(); // Obtén la instancia de navegación
+  const { query } = useLocalSearchParams<{ query: string }>();
 
-  const [inventory, setInventory] = useState<Inventory[]>([]);
-  const [states, setStates] = useState<State[]>([]);
-  const [product, setProduct] = useState<Product>();
-  const [products, setProducts] = useState<CardProduct[]>([]);
-  const [userRating, setUserRating] = useState<number>(0);
-  const [hoverRating, setHoverRating] = useState<number>(0);
-  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-  const [currentPrice, setCurrentPrice] = useState<number>(0);
-  const imagesScrollRef = useRef<ScrollView>(null);
-
-  const { cartItems, addToCart, getItemQuantity, updateCartQuantity } =
-    useCart();
-
-  const getQuantity = (): number => {
-    return product?.id ? getItemQuantity(product.id) : 0;
-  };
-
-  const obtainProducts = async () => {
-    const productsData = await ProductService.getProducts(1, 20);
-
-    if (productsData.success) {
-      const pd = productsData.data.results;
-      const carouselProducts = pd.map((p) => ({
-        id: p.product.id,
-        imageUrl: p.product.images[0].url,
-        name: p.product.name,
-        category: p.product.categories[0].name,
-        originalPrice: p.price,
-        discount: 10,
-        finalPrice: p.price - p.price * 0.1,
-        quantity: getItemQuantity(p.product.id),
-        getQuantity: (quantity: number) => {
-          addToCart({
-            id: p.product.id,
-            name: p.product.name,
-            price: p.price,
-            quantity,
-            image: p.product.images[0].url,
-          });
-          updateCartQuantity(p.product.id, quantity);
-        },
-      }));
-
-      setProducts(carouselProducts);
-    } else {
-      console.log(productsData.error);
-    }
-  };
-
-  const changePresentation = (description: string) => {
-    const presentation = product?.presentation.find(
-      (p) => p.description === description,
-    );
-    if (presentation && 'price' in presentation)
-      setCurrentPrice(presentation.price);
-  };
+  const [search, setSearch] = useState<ProductPresentation[]>();
+  const [isVisible, setIsVisible] = useState(false);
+  const [brands, setBrands] = useState<ManufacturerResponse[]>();
 
   useEffect(() => {
-    obtainProducts();
-  }, [cartItems]);
-
-  useEffect(() => {
-    const obtainProducts = async () => {
-      const productsData = await ProductService.getGenericProduct(id);
-      const productsPresentation =
-        await ProductService.getProductPresentations(id);
-      const productsImage = await ProductService.getProductImages(id);
-
-      const states = await StateService.getStates(1, 40);
-
-      if (states.success) {
-        setStates(states.data.results);
-      }
-
-      if (productsData.success) {
-        setProduct({
-          id: productsData.data.id,
-          name: productsData.data.name,
-          description: productsPresentation.success
-            ? productsData.data.description
-            : undefined,
-          rating: 0,
-          images: productsImage.success
-            ? productsImage.data.map((image: { url: string }) => image.url)
-            : [],
-          discount: 10,
-          presentation: productsPresentation.success
-            ? productsPresentation.data.map(
-                (presentation: {
-                  id: string;
-                  presentation: { description: string };
-                  price: number;
-                }) => ({
-                  id: presentation.id,
-                  description: presentation.presentation.description,
-                  price: presentation.price,
-                }),
-              )
-            : [],
-        });
-
-        setCurrentPrice(
-          productsPresentation.success ? productsPresentation.data[0].price : 0,
-        );
-      }
+    const fetchSearchData = async () => {
+      const searchData = await ProductService.getProducts(1, 20, { q: query });
+      const brands = await ProductService.getBrands(1, 100);
+      console.log(search);
+      if (searchData.success) setSearch(searchData.data.results);
+      if (brands.success) setBrands(brands.data.results);
     };
 
-    obtainProducts();
+    fetchSearchData();
   }, []);
-
-  useEffect(() => {
-    const fetchInventory = async () => {
-      if (product?.presentation) {
-        for (const p of product.presentation) {
-          const inventoryData = await InventoryService.getPresentationInventory(
-            1,
-            20,
-            p.id || '',
-          );
-          if (inventoryData.success) {
-            const newInventory = inventoryData.data.results.map((inv) => ({
-              id: inv.id,
-              branch: {
-                id: inv.branch.id,
-                name: inv.branch.name,
-                address: inv.branch.address,
-                latitude: inv.branch.latitude,
-                longitude: inv.branch.longitude,
-              },
-              stockQuantity: inv.stockQuantity, // Mover al nivel superior
-            }));
-
-            setInventory((prevInventory) => {
-              const updatedInventory = [...prevInventory];
-              newInventory.forEach((newItem) => {
-                if (!prevInventory.some((item) => item.id === newItem.id)) {
-                  updatedInventory.push(newItem as Inventory);
-                }
-              });
-              return updatedInventory;
-            });
-          } else {
-            console.error(inventoryData.error);
-          }
-        }
-      }
-    };
-    fetchInventory();
-  }, [product]);
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const newIndex = Math.round(contentOffsetX / width);
-    setCurrentImageIndex(newIndex);
-  };
-
-  const scrollToImage = (index: number) => {
-    setCurrentImageIndex(index);
-    if (imagesScrollRef.current) {
-      imagesScrollRef.current.scrollTo({
-        x: index * width,
-        animated: true,
-      });
-    }
-  };
-
-  const handleRating = (rating: number) => {
-    setUserRating(rating);
-    // Aquí podrías enviar la calificación a tu API
-    console.log('Calificación enviada:', rating);
-  };
-
-  const RatingStars = () => {
-    return (
-      <View style={styles.ratingStarsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            activeOpacity={0.7}
-            onPress={() => handleRating(star)}
-            onPressIn={() => setHoverRating(star)}
-            onPressOut={() => setHoverRating(0)}
-          >
-            <StarIcon
-              size={32}
-              color={
-                star <= (hoverRating || userRating)
-                  ? Colors.semanticWarning
-                  : Colors.gray_100
-              }
-              style={styles.starIcon}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  console.log('Current inventory state:', inventory); // Log para inspeccionar el estado de inventory
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
       <TopBar />
-      <TouchableOpacity>
-        <PoppinsText>Filtrar</PoppinsText>
-        <AdjustmentsHorizontalIcon />
-      </TouchableOpacity>
-      {/* Botón de volver */}
-      <TouchableOpacity
-        onPress={() => navigation.goBack()} // Navega a la pantalla anterior
-        style={{
-          paddingHorizontal: 10,
-          marginBottom: -4,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
-        <ChevronLeftIcon
-          width={16}
-          height={16}
-          color={Colors.primary}
-          style={{ marginRight: 2, marginLeft: 6 }} // Espacio entre el ícono y el texto
-        />
-        <PoppinsText
-          weight="medium"
+      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+        <TouchableOpacity
+          style={{ flexDirection: 'row', justifyContent: 'center' }}
+          onPress={() => setIsVisible(true)}
+        >
+          <PoppinsText style={{ color: Colors.primary, paddingEnd: 5 }}>
+            Filtrar
+          </PoppinsText>
+          <AdjustmentsHorizontalIcon size={20} color={Colors.iconMainDefault} />
+        </TouchableOpacity>
+      </View>
+      <View style={{ marginHorizontal: 20 }}>
+        <View style={{ marginVertical: 5 }}>
+          <PoppinsText>Resultados de la búsqueda: {query}</PoppinsText>
+          <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
+            {60} resultados
+          </PoppinsText>
+        </View>
+      </View>
+      <SafeAreaView style={styles.container}></SafeAreaView>
+      <FilterOptions visible={isVisible} onClose={() => setIsVisible(false)}>
+        <View
           style={{
-            fontSize: FontSizes.b1.size,
-            lineHeight: FontSizes.b1.lineHeight,
-            color: Colors.primary,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            paddingVertical: 10,
+            borderBottomWidth: 1,
+            borderColor: Colors.gray_100,
           }}
         >
-          Volver
-        </PoppinsText>
-      </TouchableOpacity>
-      <SafeAreaView style={styles.container}>
-        <ScrollView>
-          {/* Carrusel de imágenes */}
-          <ScrollView
-            ref={imagesScrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={handleScroll}
-          >
-            {product?.images.map((image, index) => (
-              <Image
-                key={index}
-                source={{ uri: image }}
-                style={styles.productImage}
-                resizeMode="contain"
-              />
-            ))}
-          </ScrollView>
-
-          {/* Indicadores de imágenes */}
-          <View style={styles.imageIndicators}>
-            {product?.images.map((_, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => scrollToImage(index)}
-              >
-                <View
-                  style={[
-                    styles.imageIndicator,
-                    index === currentImageIndex && styles.activeImageIndicator,
-                  ]}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <PoppinsText style={styles.productName}>{product?.name}</PoppinsText>
-
-          <RatingStars />
-          {userRating > 0 && (
-            <PoppinsText style={styles.ratingFeedback}>
-              ¡Gracias por tu calificación de {userRating} estrella
-              {userRating !== 1 ? 's' : ''}!
-            </PoppinsText>
-          )}
-
-          <PoppinsText style={styles.description}>
-            {product?.description}
+          <PoppinsText style={{ color: Colors.primary, paddingEnd: 5 }}>
+            Filtros
           </PoppinsText>
-
-          {/* Información del producto */}
-          <View style={styles.productInfo}>
-            <View style={styles.priceRatingContainer}>
-              <PoppinsText style={styles.price}>$ {currentPrice}</PoppinsText>
-              {product?.discount && (
-                <PoppinsText style={styles.discount}>
-                  -{product.discount}%
-                </PoppinsText>
-              )}
-            </View>
-            <PoppinsText style={styles.sectionTitle}>
-              Selecciona la presentación
-            </PoppinsText>
-            <View style={styles.quantitySelector}>
-              <Dropdown
-                placeholder="Presentación..."
-                options={
-                  product?.presentation.map(
-                    (p: { description: string }) => p.description,
-                  ) || []
-                }
-                borderColor={Colors.gray_100}
-                onSelect={(e) => changePresentation(e)}
-              />
-            </View>
-            <PoppinsText
-              style={[
-                styles.sectionTitle,
-                { fontSize: FontSizes.s1.size, paddingTop: 15 },
-              ]}
-            >
-              Disponibilidad en sucursales
-            </PoppinsText>
-            <View style={styles.quantitySelector}>
-              <View style={{ flex: 1, height: 300 }}>
-                {inventory && inventory.length > 0 ? (
-                  <BranchMap
-                    branches={inventory.map((inv) => ({
-                      id: inv.branch.id,
-                      name: inv.branch.name,
-                      address: inv.branch.address,
-                      latitude: inv.branch.latitude,
-                      longitude: inv.branch.longitude,
-                      stockQuantity: inv.stockQuantity,
-                    }))}
-                  />
-                ) : (
-                  <PoppinsText
-                    style={{
-                      textAlign: 'center',
-                      color: Colors.textLowContrast,
-                      marginVertical: 10,
-                    }}
-                  >
-                    No hay productos disponibles
-                  </PoppinsText>
-                )}
-              </View>
-            </View>
-            <PoppinsText style={styles.sectionTitle}>
-              Selecciona el estado
-            </PoppinsText>
-            <View style={styles.quantitySelector}>
-              <Dropdown
-                placeholder="Estado..."
-                options={states.map((state) => state.name)}
-                borderColor={Colors.gray_100}
-                onSelect={() => console.log('p')}
-              />
-            </View>
-            <View style={styles.availableContainer}>
-              {inventory && inventory.length > 0 ? (
-                inventory.map((inv) => (
-                  <View key={inv.id} style={styles.availableCard}>
-                    <View style={{ padding: 10, paddingHorizontal: 16 }}>
-                      <PoppinsText style={styles.sectionTitle}>
-                        {inv.branch.name}
-                      </PoppinsText>
-                      <PoppinsText
-                        style={{
-                          fontSize: FontSizes.b3.size,
-                          color: Colors.textLowContrast,
-                        }}
-                      >
-                        {inv.branch.address}
-                      </PoppinsText>
-                    </View>
-                    <View
-                      style={{
-                        width: '100%',
-                        alignItems: 'flex-end',
-                        paddingHorizontal: 20,
-                      }}
-                    >
-                      <View
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
-                      >
-                        <PoppinsText
-                          style={{
-                            fontSize: FontSizes.c1.size,
-                            color: Colors.textLowContrast,
-                          }}
-                        >
-                          {inv.stockQuantity} unidades{' '}
-                        </PoppinsText>
-                        <CheckCircleIcon
-                          size={15}
-                          color={Colors.semanticSuccess}
-                        />
-                      </View>
-                      <View
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
-                      >
-                        <TruckIcon size={15} color={Colors.gray_500} />
-                        <PoppinsText
-                          style={{
-                            fontSize: FontSizes.c3.size,
-                            color: Colors.gray_500,
-                            marginLeft: 5,
-                          }}
-                        >
-                          Envio en menos de 3h
-                        </PoppinsText>
-                      </View>
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <PoppinsText
-                  style={{
-                    textAlign: 'center',
-                    color: Colors.textLowContrast,
-                    marginVertical: 10,
-                  }}
-                >
-                  No hay productos disponibles
-                </PoppinsText>
-              )}
-            </View>
-            <PoppinsText style={styles.sectionTitle}>
-              Productos relacionados
-            </PoppinsText>
-            <View style={styles.quantitySelector}>
-              <Carousel cards={products} />
+          <AdjustmentsHorizontalIcon size={20} color={Colors.iconMainDefault} />
+        </View>
+        <View style={{ paddingVertical: 10 }}>
+          <View>
+            <PoppinsText weight="medium">Categoría</PoppinsText>
+            <View></View>
+          </View>
+          <View>
+            <PoppinsText weight="medium">Marca o Laboratorio</PoppinsText>
+            <View>
+              {brands?.map((b, index) => (
+                <Checkbox
+                  key={index}
+                  checked={false}
+                  label={b.name}
+                  onChange={(e) => (e ? '' : null)}
+                  style={{ margin: 3 }}
+                  size={20}
+                />
+              ))}
             </View>
           </View>
-        </ScrollView>
-
-        <View style={styles.cardButtonContainer}>
-          <CardButton
-            size={10}
-            getValue={(quantity) => {
-              if (product?.id) updateCartQuantity(product.id, quantity);
-            }}
-            initialValue={getQuantity()}
-          />
+          <View>
+            <PoppinsText weight="medium">Presentación</PoppinsText>
+          </View>
         </View>
-      </SafeAreaView>
+        <View>
+          <PoppinsText weight="medium">Precio</PoppinsText>
+          <Steps
+            totalSteps={2}
+            currentStep={2}
+            labels={['Bs. 40.00', 'Bs. 1000.00']}
+          />
+          <Button title="Filtrar" />
+        </View>
+      </FilterOptions>
     </View>
   );
 }
