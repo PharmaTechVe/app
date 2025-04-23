@@ -42,7 +42,9 @@ const TopBarDelivery = () => {
       <View style={styles.topSection}>
         {/* Left user icon */}
         <View>
-          <TouchableOpacity onPress={() => setIsPopupVisible(true)}>
+          <TouchableOpacity
+            onPress={() => router.push('/menu?context=topBarDelivery')}
+          >
             <Avatar />
           </TouchableOpacity>
         </View>
