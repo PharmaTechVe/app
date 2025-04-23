@@ -134,6 +134,12 @@ export default function RootLayout() {
           name="change-password"
           options={{ headerTitle: '', headerTransparent: true }}
         />
+        <Stack.Screen name="(delivery-tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="deliveryDetail" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="deliveryHistoryDetail"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="checkout"
           options={{

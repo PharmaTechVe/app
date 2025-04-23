@@ -233,11 +233,14 @@ export const UserService = {
       }
 
       const userId = decoded.userId;
-      const response = await api.order.findAll({
-        page: 1,
-        limit: 10,
-        userId: userId,
-      });
+      const response = await api.order.findAll(
+        {
+          page: 1,
+          limit: 10,
+          userId: userId,
+        },
+        token, // Proporciona el token JWT como segundo argumento
+      );
       return { success: true, data: response };
     } catch (error) {
       return {
@@ -251,7 +254,14 @@ export const UserService = {
     id: string,
   ): Promise<ServiceResponse<OrderDetailedResponse>> => {
     try {
-      const response = await api.order.getById(id);
+      // Obtén el token JWT desde SecureStore
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+
+      // Llama al método `getById` del SDK con el id y el token JWT
+      const response = await api.order.getById(id, token); // Proporciona el token JWT como segundo argumento
       return { success: true, data: response };
     } catch (error) {
       return {

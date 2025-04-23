@@ -11,9 +11,17 @@ import PoppinsText from './PoppinsText';
 
 export interface BadgeProps {
   variant: 'filled' | 'outlined' | 'text';
-  color: 'primary' | 'warning' | 'danger' | 'success' | 'info';
+  color:
+    | 'primary'
+    | 'warning'
+    | 'danger'
+    | 'success'
+    | 'info'
+    | 'secondary_300'
+    | 'primary_300';
   size: 'tiny' | 'small' | 'medium' | 'large';
   borderRadius?: 'rounded' | 'square';
+  textColor?: string;
   children: React.ReactNode;
 }
 
@@ -22,13 +30,14 @@ const Badge: React.FC<BadgeProps> = ({
   color,
   size,
   borderRadius = 'rounded',
+  textColor,
   children,
 }) => {
   const sizeStyles: Record<string, StyleProp<ViewStyle | TextStyle>> = {
-    tiny: { width: 17, height: 17, fontSize: 10 }, // Fixed width and height for a perfect circle
-    small: { width: 24, height: 24, fontSize: 12 },
-    medium: { width: 32, height: 32, fontSize: 14 },
-    large: { width: 40, height: 40, fontSize: 16 },
+    tiny: { height: 17, fontSize: 10, minWidth: 17 },
+    small: { height: 24, fontSize: 12, minWidth: 24 },
+    medium: { height: 32, fontSize: 14, minWidth: 32 },
+    large: { height: 40, fontSize: 16, minWidth: 40 },
   };
 
   const borderRadiusStyles: Record<string, StyleProp<ViewStyle>> = {
@@ -55,6 +64,16 @@ const Badge: React.FC<BadgeProps> = ({
         color: Colors.textWhite,
       },
       info: { backgroundColor: Colors.semanticInfo, color: Colors.textWhite },
+
+      secondary_300: {
+        backgroundColor: Colors.secondary_300,
+        color: Colors.textWhite,
+      },
+
+      primary_300: {
+        backgroundColor: Colors.primary_300,
+        color: Colors.textWhite,
+      },
     },
     outlined: {
       primary: {
@@ -82,6 +101,16 @@ const Badge: React.FC<BadgeProps> = ({
         borderWidth: 1,
         color: Colors.semanticInfo,
       },
+      secondary_300: {
+        borderColor: Colors.secondary_300,
+        borderWidth: 1,
+        color: Colors.secondary_300,
+      },
+      primary_300: {
+        borderColor: Colors.primary_300,
+        borderWidth: 1,
+        color: Colors.primary_300,
+      },
     },
     text: {
       primary: { color: Colors.primary },
@@ -89,6 +118,8 @@ const Badge: React.FC<BadgeProps> = ({
       danger: { color: Colors.semanticDanger },
       success: { color: Colors.semanticSuccess },
       info: { color: Colors.semanticInfo },
+      secondary_300: { color: Colors.secondary_300 },
+      primary_300: { color: Colors.primary_300 },
     },
   };
 
@@ -97,19 +128,27 @@ const Badge: React.FC<BadgeProps> = ({
   const borderRadiusStyle = borderRadiusStyles[borderRadius];
 
   return (
-    <View style={[styles.base, sizeStyle, borderRadiusStyle, variantStyle]}>
+    <View
+      style={[
+        styles.base,
+        sizeStyle,
+        borderRadiusStyle,
+        variantStyle,
+        { paddingHorizontal: (children?.toString().length ?? 0) > 1 ? 6 : 4 },
+      ]}
+    >
       <PoppinsText
         style={[
           styles.text,
-          variant === 'outlined' || variant === 'text'
-            ? {
-                color:
-                  (variantStyle as TextStyle).borderColor || Colors.textWhite,
-              }
-            : { color: Colors.textWhite },
+          {
+            color:
+              textColor ||
+              (variantStyle as TextStyle).color ||
+              Colors.textWhite,
+          },
         ]}
-        numberOfLines={1} // Ensures the text does not wrap
-        ellipsizeMode="clip" // Prevents truncation
+        numberOfLines={1}
+        ellipsizeMode="clip"
       >
         {children}
       </PoppinsText>
@@ -121,12 +160,13 @@ const styles = StyleSheet.create({
   base: {
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 4,
   },
   text: {
     textAlign: 'center',
     marginTop: 1.5,
-    lineHeight: 16, // Matches the height for vertical centering
-    fontSize: 10, // Matches the font size for the "tiny" size
+    lineHeight: 16,
+    fontSize: 10,
   },
 });
 

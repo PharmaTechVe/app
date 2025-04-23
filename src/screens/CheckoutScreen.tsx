@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  BackHandler,
 } from 'react-native';
 import {
   ShoppingBagIcon,
@@ -31,6 +32,7 @@ import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
 import BranchMapModal from '../components/BranchMapModal';
 import { useDispatch } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
+import { useFocusEffect } from '@react-navigation/native';
 
 const CheckoutScreen = () => {
   const router = useRouter();
@@ -74,6 +76,23 @@ const CheckoutScreen = () => {
 
     fetchUserName();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (currentStep === stepsLabels.length) {
+          // Limpiar el carrito si el usuario está en el último paso
+          dispatch(clearCart());
+        }
+        return false; // Permitir el comportamiento predeterminado del retroceso
+      };
+
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, [currentStep]),
+  );
 
   const isSimplifiedSteps =
     (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
@@ -201,9 +220,6 @@ const CheckoutScreen = () => {
 
           console.log('Orden creada exitosamente:', orderResponse);
 
-          // Limpiar el carrito
-          dispatch(clearCart());
-
           setStatus('approved');
           setCurrentStep(stepsLabels.length);
         } catch (error) {
@@ -231,6 +247,8 @@ const CheckoutScreen = () => {
   };
 
   const handleGoToHome = () => {
+    // Limpiar el carrito al salir del flujo de checkout
+    dispatch(clearCart());
     router.dismissAll();
     router.replace({
       pathname: '/(tabs)',
