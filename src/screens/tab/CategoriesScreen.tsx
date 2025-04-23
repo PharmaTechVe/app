@@ -9,7 +9,7 @@ import {
   ListRenderItem,
 } from 'react-native';
 import PoppinsText from '../../components/PoppinsText';
-import { Colors } from '../../styles/theme';
+import { Colors, FontSizes } from '../../styles/theme';
 import Alert from '../../components/Alerts';
 import { CategoryService } from '../../services/category';
 import { CategoryResponse } from '@pharmatech/sdk';
@@ -68,6 +68,9 @@ export default function CategoriesScreen() {
           />
         )}
       </View>
+      <PoppinsText style={styles.title} weight="semibold">
+        Categorías
+      </PoppinsText>
       <FlatList
         data={categories}
         renderItem={renderItem}
@@ -94,6 +97,11 @@ const styles = StyleSheet.create({
     top: 20,
     right: 0,
     zIndex: 1000,
+  },
+  title: {
+    margin: 5,
+    paddingHorizontal: 10,
+    fontSize: FontSizes.b1.size,
   },
   listContainer: {
     marginHorizontal: 10,
