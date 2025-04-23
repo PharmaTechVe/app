@@ -9,8 +9,9 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
 import { useCart } from '../hooks/useCart';
 import { Product as CardProduct } from '../types/Product';
@@ -31,30 +32,32 @@ import { Inventory, State } from '../types/api';
 import { InventoryService } from '../services/inventory';
 import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
 import BranchMap from '../components/BranchMap';
-
-type Product = {
-  id: string;
-  name: string;
-  description: string | undefined;
-  rating: number;
-  discount: number;
-  presentation: { id: string; description: string; price: number }[];
-  images: string[];
-};
+import {
+  ProductImage,
+  ProductPresentationDetailResponse,
+  ProductPresentationResponse,
+} from '@pharmatech/sdk';
 
 const ProductDetailScreen: React.FC = () => {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, productId } = useLocalSearchParams<{
+    id: string;
+    productId: string;
+  }>();
   const navigation = useNavigation(); // Obtén la instancia de navegación
 
   const [inventory, setInventory] = useState<Inventory[]>([]);
   const [states, setStates] = useState<State[]>([]);
-  const [product, setProduct] = useState<Product>();
+  const [product, setProduct] = useState<ProductPresentationDetailResponse>();
+  const [images, setImages] = useState<ProductImage[]>();
+  const [presentations, setPresentations] =
+    useState<ProductPresentationResponse[]>();
   const [products, setProducts] = useState<CardProduct[]>([]);
   const [userRating, setUserRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-  const [currentPrice, setCurrentPrice] = useState<number>(0);
   const imagesScrollRef = useRef<ScrollView>(null);
+  const discount = 10;
+  const router = useRouter();
 
   const { cartItems, addToCart, getItemQuantity, updateCartQuantity } =
     useCart();
@@ -69,9 +72,18 @@ const ProductDetailScreen: React.FC = () => {
     if (productsData.success) {
       const pd = productsData.data.results;
       const carouselProducts = pd.map((p) => ({
-        id: p.product.id,
+        id: p.id,
+        presentationId: p.presentation.id,
+        productId: p.product.id,
         imageUrl: p.product.images[0].url,
-        name: p.product.name,
+        name:
+          p.product.name +
+          ' ' +
+          p.presentation.name +
+          ' ' +
+          p.presentation.quantity +
+          ' ' +
+          p.presentation.measurementUnit,
         category: p.product.categories[0].name,
         originalPrice: p.price,
         discount: 10,
@@ -79,13 +91,20 @@ const ProductDetailScreen: React.FC = () => {
         quantity: getItemQuantity(p.product.id),
         getQuantity: (quantity: number) => {
           addToCart({
-            id: p.product.id,
-            name: p.product.name,
+            id: p.id,
+            name:
+              p.product.name +
+              ' ' +
+              p.presentation.name +
+              ' ' +
+              p.presentation.quantity +
+              ' ' +
+              p.presentation.measurementUnit,
             price: p.price,
             quantity,
             image: p.product.images[0].url,
           });
-          updateCartQuantity(p.product.id, quantity);
+          updateCartQuantity(p.id, quantity);
         },
       }));
 
@@ -95,12 +114,27 @@ const ProductDetailScreen: React.FC = () => {
     }
   };
 
-  const changePresentation = (description: string) => {
-    const presentation = product?.presentation.find(
-      (p) => p.description === description,
+  const changePresentation = async (description: string) => {
+    if (!presentations) return;
+    const presentation = presentations.find(
+      (p) =>
+        product?.product.name +
+          ' ' +
+          p.presentation.name +
+          ' ' +
+          p.presentation.quantity +
+          ' ' +
+          p.presentation.measurementUnit ===
+        description,
     );
-    if (presentation && 'price' in presentation)
-      setCurrentPrice(presentation.price);
+    if (presentation) {
+      router.replace(
+        '/products/' +
+          productId +
+          '/presentation/' +
+          presentation.presentation.id,
+      );
+    }
   };
 
   useEffect(() => {
@@ -108,58 +142,27 @@ const ProductDetailScreen: React.FC = () => {
   }, [cartItems]);
 
   useEffect(() => {
-    const obtainProducts = async () => {
-      const productsData = await ProductService.getGenericProduct(id);
-      const productsPresentation =
-        await ProductService.getProductPresentations(id);
-      const productsImage = await ProductService.getProductImages(id);
-
+    const obtainProduct = async () => {
+      const productPresentations =
+        await ProductService.getProductPresentations(productId);
+      const productImages = await ProductService.getProductImages(productId);
+      const productData = await ProductService.getPresentation(productId, id);
       const states = await StateService.getStates(1, 40);
 
-      if (states.success) {
-        setStates(states.data.results);
-      }
-
-      if (productsData.success) {
-        setProduct({
-          id: productsData.data.id,
-          name: productsData.data.name,
-          description: productsPresentation.success
-            ? productsData.data.description
-            : undefined,
-          rating: 0,
-          images: productsImage.success
-            ? productsImage.data.map((image: { url: string }) => image.url)
-            : [],
-          discount: 10,
-          presentation: productsPresentation.success
-            ? productsPresentation.data.map(
-                (presentation: {
-                  id: string;
-                  presentation: { description: string };
-                  price: number;
-                }) => ({
-                  id: presentation.id,
-                  description: presentation.presentation.description,
-                  price: presentation.price,
-                }),
-              )
-            : [],
-        });
-
-        setCurrentPrice(
-          productsPresentation.success ? productsPresentation.data[0].price : 0,
-        );
-      }
+      if (productData.success) setProduct(productData.data);
+      if (productImages.success) setImages(productImages.data);
+      if (productPresentations.success)
+        setPresentations(productPresentations.data);
+      if (states.success) setStates(states.data.results);
     };
 
-    obtainProducts();
+    obtainProduct();
   }, []);
 
   useEffect(() => {
     const fetchInventory = async () => {
-      if (product?.presentation) {
-        for (const p of product.presentation) {
+      if (presentations) {
+        for (const p of presentations) {
           const inventoryData = await InventoryService.getPresentationInventory(
             1,
             20,
@@ -286,10 +289,10 @@ const ProductDetailScreen: React.FC = () => {
             showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={handleScroll}
           >
-            {product?.images.map((image, index) => (
+            {images?.map((image, index) => (
               <Image
                 key={index}
-                source={{ uri: image }}
+                source={{ uri: image.url }}
                 style={styles.productImage}
                 resizeMode="contain"
               />
@@ -298,7 +301,7 @@ const ProductDetailScreen: React.FC = () => {
 
           {/* Indicadores de imágenes */}
           <View style={styles.imageIndicators}>
-            {product?.images.map((_, index) => (
+            {images?.map((_, index) => (
               <TouchableOpacity
                 key={index}
                 onPress={() => scrollToImage(index)}
@@ -313,7 +316,13 @@ const ProductDetailScreen: React.FC = () => {
             ))}
           </View>
 
-          <PoppinsText style={styles.productName}>{product?.name}</PoppinsText>
+          <PoppinsText style={styles.productName}>
+            {product ? (
+              `${product.product.name} ${product.presentation.name} ${product.presentation.quantity} ${product.presentation.measurementUnit}`
+            ) : (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            )}
+          </PoppinsText>
 
           <RatingStars />
           {userRating > 0 && (
@@ -324,17 +333,15 @@ const ProductDetailScreen: React.FC = () => {
           )}
 
           <PoppinsText style={styles.description}>
-            {product?.description}
+            {product?.presentation.description}
           </PoppinsText>
 
           {/* Información del producto */}
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
-              <PoppinsText style={styles.price}>$ {currentPrice}</PoppinsText>
-              {product?.discount && (
-                <PoppinsText style={styles.discount}>
-                  -{product.discount}%
-                </PoppinsText>
+              <PoppinsText style={styles.price}>$ {product?.price}</PoppinsText>
+              {discount && (
+                <PoppinsText style={styles.discount}>-{discount}%</PoppinsText>
               )}
             </View>
             <PoppinsText style={styles.sectionTitle}>
@@ -344,8 +351,15 @@ const ProductDetailScreen: React.FC = () => {
               <Dropdown
                 placeholder="Presentación..."
                 options={
-                  product?.presentation.map(
-                    (p: { description: string }) => p.description,
+                  presentations?.map(
+                    (p: ProductPresentationResponse) =>
+                      product?.product.name +
+                      ' ' +
+                      p.presentation.name +
+                      ' ' +
+                      p.presentation.quantity +
+                      ' ' +
+                      p.presentation.measurementUnit,
                   ) || []
                 }
                 borderColor={Colors.gray_100}
