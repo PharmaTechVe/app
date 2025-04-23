@@ -76,7 +76,7 @@ const SelectLocationScreen = () => {
   const fetchAddress = async (latitude: number, longitude: number) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDo6tMJUrZsd-LsNNnUDJ95ZGZfUrYMmgU`,
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyC172ukD655b-4H1m1bC3xQ7g1sHFxMP_w`,
       );
       const data = await response.json();
 
@@ -114,6 +114,7 @@ const SelectLocationScreen = () => {
         params: {
           latitude: selectedLocation.latitude.toString(),
           longitude: selectedLocation.longitude.toString(),
+          fromCheckout: 'true', // Convertimos a cadena
         },
       });
     } else {
