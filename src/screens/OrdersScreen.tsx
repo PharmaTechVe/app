@@ -7,6 +7,7 @@ import Alert from '../components/Alerts';
 import Button from '../components/Button';
 import { OrderResponse } from '@pharmatech/sdk'; // Usar el tipo del SDK
 import { UserService } from '../services/user';
+import { truncateString } from '../utils/commons';
 
 const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
@@ -92,7 +93,9 @@ const OrdersScreen = () => {
                   }}
                 >
                   <View>
-                    <PoppinsText>{order.id}</PoppinsText>
+                    <PoppinsText>
+                      {order ? truncateString(order?.id, 8) : ''}
+                    </PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
                       {new Date(order.createdAt).toLocaleDateString()}{' '}
                       {/* Formatear fecha */}
