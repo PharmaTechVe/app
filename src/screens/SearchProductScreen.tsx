@@ -17,6 +17,7 @@ import { ProductService } from '../services/products';
 import { AdjustmentsHorizontalIcon } from 'react-native-heroicons/solid';
 import FilterOptions from '../components/FilterOptions';
 import {
+  CategoryResponse,
   ManufacturerResponse,
   PresentationResponse,
   ProductPresentation,
@@ -25,6 +26,7 @@ import Checkbox from '../components/Checkbox';
 import Steps from '../components/Steps';
 import Button from '../components/Button';
 import ProductCard from '../components/Card';
+import { CategoryService } from '../services/category';
 
 export default function SearchProductScreen() {
   const { query } = useLocalSearchParams<{ query: string }>();
@@ -32,21 +34,57 @@ export default function SearchProductScreen() {
   const [search, setSearch] = useState<ProductPresentation[]>();
   const [isVisible, setIsVisible] = useState(false);
   const [brands, setBrands] = useState<ManufacturerResponse[]>();
+  const [categories, setCategories] = useState<CategoryResponse[]>();
   const [presentations, setPresentations] = useState<PresentationResponse[]>();
 
-  const [selectedBrands, setSelectedBrands] = useState<ManufacturerResponse[]>(
+  const [selectedPresentations, setSelectedPresentations] = useState<string[]>(
     [],
   );
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
 
-  const handleBrandToggle = (brand: ManufacturerResponse) => {
-    setSelectedBrands((prevSelected) => {
-      const exists = prevSelected.some((b) => b.id === brand.id);
-      if (exists) {
-        return prevSelected.filter((b) => b.id !== brand.id);
-      } else {
-        return [...prevSelected, brand];
-      }
+  const handleBrandToggle = (brand: boolean, value: string) => {
+    if (brand) {
+      setSelectedBrands([...selectedBrands, value]);
+      return [...selectedBrands, value];
+    } else {
+      setSelectedBrands((prev) => prev.filter((item) => item !== value));
+    }
+  };
+
+  const handleCategoryToggle = (category: boolean, value: string) => {
+    if (category) {
+      setSelectedCategories([...selectedCategories, value]);
+      return [...selectedCategories, value];
+    } else {
+      setSelectedCategories((prev) => prev.filter((item) => item !== value));
+    }
+  };
+
+  const handlePresentationToggle = (presentation: boolean, value: string) => {
+    if (presentation) {
+      setSelectedPresentations([...selectedPresentations, value]);
+      return [...selectedPresentations, value];
+    } else {
+      setSelectedPresentations((prev) => prev.filter((item) => item !== value));
+    }
+  };
+
+  const clearFilters = () => {
+    setSelectedBrands([]);
+    setSelectedCategories([]);
+    setSelectedPresentations([]);
+  };
+
+  const submitFilters = async () => {
+    const searchData = await ProductService.getProducts(1, 20, {
+      q: query,
+      manufacturerId: selectedBrands,
+      categoryId: selectedCategories,
+      presentationId: selectedPresentations,
     });
+
+    if (searchData.success) setSearch(searchData.data.results);
   };
 
   useEffect(() => {
@@ -54,10 +92,12 @@ export default function SearchProductScreen() {
       const searchData = await ProductService.getProducts(1, 20, { q: query });
       const brands = await ProductService.getBrands(1, 100);
       const presentations = await ProductService.getPresentations(1, 100);
+      const categories = await CategoryService.getCategories(1, 100);
 
       if (searchData.success) setSearch(searchData.data.results);
       if (brands.success) setBrands(brands.data.results);
       if (presentations.success) setPresentations(presentations.data.results);
+      if (categories.success) setCategories(categories.data.results);
     };
 
     fetchSearchData();
@@ -130,16 +170,42 @@ export default function SearchProductScreen() {
             borderColor: Colors.gray_100,
           }}
         >
-          <PoppinsText style={{ color: Colors.primary, paddingEnd: 5 }}>
-            Filtros
-          </PoppinsText>
-          <AdjustmentsHorizontalIcon size={20} color={Colors.iconMainDefault} />
+          <View
+            style={{
+              flexDirection: 'row',
+              marginHorizontal: 80,
+              paddingStart: 60,
+            }}
+          >
+            <PoppinsText style={{ color: Colors.primary, paddingEnd: 5 }}>
+              Filtros
+            </PoppinsText>
+            <AdjustmentsHorizontalIcon
+              size={20}
+              color={Colors.iconMainDefault}
+            />
+          </View>
+          <TouchableOpacity onPress={clearFilters}>
+            <PoppinsText>Limpiar</PoppinsText>
+          </TouchableOpacity>
         </View>
         <ScrollView>
           <View style={{ paddingVertical: 10 }}>
             <View>
               <PoppinsText weight="medium">Categoría</PoppinsText>
-              <View></View>
+              <View>
+                {categories?.map((b, index) => (
+                  <Checkbox
+                    key={index}
+                    checked={selectedCategories.includes(b.id)}
+                    label={b.name}
+                    value={b.id}
+                    onChange={(e, val) => handleCategoryToggle(e, val)}
+                    style={{ margin: 3 }}
+                    size={20}
+                  />
+                ))}
+              </View>
             </View>
             <View style={{ marginTop: 20 }}>
               <PoppinsText weight="medium">Marca o Laboratorio</PoppinsText>
@@ -147,9 +213,10 @@ export default function SearchProductScreen() {
                 {brands?.map((b, index) => (
                   <Checkbox
                     key={index}
-                    checked={selectedBrands.some((b) => b.name === b.name)}
+                    checked={selectedBrands.includes(b.id)}
                     label={b.name}
-                    onChange={() => handleBrandToggle(b)}
+                    value={b.id}
+                    onChange={(e, val) => handleBrandToggle(e, val)}
                     style={{ margin: 3 }}
                     size={20}
                   />
@@ -162,9 +229,10 @@ export default function SearchProductScreen() {
                 {presentations?.map((b, index) => (
                   <Checkbox
                     key={index}
-                    checked={false}
+                    checked={selectedPresentations.includes(b.id)}
                     label={b.name + ' ' + b.quantity + ' ' + b.measurementUnit}
-                    onChange={(e) => (e ? '' : null)}
+                    value={b.id}
+                    onChange={(e, val) => handlePresentationToggle(e, val)}
                     style={{ margin: 3 }}
                     size={20}
                   />
@@ -179,7 +247,7 @@ export default function SearchProductScreen() {
               currentStep={2}
               labels={['Bs. 40.00', 'Bs. 1000.00']}
             />
-            <Button title="Filtrar" />
+            <Button title="Filtrar" onPress={submitFilters} />
           </View>
         </ScrollView>
       </FilterOptions>
