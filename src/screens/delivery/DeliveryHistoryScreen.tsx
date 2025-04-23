@@ -120,13 +120,10 @@ const DeliveryHistoryScreen: React.FC = () => {
               orderType="pedido"
               address={order.address?.adress || 'Dirección no disponible'}
               branch={branchNames[order.branchId] || 'Sucursal no disponible'}
-              estimatedTime={new Date(order.estimatedTime).toLocaleTimeString(
-                'es-VE',
-                {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                },
-              )}
+              estimatedTime={calculateElapsedTime(
+                order.createdAt,
+                order.updatedAt,
+              )} // Tiempo transcurrido entre creación y última actualización
               elapsedTime={calculateElapsedTime(order.createdAt)}
               completionTime={new Date(order.updatedAt).toLocaleTimeString(
                 'es-VE',
@@ -148,11 +145,14 @@ const DeliveryHistoryScreen: React.FC = () => {
   );
 };
 
-const calculateElapsedTime = (createdAt: string): string => {
-  const now = new Date();
+const calculateElapsedTime = (
+  createdAt: string,
+  updatedAt?: string,
+): string => {
+  const endDate = updatedAt ? new Date(updatedAt) : new Date();
   const createdDate = new Date(createdAt);
   const diffInMinutes = Math.floor(
-    (now.getTime() - createdDate.getTime()) / (1000 * 60),
+    (endDate.getTime() - createdDate.getTime()) / (1000 * 60),
   );
 
   if (diffInMinutes < 60) {

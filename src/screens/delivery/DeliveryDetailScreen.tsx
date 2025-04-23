@@ -12,6 +12,7 @@ import PoppinsText from '../../components/PoppinsText';
 import Button from '../../components/Button';
 import DeliveryMap from '../../components/DeliveryMap';
 import CustomerAvatar from '../../components/CustomerAvatar';
+import Alert from '../../components/Alerts';
 import { Colors, FontSizes } from '../../styles/theme';
 import { DeliveryService } from '../../services/delivery';
 import { BranchService } from '../../services/branches';
@@ -32,6 +33,13 @@ const DeliveryDetailScreen: React.FC = () => {
   const [deliveryState, setDeliveryState] = useState(0);
   const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
   const router = useRouter();
+
+  // Estados para las alertas
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'info'>(
+    'info',
+  );
+  const [alertMessage, setAlertMessage] = useState('');
 
   const deliveryStates = [
     'Buscando pedido en sucursal de origen',
@@ -103,21 +111,8 @@ const DeliveryDetailScreen: React.FC = () => {
   }, [id]);
 
   const handleNextState = async () => {
-    console.log(
-      'handleNextState called, current deliveryState:',
-      deliveryState,
-    );
-    console.log('Current button state:', buttonStates[deliveryState]);
-    console.log('deliveryState:', deliveryState);
-    console.log('buttonStates[deliveryState]:', buttonStates[deliveryState]);
-    console.log(
-      'Comparison result:',
-      buttonStates[deliveryState] === 'Finalizar entrega',
-    );
-
     try {
       if (deliveryState === 5) {
-        console.log('Forcing Finalizar entrega case');
         router.replace('/(delivery-tabs)');
         return;
       }
@@ -159,11 +154,28 @@ const DeliveryDetailScreen: React.FC = () => {
             break;
         }
 
-        // Avanzar al siguiente estado del botón
+        setAlertType('info');
+        setAlertMessage('Se actualizó el estado del pedido.');
+        setShowAlert(true);
+
+        // Agregar timeout para ocultar la alerta automáticamente
+        setTimeout(() => {
+          setShowAlert(false);
+        }, 3000); // 3 segundos
+
         setDeliveryState(deliveryState + 1);
       }
     } catch (error) {
       console.error('Error al actualizar el estado del delivery:', error);
+
+      setAlertType('error');
+      setAlertMessage('Hubo un problema al actualizar el estado del pedido.');
+      setShowAlert(true);
+
+      // Agregar timeout para ocultar la alerta automáticamente
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2000);
     }
   };
 
@@ -183,6 +195,19 @@ const DeliveryDetailScreen: React.FC = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
+      {/* Mostrar alertas */}
+      {showAlert && (
+        <View style={styles.alertContainer}>
+          <Alert
+            type={alertType}
+            title={alertType === 'info' ? 'Información' : 'Error'}
+            message={alertMessage}
+            borderColor
+            onClose={() => setShowAlert(false)}
+          />
+        </View>
+      )}
+
       <ScrollView contentContainerStyle={styles.container}>
         {/* Título y botón de información */}
         <View style={styles.header}>
@@ -500,6 +525,14 @@ const styles = StyleSheet.create({
   },
   scrollSpacer: {
     height: 64 + 16,
+  },
+  alertContainer: {
+    position: 'absolute',
+    width: 326,
+    left: '50%',
+    marginLeft: -163,
+    top: 20,
+    zIndex: 1000,
   },
 });
 
