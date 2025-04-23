@@ -14,12 +14,17 @@ export const DeliveryService = {
   /**
    * Listar órdenes asignadas al delivery.
    * @param employeeId - ID del motorizado (delivery).
-   * @param status - Estado de las órdenes a filtrar (por defecto: 'ASSIGNED').
+   * @param statuses - Lista de estados de las órdenes a filtrar (por defecto: ['ASSIGNED', 'WAITING_CONFIRMATION', 'PICKED_UP', 'IN_ROUTE']).
    * @returns Lista paginada de órdenes asignadas.
    */
   getAssignedOrders: async (
     employeeId: string,
-    status: OrderDeliveryStatus = OrderDeliveryStatus.ASSIGNED,
+    statuses: OrderDeliveryStatus[] = [
+      OrderDeliveryStatus.ASSIGNED,
+      OrderDeliveryStatus.WAITING_CONFIRMATION,
+      OrderDeliveryStatus.PICKED_UP,
+      OrderDeliveryStatus.IN_ROUTE,
+    ],
   ): Promise<Pagination<OrderDeliveryResponse>> => {
     try {
       const jwt = await SecureStore.getItemAsync('auth_token');
@@ -27,16 +32,37 @@ export const DeliveryService = {
         throw new Error('Token de autenticación no encontrado');
       }
 
-      const response = await api.deliveryService.findAll(
-        {
-          employeeId,
-          status,
-          page: 1,
-          limit: 10,
-        } as OrderDeliveryPaginationRequest,
-        jwt,
+      // Realizar múltiples llamadas al backend, una por cada estado
+      const responses = await Promise.all(
+        statuses.map((status) =>
+          api.deliveryService.findAll(
+            {
+              employeeId,
+              status,
+              page: 1,
+              limit: 10,
+            } as OrderDeliveryPaginationRequest,
+            jwt,
+          ),
+        ),
       );
-      return response;
+
+      // Combinar los resultados de todas las llamadas
+      const combinedResults = responses.reduce(
+        (acc, response) => {
+          acc.results = acc.results.concat(response.results);
+          acc.count += response.count;
+          return acc;
+        },
+        {
+          results: [],
+          count: 0,
+          next: null,
+          previous: null,
+        } as Pagination<OrderDeliveryResponse>,
+      );
+
+      return combinedResults;
     } catch (error) {
       console.error('Error al obtener las órdenes asignadas:', error);
       throw new Error(extractErrorMessage(error));

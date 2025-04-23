@@ -39,10 +39,9 @@ const DeliveryHistoryScreen: React.FC = () => {
       const employeeId = payload.sub;
 
       // Obtener órdenes completadas
-      const response = await DeliveryService.getAssignedOrders(
-        employeeId,
+      const response = await DeliveryService.getAssignedOrders(employeeId, [
         OrderDeliveryStatus.DELIVERED,
-      );
+      ]);
 
       // Obtener detalles de las órdenes
       const detailedOrders = await Promise.all(

@@ -16,21 +16,28 @@ import Alert from '../../components/Alerts';
 import { Colors, FontSizes } from '../../styles/theme';
 import { DeliveryService } from '../../services/delivery';
 import { BranchService } from '../../services/branches';
+import { OrderDeliveryStatus } from '@pharmatech/sdk';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../redux/store';
 import {
-  OrderDeliveryDetailedResponse,
-  OrderDeliveryStatus,
-  BranchResponse,
-} from '@pharmatech/sdk';
+  setOrderDetails,
+  setDeliveryState,
+} from '../../redux/slices/deliverySlice';
 
 const DeliveryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
-  const [orderDetails, setOrderDetails] =
-    useState<OrderDeliveryDetailedResponse | null>(null);
+  const dispatch = useDispatch();
+  const orderDetails = useSelector(
+    (state: RootState) => state.delivery.orders[id as string],
+  );
+  const deliveryState = useSelector(
+    (state: RootState) => state.delivery.deliveryState[id as string] || 0,
+  );
+
   const [branchNames, setBranchNames] = useState<
     Record<string, { name: string; latitude: number; longitude: number }>
   >({});
   const [loading, setLoading] = useState(true);
-  const [deliveryState, setDeliveryState] = useState(0);
   const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
   const router = useRouter();
 
@@ -67,18 +74,12 @@ const DeliveryDetailScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      try {
-        console.log('Fetching order details for delivery ID:', id);
+      if (!orderDetails) {
         const details = await DeliveryService.getOrderDetails(id as string);
-        console.log('Order details fetched:', details);
+        dispatch(setOrderDetails({ id: id as string, details }));
+      }
 
-        setOrderDetails(details);
-
-        // Validar si las coordenadas del cliente están disponibles
-        if (!details.address.latitude || !details.address.longitude) {
-          console.warn('Las coordenadas del cliente no están disponibles.');
-        }
-
+      try {
         // Obtener todas las sucursales y mapear sus nombres y coordenadas
         const branches = await BranchService.findAll({ page: 1, limit: 100 });
         const branchMap = branches.results.reduce(
@@ -87,7 +88,7 @@ const DeliveryDetailScreen: React.FC = () => {
               string,
               { name: string; latitude: number; longitude: number }
             >,
-            branch: BranchResponse,
+            branch,
           ) => {
             acc[branch.id] = {
               name: branch.name,
@@ -108,24 +109,18 @@ const DeliveryDetailScreen: React.FC = () => {
     };
 
     fetchOrderDetails();
-  }, [id]);
+  }, [id, orderDetails, dispatch]);
 
   const handleNextState = async () => {
     try {
       if (deliveryState === 5) {
+        router.dismiss(2);
         router.replace('/(delivery-tabs)');
         return;
       }
 
       if (deliveryState < buttonStates.length - 1) {
-        // Verifica si el estado actual es "Finalizar entrega"
-        if (buttonStates[deliveryState] === 'Finalizar entrega') {
-          console.log('Finalizar entrega case triggered');
-          router.replace('/login');
-          return;
-        }
-
-        // Actualizar el estado en el backend según el botón actual
+        // Actualizar el estado en el backend
         switch (buttonStates[deliveryState]) {
           case 'Comenzar entrega':
             await DeliveryService.updateOrderStatus(
@@ -163,7 +158,9 @@ const DeliveryDetailScreen: React.FC = () => {
           setShowAlert(false);
         }, 3000); // 3 segundos
 
-        setDeliveryState(deliveryState + 1);
+        dispatch(
+          setDeliveryState({ id: id as string, state: deliveryState + 1 }),
+        );
       }
     } catch (error) {
       console.error('Error al actualizar el estado del delivery:', error);

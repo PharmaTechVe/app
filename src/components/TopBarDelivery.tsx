@@ -55,12 +55,7 @@ const TopBarDelivery = () => {
         </View>
 
         {/* Right notification icon */}
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => {
-            router.push('/notifications'); // Redirige a la pantalla de notificaciones
-          }}
-        >
+        <TouchableOpacity style={styles.iconButton} onPress={() => {}}>
           <BellIcon size={26} color={Colors.textMain} />
         </TouchableOpacity>
       </View>
