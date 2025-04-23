@@ -63,10 +63,7 @@ export const ProductService = {
       if (!token) {
         throw new Error('No se encontró el token de autenticación');
       }
-      const presentations = await api.presentation.findAll(
-        { page, limit },
-        token,
-      );
+      const presentations = await api.presentation.findAll({ page, limit });
 
       return { success: true, data: presentations };
     } catch (error) {
@@ -131,7 +128,7 @@ export const ProductService = {
         throw new Error('No se encontró el token de autenticación');
       }
 
-      const response = await api.manufacturer.findAll({ page, limit }, token);
+      const response = await api.manufacturer.findAll({ page, limit });
 
       return { success: true, data: response };
     } catch (error) {
