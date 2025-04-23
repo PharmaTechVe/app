@@ -10,17 +10,20 @@ import {
   ShieldCheckIcon,
   ShoppingCartIcon,
   UserIcon,
+  ArrowsRightLeftIcon,
 } from 'react-native-heroicons/outline';
 import { AuthService } from '../services/auth';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Popup from '../components/Popup';
 
 export default function MenuScreen() {
   const [userName, setUserName] = useState('');
+  const [userRole, setUserRole] = useState('');
   const [isActive, setIsActive] = useState('');
   const [isLogoutConfirmationVisible, setIsLogoutConfirmationVisible] =
     useState(false);
   const router = useRouter();
+  const { context } = useLocalSearchParams(); // Obtener el contexto desde los parámetros
 
   const items = [
     {
@@ -49,11 +52,37 @@ export default function MenuScreen() {
     },
   ];
 
+  // Agregar la opción para usuarios de tipo "delivery" solo si el contexto no es "topBarDelivery"
+  if (userRole === 'delivery' && context !== 'topBarDelivery') {
+    items.push({
+      id: '5',
+      title: 'Ir al flujo de Delivery',
+      icon: <ArrowsRightLeftIcon color={Colors.iconMainPrimary} />,
+      onPress: () => router.push('/(delivery-tabs)'),
+    });
+  }
+
+  // Agregar la opción para volver al flujo regular si el contexto es "topBarDelivery"
+  if (context === 'topBarDelivery') {
+    items.push({
+      id: '6',
+      title: 'Volver al flujo regular',
+      icon: <ArrowsRightLeftIcon color={Colors.iconMainPrimary} />,
+      onPress: () => router.push('/(tabs)'),
+    });
+  }
+
   const handleLogout = async () => {
     try {
-      await AuthService.logout();
-      setIsLogoutConfirmationVisible(false);
-      router.replace('/login');
+      await AuthService.logout(); // Llama al método logout del servicio de autenticación
+      setIsLogoutConfirmationVisible(false); // Cierra el popup de confirmación
+
+      // Verificar si hay pantallas en la pila antes de llamar a dismissAll
+      if (router.canGoBack()) {
+        router.dismissAll();
+      }
+
+      router.replace('/login'); // Redirige a la pantalla de inicio de sesión
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -64,8 +93,10 @@ export default function MenuScreen() {
       try {
         const profile = await UserService.getProfile();
 
-        if (profile.success)
+        if (profile.success) {
           setUserName(profile.data.firstName + ' ' + profile.data.lastName);
+          setUserRole(profile.data.role); // Guardar el rol del usuario
+        }
       } catch (error) {
         console.log(error);
       }
