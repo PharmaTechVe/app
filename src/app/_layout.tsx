@@ -140,6 +140,15 @@ export default function RootLayout() {
           name="deliveryHistoryDetail"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="checkout"
+          options={{
+            headerTitle: '',
+            headerTransparent: true,
+            headerLeft: undefined,
+            headerShown: false,
+          }}
+        />
       </Stack>
     </Provider>
   );

@@ -5,6 +5,7 @@ import {
   GenericProductResponse,
   ProductPresentationResponse,
   ProductImage,
+  ProductPresentationDetailResponse,
 } from '@pharmatech/sdk';
 import { ServiceResponse } from '../types/api';
 import { extractErrorMessage } from '../utils/errorHandler';
@@ -29,12 +30,31 @@ export const ProductService = {
     }
   },
 
+  getPresentation: async (
+    productId: string,
+    presentationId: string,
+  ): Promise<ServiceResponse<ProductPresentationDetailResponse>> => {
+    try {
+      const presentation = await api.productPresentation.getByPresentationId(
+        productId,
+        presentationId,
+      );
+
+      return { success: true, data: presentation };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
+
   getGenericProduct: async (
     id: string,
   ): Promise<ServiceResponse<GenericProductResponse>> => {
     try {
       const product = await api.genericProduct.getById(id);
-
+      console.log(product);
       return { success: true, data: product };
     } catch (error) {
       return {

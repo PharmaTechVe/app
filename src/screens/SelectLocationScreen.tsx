@@ -114,6 +114,7 @@ const SelectLocationScreen = () => {
         params: {
           latitude: selectedLocation.latitude.toString(),
           longitude: selectedLocation.longitude.toString(),
+          fromCheckout: 'true', // Convertimos a cadena
         },
       });
     } else {
