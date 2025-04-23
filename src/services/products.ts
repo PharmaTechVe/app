@@ -9,6 +9,7 @@ import {
   ManufacturerResponse,
   ProductPaginationRequest,
   ProductPresentationDetailResponse,
+  PresentationResponse,
 } from '@pharmatech/sdk';
 import { ServiceResponse } from '../types/api';
 import { extractErrorMessage } from '../utils/errorHandler';
@@ -53,7 +54,28 @@ export const ProductService = {
       };
     }
   },
+  getPresentations: async (
+    page: number,
+    limit: number,
+  ): Promise<ServiceResponse<Pagination<PresentationResponse>>> => {
+    try {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+      const presentations = await api.presentation.findAll(
+        { page, limit },
+        token,
+      );
 
+      return { success: true, data: presentations };
+    } catch (error) {
+      return {
+        success: false,
+        error: extractErrorMessage(error),
+      };
+    }
+  },
   getGenericProduct: async (
     id: string,
   ): Promise<ServiceResponse<GenericProductResponse>> => {
