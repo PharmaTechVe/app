@@ -66,7 +66,7 @@ export default function MenuScreen() {
   if (context === 'topBarDelivery') {
     items.push({
       id: '6',
-      title: 'Volver al flujo regular',
+      title: 'Ir al flujo regular',
       icon: <ArrowsRightLeftIcon color={Colors.iconMainPrimary} />,
       onPress: () => router.push('/(tabs)'),
     });

@@ -296,19 +296,26 @@ export const AuthService = {
     }
   },
 
-  validateSession: async (): Promise<boolean> => {
+  validateSession: async (): Promise<{
+    isValid: boolean;
+    userRole?: string;
+  }> => {
     try {
       const token = await SecureStore.getItemAsync('auth_token');
-      if (!token) return false;
+      if (!token) return { isValid: false };
 
       const decoded = decodeJWT(token);
-      if (!decoded || !decoded.userId) return false;
+      if (!decoded || !decoded.userId) return { isValid: false };
 
-      console.log('Token válido. Usuario ID:', decoded.userId);
-      return true; // El token es válido
+      const profileResponse = await UserService.getProfile();
+      if (profileResponse.success) {
+        return { isValid: true, userRole: profileResponse.data.role };
+      }
+
+      return { isValid: false };
     } catch (error) {
       console.error('Error al validar la sesión:', error);
-      return false;
+      return { isValid: false };
     }
   },
 };
