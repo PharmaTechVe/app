@@ -33,6 +33,7 @@ import BranchMapModal from '../components/BranchMapModal';
 import { useDispatch } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
 import { useFocusEffect } from '@react-navigation/native';
+import Popup from '../components/Popup'; // Import the Popup component
 
 const CheckoutScreen = () => {
   const router = useRouter();
@@ -59,6 +60,8 @@ const CheckoutScreen = () => {
     longitude: number;
   } | null>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupMessages, setPopupMessages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -134,102 +137,125 @@ const CheckoutScreen = () => {
   };
 
   const handleContinue = async () => {
-    if (currentStep < stepsLabels.length) {
-      if (currentStep === stepsLabels.length - 1) {
-        try {
-          if (selectedOption === 'pickup' && !isValidUUID(selectedLocation)) {
-            setErrorMessage('La sucursal seleccionada no es válida.');
-            setStatus('rejected');
-            setCurrentStep(stepsLabels.length);
-            return;
-          }
+    const missingFields: string[] = [];
 
-          if (selectedOption === 'delivery' && !isValidUUID(selectedLocation)) {
-            setErrorMessage('La dirección seleccionada no es válida.');
-            setStatus('rejected');
-            setCurrentStep(stepsLabels.length);
-            return;
-          }
-
-          if (!selectedOption) {
-            setErrorMessage('Debe seleccionar una opción de compra.');
-            setStatus('rejected');
-            setCurrentStep(stepsLabels.length);
-            return;
-          }
-
-          setErrorMessage(null);
-
-          // Validar los productos del carrito
-          const products: CreateOrderDetail[] = cartItems
-            .filter((item) => item.quantity > 0)
-            .map((item) => ({
-              productPresentationId: item.id,
-              quantity: item.quantity, // Solo incluir los campos esperados
-            }));
-
-          if (products.length === 0) {
-            console.error('No hay productos válidos para procesar el pedido.');
-            setErrorMessage('No hay productos válidos en el carrito.');
-            setStatus('rejected');
-            return;
-          }
-
-          // Log del carrito y los productos seleccionados
-          console.log('Productos en el carrito:', cartItems);
-          console.log('Productos seleccionados para la orden:', products);
-
-          // Construir el payload de la orden
-          const orderPayload: CreateOrder = {
-            type:
-              selectedOption === 'pickup'
-                ? OrderType.PICKUP
-                : OrderType.DELIVERY,
-            branchId:
-              selectedOption === 'pickup'
-                ? selectedLocation || undefined
-                : undefined,
-            userAddressId:
-              selectedOption === 'delivery'
-                ? selectedLocation || undefined
-                : undefined,
-            products,
-          };
-
-          // Log del payload que se enviará al backend
-          console.log('Payload enviado al backend:', orderPayload);
-
-          // Enviar la orden al backend
-          const orderResponse = await OrderService.create(orderPayload);
-
-          // Log de la respuesta del backend
-          console.log('Respuesta del backend:', orderResponse);
-
-          // Validar la respuesta
-          if (!orderResponse?.id) {
-            setErrorMessage(
-              'No pudimos procesar tu orden. Inténtalo nuevamente.',
-            );
-            setStatus('rejected');
-            setCurrentStep(stepsLabels.length);
-            return;
-          }
-
-          // Guardar el número de orden generado
-          setOrderNumber(orderResponse.id);
-
-          console.log('Orden creada exitosamente:', orderResponse);
-
-          setStatus('approved');
-          setCurrentStep(stepsLabels.length);
-        } catch (error) {
-          console.error('Error al procesar la orden:', error);
-          setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
-          setStatus('rejected');
-        }
-      } else {
-        setCurrentStep(currentStep + 1);
+    if (currentStep < stepsLabels.length - 1) {
+      // Validation for steps before the confirmation step
+      if (currentStep === 1) {
+        if (!selectedOption)
+          missingFields.push('Seleccionar una opción de compra.');
+        if (!selectedLocation)
+          missingFields.push('Seleccionar una opción de locación.');
+        if (!selectedPayment)
+          missingFields.push('Seleccionar un método de pago.');
+      } else if (
+        currentStep === 2 &&
+        !isSimplifiedSteps &&
+        !isPaymentInfoValid
+      ) {
+        missingFields.push('Completar la información de pago.');
       }
+
+      if (missingFields.length > 0) {
+        setPopupMessages(missingFields);
+        setPopupVisible(true);
+        return;
+      }
+
+      setCurrentStep(currentStep + 1);
+    } else if (currentStep === stepsLabels.length - 1) {
+      // Create the order on the penultimate step
+      try {
+        if (selectedOption === 'pickup' && !isValidUUID(selectedLocation)) {
+          setErrorMessage('La sucursal seleccionada no es válida.');
+          setStatus('rejected');
+          return;
+        }
+
+        if (selectedOption === 'delivery' && !isValidUUID(selectedLocation)) {
+          setErrorMessage('La dirección seleccionada no es válida.');
+          setStatus('rejected');
+          return;
+        }
+
+        if (!selectedOption) {
+          setErrorMessage('Debe seleccionar una opción de compra.');
+          setStatus('rejected');
+          return;
+        }
+
+        setErrorMessage(null);
+
+        // Validar los productos del carrito
+        const products: CreateOrderDetail[] = cartItems
+          .filter((item) => item.quantity > 0)
+          .map((item) => ({
+            productPresentationId: item.id,
+            quantity: item.quantity, // Solo incluir los campos esperados
+          }));
+
+        if (products.length === 0) {
+          setErrorMessage('No hay productos válidos en el carrito.');
+          setStatus('rejected');
+          return;
+        }
+
+        // Log del carrito y los productos seleccionados
+        console.log('Productos en el carrito:', cartItems);
+        console.log('Productos seleccionados para la orden:', products);
+
+        // Construir el payload de la orden
+        const orderPayload: CreateOrder = {
+          type:
+            selectedOption === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
+          branchId:
+            selectedOption === 'pickup'
+              ? selectedLocation || undefined
+              : undefined,
+          userAddressId:
+            selectedOption === 'delivery'
+              ? selectedLocation || undefined
+              : undefined,
+          products,
+        };
+
+        // Log del payload que se enviará al backend
+        console.log('Payload enviado al backend:', orderPayload);
+
+        // Enviar la orden al backend
+        const orderResponse = await OrderService.create(orderPayload);
+
+        // Log de la respuesta del backend
+        console.log('Respuesta del backend:', orderResponse);
+
+        // Validar la respuesta
+        if (!orderResponse?.id) {
+          setErrorMessage(
+            'No pudimos procesar tu orden. Inténtalo nuevamente.',
+          );
+          setStatus('rejected');
+          return;
+        }
+
+        // Guardar el número de orden generado
+        setOrderNumber(orderResponse.id);
+
+        console.log('Orden creada exitosamente:', orderResponse);
+
+        setStatus('approved');
+        setCurrentStep(currentStep + 1); // Move to the confirmation step
+      } catch (error) {
+        console.error('Error al procesar la orden:', error);
+        setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
+        setStatus('rejected');
+      }
+    } else if (currentStep === stepsLabels.length) {
+      // Limpiar el carrito al salir del flujo de checkout
+      dispatch(clearCart());
+      router.dismissAll();
+      router.replace({
+        pathname: '/(tabs)',
+      });
     }
   };
 
@@ -246,15 +272,6 @@ const CheckoutScreen = () => {
     }
   };
 
-  const handleGoToHome = () => {
-    // Limpiar el carrito al salir del flujo de checkout
-    dispatch(clearCart());
-    router.dismissAll();
-    router.replace({
-      pathname: '/(tabs)',
-    });
-  };
-
   const handleOpenMapModal = () => {
     if (selectedBranch) {
       setModalVisible(true); // Open the modal only if a branch is selected
@@ -262,20 +279,6 @@ const CheckoutScreen = () => {
       console.error('No branch selected to display on the map.');
     }
   };
-
-  const isStep1Complete =
-    selectedOption !== null &&
-    selectedPayment !== null &&
-    selectedLocation !== null;
-  const isStep2Complete =
-    isSimplifiedSteps || (selectedPayment !== null && isPaymentInfoValid);
-
-  const isButtonEnabled =
-    currentStep === 1
-      ? isStep1Complete
-      : currentStep === 2
-        ? isStep2Complete
-        : true;
 
   const renderConfirmationContent = (status: 'approved' | 'rejected') => {
     if (selectedOption === 'pickup' && status === 'approved') {
@@ -344,190 +347,203 @@ const CheckoutScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        {currentStep < stepsLabels.length && (
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.steps}>
-          <Animated.View style={{ opacity: 1 }}>
-            <Steps
-              totalSteps={stepsLabels.length}
-              currentStep={currentStep}
-              labels={stepsLabels}
-            />
-          </Animated.View>
-        </View>
-
-        {errorMessage && (
-          <PoppinsText style={styles.errorMessage}>{errorMessage}</PoppinsText>
-        )}
-
-        {currentStep === 1 && (
-          <>
-            <PoppinsText style={styles.purchaseOptionsTitle}>
-              Opciones de Compra
-            </PoppinsText>
-            <View style={styles.radioContainer}>
-              <View style={styles.radioItem}>
-                <RadioCard
-                  label="Retiro en Sucursal"
-                  icon={<ShoppingBagIcon color={Colors.textMain} />}
-                  selected={selectedOption === 'pickup'}
-                  onPress={() => {
-                    setSelectedOption('pickup');
-                    setSelectedLocation(null);
-                  }}
-                />
-              </View>
-              <View>
-                <RadioCard
-                  label="Delivery"
-                  icon={<TruckIcon color={Colors.textMain} />}
-                  selected={selectedOption === 'delivery'}
-                  onPress={() => {
-                    setSelectedOption('delivery');
-                    setSelectedLocation(null);
-                  }}
-                />
-              </View>
-            </View>
-            <LocationSelector
-              selectedOption={selectedOption || 'pickup'}
-              onSelect={(val) => setSelectedLocation(val)}
-              setSelectedBranch={setSelectedBranch}
-            />
-            <View style={styles.paymentMethods}>
-              <PaymentMethods
-                selectedOption={selectedOption}
-                selectedPayment={selectedPayment}
-                setSelectedPayment={setSelectedPayment}
-              />
-            </View>
-            {renderFooterMessage() && (
-              <PoppinsText style={styles.footerMessage}>
-                {renderFooterMessage()}
-              </PoppinsText>
-            )}
-          </>
-        )}
-
-        {currentStep === 2 && !isSimplifiedSteps && (
-          <>
-            <PoppinsText
-              style={[styles.purchaseOptionsTitle, styles.step2Title]}
-            >
-              Visualización de datos
-            </PoppinsText>
-            <View style={styles.paymentInfoFormContainer}>
-              <PaymentInfoForm
-                paymentMethod={selectedPayment}
-                total={total.toFixed(2)}
-                onValidationChange={setIsPaymentInfoValid}
-                onBankChange={(value) => console.log('Bank changed:', value)}
-                onReferenceChange={(value) =>
-                  console.log('Reference changed:', value)
-                }
-                onDocumentNumberChange={(value) =>
-                  console.log('Document number changed:', value)
-                }
-                onPhoneChange={(value) => console.log('Phone changed:', value)}
-              />
-            </View>
-          </>
-        )}
-
-        {currentStep === stepsLabels.length && (
-          <>
-            <PoppinsText style={styles.purchaseOptionsTitle}>
-              Confirmación de Orden
-            </PoppinsText>
-            <PaymentStatusMessage
-              status={status}
-              orderNumber={orderNumber ? orderNumber.split('-')[0] : 'N/A'}
-              userName={userName || 'Usuario'}
-            />
-            <View style={styles.confirmationContainer}>
-              {renderConfirmationContent(status)}
-            </View>
-          </>
-        )}
-
-        <View style={styles.whiteBackgroundContainer}>
-          {currentStep !== 2 && currentStep < stepsLabels.length && (
-            <Coupon
-              onApplyCoupon={(discountAmount) => {
-                setCouponDiscount(discountAmount);
-                setIsCouponApplied(true);
-              }}
-              onCouponApplied={() => setIsCouponApplied(true)}
-            />
+    <>
+      <Popup
+        visible={popupVisible}
+        type="center"
+        headerText="Datos Incompletos"
+        bodyText={popupMessages
+          .map((msg, index) => `${index + 1}. ${msg}`)
+          .join('\n')}
+        primaryButton={{
+          text: 'Aceptar',
+          onPress: () => setPopupVisible(false),
+        }}
+        onClose={() => setPopupVisible(false)}
+      />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          {currentStep < stepsLabels.length && (
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+              <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
+            </TouchableOpacity>
           )}
-          <OrderSummary />
-          <View style={styles.totalContainer}>
-            {isCouponApplied && (
-              <>
-                <View style={styles.totalRow}>
-                  <PoppinsText style={styles.descuentoLabel}>
-                    Subtotal después del Cupón:
-                  </PoppinsText>
-                  <PoppinsText style={styles.descuentoAmount}>
-                    ${subtotalAfterCoupon.toFixed(2)}
-                  </PoppinsText>
-                </View>
-              </>
-            )}
-            <View style={styles.totalRow}>
-              <PoppinsText style={styles.descuentoLabel}>IVA:</PoppinsText>
-              <PoppinsText style={styles.descuentoAmount}>
-                +${iva.toFixed(2)}
-              </PoppinsText>
-            </View>
-            <View style={styles.totalRow}>
-              <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
-              <PoppinsText style={styles.totalAmount}>
-                ${total.toFixed(2)}
-              </PoppinsText>
-            </View>
+
+          <View style={styles.steps}>
+            <Animated.View style={{ opacity: 1 }}>
+              <Steps
+                totalSteps={stepsLabels.length}
+                currentStep={currentStep}
+                labels={stepsLabels}
+              />
+            </Animated.View>
           </View>
-          <Button
-            title={
-              currentStep === 2 && !isSimplifiedSteps
-                ? 'Confirmar Pago'
-                : currentStep < stepsLabels.length
-                  ? 'Continuar'
-                  : 'Volver al Home'
-            }
-            size="medium"
-            style={styles.checkoutButton}
-            variant={isButtonEnabled ? 'primary' : 'disabled'}
-            onPress={
-              currentStep < stepsLabels.length
-                ? isButtonEnabled
-                  ? handleContinue
-                  : undefined
-                : handleGoToHome
+
+          {errorMessage && (
+            <PoppinsText style={styles.errorMessage}>
+              {errorMessage}
+            </PoppinsText>
+          )}
+
+          {currentStep === 1 && (
+            <>
+              <PoppinsText style={styles.purchaseOptionsTitle}>
+                Opciones de Compra
+              </PoppinsText>
+              <View style={styles.radioContainer}>
+                <View style={styles.radioItem}>
+                  <RadioCard
+                    label="Retiro en Sucursal"
+                    icon={<ShoppingBagIcon color={Colors.textMain} />}
+                    selected={selectedOption === 'pickup'}
+                    onPress={() => {
+                      setSelectedOption('pickup');
+                      setSelectedLocation(null);
+                    }}
+                  />
+                </View>
+                <View>
+                  <RadioCard
+                    label="Delivery"
+                    icon={<TruckIcon color={Colors.textMain} />}
+                    selected={selectedOption === 'delivery'}
+                    onPress={() => {
+                      setSelectedOption('delivery');
+                      setSelectedLocation(null);
+                    }}
+                  />
+                </View>
+              </View>
+              <LocationSelector
+                selectedOption={selectedOption || 'pickup'}
+                onSelect={(val) => setSelectedLocation(val)}
+                setSelectedBranch={setSelectedBranch}
+              />
+              <View style={styles.paymentMethods}>
+                <PaymentMethods
+                  selectedOption={selectedOption}
+                  selectedPayment={selectedPayment}
+                  setSelectedPayment={setSelectedPayment}
+                />
+              </View>
+              {renderFooterMessage() && (
+                <PoppinsText style={styles.footerMessage}>
+                  {renderFooterMessage()}
+                </PoppinsText>
+              )}
+            </>
+          )}
+
+          {currentStep === 2 && !isSimplifiedSteps && (
+            <>
+              <PoppinsText
+                style={[styles.purchaseOptionsTitle, styles.step2Title]}
+              >
+                Visualización de datos
+              </PoppinsText>
+              <View style={styles.paymentInfoFormContainer}>
+                <PaymentInfoForm
+                  paymentMethod={selectedPayment}
+                  total={total.toFixed(2)}
+                  onValidationChange={setIsPaymentInfoValid}
+                  onBankChange={(value) => console.log('Bank changed:', value)}
+                  onReferenceChange={(value) =>
+                    console.log('Reference changed:', value)
+                  }
+                  onDocumentNumberChange={(value) =>
+                    console.log('Document number changed:', value)
+                  }
+                  onPhoneChange={(value) =>
+                    console.log('Phone changed:', value)
+                  }
+                />
+              </View>
+            </>
+          )}
+
+          {currentStep === stepsLabels.length && (
+            <>
+              <PoppinsText style={styles.purchaseOptionsTitle}>
+                Confirmación de Orden
+              </PoppinsText>
+              <PaymentStatusMessage
+                status={status}
+                orderNumber={orderNumber ? orderNumber.split('-')[0] : 'N/A'}
+                userName={userName || 'Usuario'}
+              />
+              <View style={styles.confirmationContainer}>
+                {renderConfirmationContent(status)}
+              </View>
+            </>
+          )}
+
+          <View style={styles.whiteBackgroundContainer}>
+            {currentStep !== 2 && currentStep < stepsLabels.length && (
+              <Coupon
+                onApplyCoupon={(discountAmount) => {
+                  setCouponDiscount(discountAmount);
+                  setIsCouponApplied(true);
+                }}
+                onCouponApplied={() => setIsCouponApplied(true)}
+              />
+            )}
+            <OrderSummary />
+            <View style={styles.totalContainer}>
+              {isCouponApplied && (
+                <>
+                  <View style={styles.totalRow}>
+                    <PoppinsText style={styles.descuentoLabel}>
+                      Subtotal después del Cupón:
+                    </PoppinsText>
+                    <PoppinsText style={styles.descuentoAmount}>
+                      ${subtotalAfterCoupon.toFixed(2)}
+                    </PoppinsText>
+                  </View>
+                </>
+              )}
+              <View style={styles.totalRow}>
+                <PoppinsText style={styles.descuentoLabel}>IVA:</PoppinsText>
+                <PoppinsText style={styles.descuentoAmount}>
+                  +${iva.toFixed(2)}
+                </PoppinsText>
+              </View>
+              <View style={styles.totalRow}>
+                <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
+                <PoppinsText style={styles.totalAmount}>
+                  ${total.toFixed(2)}
+                </PoppinsText>
+              </View>
+            </View>
+            <Button
+              title={
+                currentStep === 2 && !isSimplifiedSteps
+                  ? 'Confirmar Pago'
+                  : currentStep < stepsLabels.length
+                    ? 'Continuar'
+                    : 'Volver al Home'
+              }
+              size="medium"
+              style={styles.checkoutButton}
+              variant={'primary'}
+              onPress={handleContinue}
+            />
+          </View>
+          <BranchMapModal
+            visible={modalVisible}
+            onClose={() => setModalVisible(false)}
+            branchName={selectedBranch?.name || null}
+            branchCoordinates={
+              selectedBranch
+                ? {
+                    latitude: selectedBranch.latitude,
+                    longitude: selectedBranch.longitude,
+                  }
+                : null
             }
           />
         </View>
-        <BranchMapModal
-          visible={modalVisible}
-          onClose={() => setModalVisible(false)}
-          branchName={selectedBranch?.name || null}
-          branchCoordinates={
-            selectedBranch
-              ? {
-                  latitude: selectedBranch.latitude,
-                  longitude: selectedBranch.longitude,
-                }
-              : null
-          }
-        />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 };
 
