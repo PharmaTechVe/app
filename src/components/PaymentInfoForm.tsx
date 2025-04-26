@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import PoppinsText from './PoppinsText';
 import Input from './Input';
 import { FontSizes, Colors } from '../styles/theme';
+import Dropdown from './Dropdown';
 
 const PaymentInfoForm = ({
   paymentMethod,
@@ -126,14 +127,13 @@ const PaymentInfoForm = ({
             Ingrese los datos para validar el pago
           </PoppinsText>
 
-          <Input
+          <Dropdown
             label="Banco"
-            value={bank}
-            placeholder="Ingrese el banco"
-            getValue={setBank}
-            errorText="Este campo no puede estar vacío"
-            validation={(val) => val.trim() !== ''}
-            {...editableInputProps}
+            placeholder="Seleccione el Banco Emisor"
+            options={['Banesco', 'Provincial', 'Mercantil']}
+            onSelect={(val) => setBank(val)}
+            border="default"
+            borderColor={Colors.gray_100}
           />
           <Input
             label="Referencia"

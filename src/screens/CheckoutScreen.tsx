@@ -164,6 +164,13 @@ const CheckoutScreen = () => {
 
       setCurrentStep(currentStep + 1);
     } else if (currentStep === stepsLabels.length - 1) {
+      // Ensure payment form is valid before creating the order
+      if (!isPaymentInfoValid) {
+        setPopupMessages(['Completar la información de pago correctamente.']);
+        setPopupVisible(true);
+        return;
+      }
+
       // Create the order on the penultimate step
       try {
         if (selectedOption === 'pickup' && !isValidUUID(selectedLocation)) {
