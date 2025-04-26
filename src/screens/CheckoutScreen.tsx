@@ -30,27 +30,37 @@ import { OrderService } from '../services/order';
 import { UserService } from '../services/user';
 import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
 import BranchMapModal from '../components/BranchMapModal';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
 import { useFocusEffect } from '@react-navigation/native';
 import Popup from '../components/Popup'; // Import the Popup component
+import { RootState, AppDispatch } from '../redux/store';
+import {
+  setStep,
+  setOption,
+  setPayment,
+  setLocationId,
+  setPaymentInfoValid,
+  resetCheckout,
+  setCouponDiscount,
+  setCouponApplied,
+} from '../redux/slices/checkoutSlice';
 
 const CheckoutScreen = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    step,
+    option,
+    payment,
+    locationId,
+    paymentInfoValid,
+    couponDiscount,
+    couponApplied,
+  } = useSelector((state: RootState) => state.checkout);
+
   const router = useRouter();
-  const dispatch = useDispatch();
   const { cartItems } = useCart();
-  const [selectedOption, setSelectedOption] = useState<
-    'pickup' | 'delivery' | null
-  >('pickup');
-  const [selectedPayment, setSelectedPayment] = useState<
-    'punto_de_venta' | 'efectivo' | 'transferencia' | 'pago_movil' | null
-  >(null);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
   const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
-  const [isPaymentInfoValid, setIsPaymentInfoValid] = useState(false);
-  const [couponDiscount, setCouponDiscount] = useState(0);
-  const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>('Usuario');
   const [modalVisible, setModalVisible] = useState(false);
@@ -83,7 +93,7 @@ const CheckoutScreen = () => {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        if (currentStep === stepsLabels.length) {
+        if (step === stepsLabels.length) {
           // Limpiar el carrito si el usuario está en el último paso
           dispatch(clearCart());
         }
@@ -94,12 +104,12 @@ const CheckoutScreen = () => {
 
       return () =>
         BackHandler.removeEventListener('hardwareBackPress', onBackPress);
-    }, [currentStep]),
+    }, [step]),
   );
 
   const isSimplifiedSteps =
-    (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') ||
-    (selectedOption === 'delivery' && selectedPayment === 'efectivo');
+    (option === 'pickup' && payment === 'punto_de_venta') ||
+    (option === 'delivery' && payment === 'efectivo');
 
   const stepsLabels = isSimplifiedSteps
     ? ['Opciones de Compra', 'Confirmación de orden']
@@ -114,17 +124,17 @@ const CheckoutScreen = () => {
     0,
   );
   const subtotalAfterDiscount = subtotal - totalDiscount;
-  const subtotalAfterCoupon = isCouponApplied
-    ? subtotalAfterDiscount - couponDiscount
+  const subtotalAfterCoupon = couponApplied
+    ? subtotalAfterDiscount * (1 - couponDiscount / 100)
     : subtotalAfterDiscount;
   const iva = subtotalAfterCoupon * 0.16;
   const total = subtotalAfterCoupon + iva;
 
   const renderFooterMessage = () => {
-    if (selectedOption === 'pickup' && selectedPayment === 'punto_de_venta') {
+    if (option === 'pickup' && payment === 'punto_de_venta') {
       return 'Por favor dirigirse a su sucursal más cercana y pagar en el sitio. La orden estará en proceso de pago hasta que pague en el sitio.';
     }
-    if (selectedOption === 'delivery' && selectedPayment === 'efectivo') {
+    if (option === 'delivery' && payment === 'efectivo') {
       return 'Debe pagar al personal del delivery la cantidad exacta de su pedido. La orden estará en proceso de pago hasta que pague en el sitio.';
     }
     return null;
@@ -139,20 +149,14 @@ const CheckoutScreen = () => {
   const handleContinue = async () => {
     const missingFields: string[] = [];
 
-    if (currentStep < stepsLabels.length - 1) {
+    if (step < stepsLabels.length - 1) {
       // Validation for steps before the confirmation step
-      if (currentStep === 1) {
-        if (!selectedOption)
-          missingFields.push('Seleccionar una opción de compra.');
-        if (!selectedLocation)
+      if (step === 1) {
+        if (!option) missingFields.push('Seleccionar una opción de compra.');
+        if (!locationId)
           missingFields.push('Seleccionar una opción de locación.');
-        if (!selectedPayment)
-          missingFields.push('Seleccionar un método de pago.');
-      } else if (
-        currentStep === 2 &&
-        !isSimplifiedSteps &&
-        !isPaymentInfoValid
-      ) {
+        if (!payment) missingFields.push('Seleccionar un método de pago.');
+      } else if (step === 2 && !isSimplifiedSteps && !paymentInfoValid) {
         missingFields.push('Completar la información de pago.');
       }
 
@@ -162,10 +166,10 @@ const CheckoutScreen = () => {
         return;
       }
 
-      setCurrentStep(currentStep + 1);
-    } else if (currentStep === stepsLabels.length - 1) {
+      dispatch(setStep(step + 1));
+    } else if (step === stepsLabels.length - 1) {
       // Ensure payment form is valid before creating the order
-      if (!isPaymentInfoValid) {
+      if (!paymentInfoValid) {
         setPopupMessages(['Completar la información de pago correctamente.']);
         setPopupVisible(true);
         return;
@@ -173,19 +177,19 @@ const CheckoutScreen = () => {
 
       // Create the order on the penultimate step
       try {
-        if (selectedOption === 'pickup' && !isValidUUID(selectedLocation)) {
+        if (option === 'pickup' && !isValidUUID(locationId)) {
           setErrorMessage('La sucursal seleccionada no es válida.');
           setStatus('rejected');
           return;
         }
 
-        if (selectedOption === 'delivery' && !isValidUUID(selectedLocation)) {
+        if (option === 'delivery' && !isValidUUID(locationId)) {
           setErrorMessage('La dirección seleccionada no es válida.');
           setStatus('rejected');
           return;
         }
 
-        if (!selectedOption) {
+        if (!option) {
           setErrorMessage('Debe seleccionar una opción de compra.');
           setStatus('rejected');
           return;
@@ -213,16 +217,10 @@ const CheckoutScreen = () => {
 
         // Construir el payload de la orden
         const orderPayload: CreateOrder = {
-          type:
-            selectedOption === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
-          branchId:
-            selectedOption === 'pickup'
-              ? selectedLocation || undefined
-              : undefined,
+          type: option === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
+          branchId: option === 'pickup' ? locationId || undefined : undefined,
           userAddressId:
-            selectedOption === 'delivery'
-              ? selectedLocation || undefined
-              : undefined,
+            option === 'delivery' ? locationId || undefined : undefined,
           products,
         };
 
@@ -250,15 +248,16 @@ const CheckoutScreen = () => {
         console.log('Orden creada exitosamente:', orderResponse);
 
         setStatus('approved');
-        setCurrentStep(currentStep + 1); // Move to the confirmation step
+        dispatch(setStep(step + 1)); // Move to the confirmation step
       } catch (error) {
         console.error('Error al procesar la orden:', error);
         setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
         setStatus('rejected');
       }
-    } else if (currentStep === stepsLabels.length) {
+    } else if (step === stepsLabels.length) {
       // Limpiar el carrito al salir del flujo de checkout
       dispatch(clearCart());
+      dispatch(resetCheckout());
       router.dismissAll();
       router.replace({
         pathname: '/(tabs)',
@@ -267,15 +266,15 @@ const CheckoutScreen = () => {
   };
 
   const handleGoBack = () => {
-    if (currentStep === stepsLabels.length) {
+    if (step === stepsLabels.length) {
       // Si estamos en el último paso, no permitir retroceder
       return;
     }
 
-    if (currentStep === 1) {
+    if (step === 1) {
       router.back();
-    } else if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+    } else if (step > 1) {
+      dispatch(setStep(step - 1));
     }
   };
 
@@ -288,7 +287,7 @@ const CheckoutScreen = () => {
   };
 
   const renderConfirmationContent = (status: 'approved' | 'rejected') => {
-    if (selectedOption === 'pickup' && status === 'approved') {
+    if (option === 'pickup' && status === 'approved') {
       return (
         <>
           <PoppinsText style={styles.confirmationMessage}>
@@ -312,7 +311,7 @@ const CheckoutScreen = () => {
       );
     }
 
-    if (selectedOption === 'delivery' && status === 'approved') {
+    if (option === 'delivery' && status === 'approved') {
       return (
         <>
           <PoppinsText style={styles.confirmationMessage}>
@@ -353,6 +352,11 @@ const CheckoutScreen = () => {
     return null;
   };
 
+  const handleApplyCoupon = (discountAmount: number) => {
+    dispatch(setCouponDiscount(discountAmount));
+    dispatch(setCouponApplied(true));
+  };
+
   return (
     <>
       <Popup
@@ -370,7 +374,7 @@ const CheckoutScreen = () => {
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          {currentStep < stepsLabels.length && (
+          {step < stepsLabels.length && (
             <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
               <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
             </TouchableOpacity>
@@ -380,7 +384,7 @@ const CheckoutScreen = () => {
             <Animated.View style={{ opacity: 1 }}>
               <Steps
                 totalSteps={stepsLabels.length}
-                currentStep={currentStep}
+                currentStep={step}
                 labels={stepsLabels}
               />
             </Animated.View>
@@ -392,7 +396,7 @@ const CheckoutScreen = () => {
             </PoppinsText>
           )}
 
-          {currentStep === 1 && (
+          {step === 1 && (
             <>
               <PoppinsText style={styles.purchaseOptionsTitle}>
                 Opciones de Compra
@@ -402,10 +406,10 @@ const CheckoutScreen = () => {
                   <RadioCard
                     label="Retiro en Sucursal"
                     icon={<ShoppingBagIcon color={Colors.textMain} />}
-                    selected={selectedOption === 'pickup'}
+                    selected={option === 'pickup'}
                     onPress={() => {
-                      setSelectedOption('pickup');
-                      setSelectedLocation(null);
+                      dispatch(setOption('pickup'));
+                      dispatch(setLocationId(null));
                     }}
                   />
                 </View>
@@ -413,24 +417,24 @@ const CheckoutScreen = () => {
                   <RadioCard
                     label="Delivery"
                     icon={<TruckIcon color={Colors.textMain} />}
-                    selected={selectedOption === 'delivery'}
+                    selected={option === 'delivery'}
                     onPress={() => {
-                      setSelectedOption('delivery');
-                      setSelectedLocation(null);
+                      dispatch(setOption('delivery'));
+                      dispatch(setLocationId(null));
                     }}
                   />
                 </View>
               </View>
               <LocationSelector
-                selectedOption={selectedOption || 'pickup'}
-                onSelect={(val) => setSelectedLocation(val)}
+                selectedOption={option || 'pickup'}
+                onSelect={(val) => dispatch(setLocationId(val))}
                 setSelectedBranch={setSelectedBranch}
               />
               <View style={styles.paymentMethods}>
                 <PaymentMethods
-                  selectedOption={selectedOption}
-                  selectedPayment={selectedPayment}
-                  setSelectedPayment={setSelectedPayment}
+                  selectedOption={option}
+                  selectedPayment={payment}
+                  setSelectedPayment={(val) => dispatch(setPayment(val))}
                 />
               </View>
               {renderFooterMessage() && (
@@ -441,7 +445,7 @@ const CheckoutScreen = () => {
             </>
           )}
 
-          {currentStep === 2 && !isSimplifiedSteps && (
+          {step === 2 && !isSimplifiedSteps && (
             <>
               <PoppinsText
                 style={[styles.purchaseOptionsTitle, styles.step2Title]}
@@ -450,9 +454,11 @@ const CheckoutScreen = () => {
               </PoppinsText>
               <View style={styles.paymentInfoFormContainer}>
                 <PaymentInfoForm
-                  paymentMethod={selectedPayment}
+                  paymentMethod={payment}
                   total={total.toFixed(2)}
-                  onValidationChange={setIsPaymentInfoValid}
+                  onValidationChange={(isValid) =>
+                    dispatch(setPaymentInfoValid(isValid))
+                  }
                   onBankChange={(value) => console.log('Bank changed:', value)}
                   onReferenceChange={(value) =>
                     console.log('Reference changed:', value)
@@ -468,7 +474,7 @@ const CheckoutScreen = () => {
             </>
           )}
 
-          {currentStep === stepsLabels.length && (
+          {step === stepsLabels.length && (
             <>
               <PoppinsText style={styles.purchaseOptionsTitle}>
                 Confirmación de Orden
@@ -485,18 +491,15 @@ const CheckoutScreen = () => {
           )}
 
           <View style={styles.whiteBackgroundContainer}>
-            {currentStep !== 2 && currentStep < stepsLabels.length && (
+            {step !== 2 && step < stepsLabels.length && (
               <Coupon
-                onApplyCoupon={(discountAmount) => {
-                  setCouponDiscount(discountAmount);
-                  setIsCouponApplied(true);
-                }}
-                onCouponApplied={() => setIsCouponApplied(true)}
+                onApplyCoupon={handleApplyCoupon}
+                onCouponApplied={() => dispatch(setCouponApplied(true))}
               />
             )}
             <OrderSummary />
             <View style={styles.totalContainer}>
-              {isCouponApplied && (
+              {couponApplied && (
                 <>
                   <View style={styles.totalRow}>
                     <PoppinsText style={styles.descuentoLabel}>
@@ -523,9 +526,9 @@ const CheckoutScreen = () => {
             </View>
             <Button
               title={
-                currentStep === 2 && !isSimplifiedSteps
+                step === 2 && !isSimplifiedSteps
                   ? 'Confirmar Pago'
-                  : currentStep < stepsLabels.length
+                  : step < stepsLabels.length
                     ? 'Continuar'
                     : 'Volver al Home'
               }

@@ -41,7 +41,7 @@ const Coupon: React.FC<CouponProps> = ({
             setValidationMessage('El cupón ha expirado.');
           } else {
             setValidationMessage(
-              `Cupón válido. Se aplicó un descuento de ${discount}$.`,
+              `Cupón válido. Se aplicó un descuento del ${discount}%.`,
             );
             onApplyCoupon(discount);
             onCouponApplied();
