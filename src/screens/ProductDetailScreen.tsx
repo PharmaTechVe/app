@@ -263,8 +263,8 @@ const ProductDetailScreen: React.FC = () => {
         }}
       >
         <ChevronLeftIcon
-          width={16}
-          height={16}
+          width={20}
+          height={20}
           color={Colors.primary}
           style={{ marginRight: 2, marginLeft: 6 }} // Espacio entre el ícono y el texto
         />
