@@ -17,6 +17,7 @@ interface CheckoutState {
   paymentInfoValid: boolean;
   couponDiscount: number;
   couponApplied: boolean;
+  lastAppliedCoupon: string | null; // Add a field to store the last applied coupon code
 }
 
 const initialState: CheckoutState = {
@@ -27,6 +28,7 @@ const initialState: CheckoutState = {
   paymentInfoValid: false,
   couponDiscount: 0,
   couponApplied: false,
+  lastAppliedCoupon: null,
 };
 
 const checkoutSlice = createSlice({
@@ -54,6 +56,9 @@ const checkoutSlice = createSlice({
     setCouponApplied(state, action: PayloadAction<boolean>) {
       state.couponApplied = action.payload;
     },
+    setLastAppliedCoupon(state, action: PayloadAction<string | null>) {
+      state.lastAppliedCoupon = action.payload;
+    },
     resetCheckout(state) {
       Object.assign(state, initialState);
     },
@@ -68,6 +73,7 @@ export const {
   setPaymentInfoValid,
   setCouponDiscount,
   setCouponApplied,
+  setLastAppliedCoupon,
   resetCheckout,
 } = checkoutSlice.actions;
 
