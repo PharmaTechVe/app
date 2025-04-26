@@ -28,6 +28,7 @@ const PaymentInfoForm = ({
   onPhoneChange: (value: string) => void;
 }) => {
   const [bank, setBank] = useState('');
+  const [hasBankTouched, setHasBankTouched] = useState(false);
   const [reference, setReference] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const [phone, setPhone] = useState('');
@@ -131,10 +132,29 @@ const PaymentInfoForm = ({
             label="Banco"
             placeholder="Seleccione el Banco Emisor"
             options={['Banesco', 'Provincial', 'Mercantil']}
-            onSelect={(val) => setBank(val)}
+            onSelect={(val) => {
+              setBank(val);
+              setHasBankTouched(true);
+            }}
             border="default"
-            borderColor={Colors.gray_100}
+            borderColor={
+              hasBankTouched && bank === ''
+                ? Colors.semanticDanger
+                : Colors.gray_100
+            }
           />
+          {hasBankTouched && bank === '' && (
+            <PoppinsText
+              style={{
+                color: Colors.semanticDanger,
+                fontSize: FontSizes.label.size,
+                marginTop: 4,
+              }}
+            >
+              Debe seleccionar un banco
+            </PoppinsText>
+          )}
+
           <Input
             label="Referencia"
             value={reference}
@@ -143,6 +163,8 @@ const PaymentInfoForm = ({
             fieldType="number"
             errorText="Debe ser un número válido"
             validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
+            showIcon
+            useDefaultValidation={false}
             {...editableInputProps}
           />
           <Input
@@ -153,8 +175,10 @@ const PaymentInfoForm = ({
               setDocumentNumber(val.replace(/\D/g, '').slice(0, 8))
             }
             fieldType="number"
-            errorText="Debe contener hasta 8 dígitos numéricos"
-            validation={(val) => /^\d{1,8}$/.test(val)}
+            errorText="El campo no debe estar vacío"
+            validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
+            showIcon
+            useDefaultValidation={false}
             {...editableInputProps}
           />
           <Input
@@ -165,6 +189,8 @@ const PaymentInfoForm = ({
             fieldType="number"
             errorText="Debe tener exactamente 11 dígitos"
             validation={(val) => /^\d{11}$/.test(val)}
+            showIcon
+            useDefaultValidation={false}
             {...editableInputProps}
           />
         </>
