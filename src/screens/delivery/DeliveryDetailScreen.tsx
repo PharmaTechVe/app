@@ -23,6 +23,7 @@ import {
   setOrderDetails,
   setDeliveryState,
 } from '../../redux/slices/deliverySlice';
+import Popup from '../../components/Popup';
 
 const DeliveryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -59,8 +60,9 @@ const DeliveryDetailScreen: React.FC = () => {
     'Ya tengo los productos del pedido',
     'Ir a destino de entrega',
     'Ya hice la entrega',
-    'Finalizar entrega',
   ];
+
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
 
   const branchLocation = {
     latitude: branchNames[orderDetails?.branchId ?? '']?.latitude || 0,
@@ -113,55 +115,46 @@ const DeliveryDetailScreen: React.FC = () => {
 
   const handleNextState = async () => {
     try {
-      if (deliveryState === 5) {
-        router.dismiss(2);
-        router.replace('/(delivery-tabs)');
+      if (deliveryState === buttonStates.length - 1) {
+        // Mostrar el popup de confirmación
+        setShowConfirmationPopup(true);
         return;
       }
 
-      if (deliveryState < buttonStates.length - 1) {
-        // Actualizar el estado en el backend
-        switch (buttonStates[deliveryState]) {
-          case 'Comenzar entrega':
-            await DeliveryService.updateOrderStatus(
-              orderDetails!.id,
-              OrderDeliveryStatus.WAITING_CONFIRMATION,
-            );
-            break;
-          case 'Ya tengo los productos del pedido':
-            await DeliveryService.updateOrderStatus(
-              orderDetails!.id,
-              OrderDeliveryStatus.PICKED_UP,
-            );
-            break;
-          case 'Ir a destino de entrega':
-            await DeliveryService.updateOrderStatus(
-              orderDetails!.id,
-              OrderDeliveryStatus.IN_ROUTE,
-            );
-            setDeliveryStateBadge(1); // Cambiar a "Haciendo entrega del pedido"
-            break;
-          case 'Ya hice la entrega':
-            await DeliveryService.updateOrderStatus(
-              orderDetails!.id,
-              OrderDeliveryStatus.DELIVERED,
-            );
-            break;
-        }
-
-        setAlertType('info');
-        setAlertMessage('Se actualizó el estado del pedido.');
-        setShowAlert(true);
-
-        // Agregar timeout para ocultar la alerta automáticamente
-        setTimeout(() => {
-          setShowAlert(false);
-        }, 3000); // 3 segundos
-
-        dispatch(
-          setDeliveryState({ id: id as string, state: deliveryState + 1 }),
-        );
+      // Lógica para otros estados
+      switch (buttonStates[deliveryState]) {
+        case 'Comenzar entrega':
+          await DeliveryService.updateOrderStatus(
+            orderDetails!.id,
+            OrderDeliveryStatus.WAITING_CONFIRMATION,
+          );
+          break;
+        case 'Ya tengo los productos del pedido':
+          await DeliveryService.updateOrderStatus(
+            orderDetails!.id,
+            OrderDeliveryStatus.PICKED_UP,
+          );
+          break;
+        case 'Ir a destino de entrega':
+          await DeliveryService.updateOrderStatus(
+            orderDetails!.id,
+            OrderDeliveryStatus.IN_ROUTE,
+          );
+          setDeliveryStateBadge(1); // Cambiar a "Haciendo entrega del pedido"
+          break;
       }
+
+      setAlertType('info');
+      setAlertMessage('Se actualizó el estado del pedido.');
+      setShowAlert(true);
+
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2500);
+
+      dispatch(
+        setDeliveryState({ id: id as string, state: deliveryState + 1 }),
+      );
     } catch (error) {
       console.error('Error al actualizar el estado del delivery:', error);
 
@@ -169,10 +162,42 @@ const DeliveryDetailScreen: React.FC = () => {
       setAlertMessage('Hubo un problema al actualizar el estado del pedido.');
       setShowAlert(true);
 
-      // Agregar timeout para ocultar la alerta automáticamente
       setTimeout(() => {
         setShowAlert(false);
       }, 2000);
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    try {
+      // Actualizar el estado de la orden a DELIVERED
+      await DeliveryService.updateOrderStatus(
+        orderDetails!.id,
+        OrderDeliveryStatus.DELIVERED,
+      );
+
+      setAlertType('success');
+      setAlertMessage('La entrega se ha finalizado correctamente.');
+      setShowAlert(true);
+
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2500);
+
+      // Redirigir al usuario a (delivery-tabs)
+      router.replace('/(delivery-tabs)');
+    } catch (error) {
+      console.error('Error al finalizar la entrega:', error);
+
+      setAlertType('error');
+      setAlertMessage('Hubo un problema al finalizar la entrega.');
+      setShowAlert(true);
+
+      setTimeout(() => {
+        setShowAlert(false);
+      }, 2000);
+    } finally {
+      setShowConfirmationPopup(false); // Cerrar el popup
     }
   };
 
@@ -351,6 +376,20 @@ const DeliveryDetailScreen: React.FC = () => {
         size="medium"
         onPress={handleNextState}
         style={styles.floatingButton}
+      />
+      <Popup
+        visible={showConfirmationPopup}
+        headerText="Confirmar entrega"
+        bodyText="¿Estás seguro de que has realizado la entrega del pedido?"
+        primaryButton={{
+          text: 'Confirmar',
+          onPress: handleConfirmDelivery,
+        }}
+        secondaryButton={{
+          text: 'Cancelar',
+          onPress: () => setShowConfirmationPopup(false),
+        }}
+        onClose={() => setShowConfirmationPopup(false)}
       />
     </View>
   );

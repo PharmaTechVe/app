@@ -38,15 +38,29 @@ export default function LoginScreen() {
       if (result.success) {
         const profileResponse = await UserService.getProfile();
         if (profileResponse.success) {
-          const userRole = profileResponse.data.role;
+          const { role: userRole } = profileResponse.data;
+          const { isValidated } = result.data!;
 
-          if (userRole === 'delivery') {
-            // Redirigir a (delivery-tabs) si es un usuario de tipo delivery
-            router.replace('/(delivery-tabs)');
-          } else {
-            // Redirigir a (tabs) si es un usuario regular
-            router.replace('/(tabs)');
-          }
+          // Mostrar alerta de éxito para todos los usuarios
+          setShowSuccessAlert(true);
+
+          setTimeout(() => {
+            setShowSuccessAlert(false);
+
+            if (!isValidated) {
+              // Redirigir al home con el modal de verificación de correo
+              router.replace({
+                pathname: '/(tabs)',
+                params: { showEmailVerification: 'true' },
+              });
+            } else if (userRole === 'delivery') {
+              // Redirigir a (delivery-tabs) si es un usuario de tipo delivery
+              router.replace('/(delivery-tabs)');
+            } else {
+              // Redirigir a (tabs) si es un usuario regular
+              router.replace('/(tabs)');
+            }
+          }, 2000);
         } else {
           console.error(
             'Error al obtener el perfil del usuario:',
@@ -60,9 +74,9 @@ export default function LoginScreen() {
         setErrorMessage(result.error || 'Error al iniciar sesión.');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error during login:', error);
       setShowErrorAlert(true);
-      setErrorMessage('Error al iniciar sesión, verifica tus credenciales.');
+      setErrorMessage('Error inesperado al iniciar sesión.');
     } finally {
       setLoading(false);
     }
