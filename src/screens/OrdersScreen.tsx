@@ -8,6 +8,7 @@ import Button from '../components/Button';
 import { OrderResponse } from '@pharmatech/sdk'; // Usar el tipo del SDK
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
+import OrderBadge from '../components/OrderBadge';
 
 const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
@@ -94,7 +95,7 @@ const OrdersScreen = () => {
                 >
                   <View>
                     <PoppinsText>
-                      {order ? truncateString(order?.id, 8) : ''}
+                      #{order ? truncateString(order?.id, 8) : ''}
                     </PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
                       {new Date(order.createdAt).toLocaleDateString()}{' '}
@@ -111,19 +112,7 @@ const OrdersScreen = () => {
                     marginTop: 5,
                   }}
                 >
-                  <PoppinsText
-                    style={{
-                      padding: 5,
-                      backgroundColor: Colors.semanticDanger,
-                      borderRadius: 5,
-                      width: 80,
-                      textAlign: 'center',
-                      color: Colors.textWhite,
-                      fontSize: FontSizes.c1.size,
-                    }}
-                  >
-                    {order.status}
-                  </PoppinsText>
+                  <OrderBadge status={order.status} />
                   <TouchableOpacity
                     onPress={() => router.push(`order/${order.id}`)}
                   >
