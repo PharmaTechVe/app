@@ -37,6 +37,7 @@ import {
   ProductPresentationDetailResponse,
   ProductPresentationResponse,
 } from '@pharmatech/sdk';
+import Button from '../components/Button';
 
 const ProductDetailScreen: React.FC = () => {
   const { id, productId } = useLocalSearchParams<{
@@ -45,6 +46,7 @@ const ProductDetailScreen: React.FC = () => {
   }>();
   const navigation = useNavigation(); // Obtén la instancia de navegación
 
+  const [showMap, setShowMap] = useState(false);
   const [inventory, setInventory] = useState<Inventory[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [product, setProduct] = useState<ProductPresentationDetailResponse>();
@@ -151,8 +153,12 @@ const ProductDetailScreen: React.FC = () => {
 
       if (productData.success) setProduct(productData.data);
       if (productImages.success) setImages(productImages.data);
-      if (productPresentations.success)
-        setPresentations(productPresentations.data);
+      if (productPresentations.success) {
+        const presentations = productPresentations.data.filter(
+          (item) => item.presentation.id !== id,
+        );
+        setPresentations(presentations);
+      }
       if (states.success) setStates(states.data.results);
     };
 
@@ -375,30 +381,36 @@ const ProductDetailScreen: React.FC = () => {
               Disponibilidad en sucursales
             </PoppinsText>
             <View style={styles.quantitySelector}>
-              <View style={{ flex: 1, height: 300 }}>
-                {inventory && inventory.length > 0 ? (
-                  <BranchMap
-                    branches={inventory.map((inv) => ({
-                      id: inv.branch.id,
-                      name: inv.branch.name,
-                      address: inv.branch.address,
-                      latitude: inv.branch.latitude,
-                      longitude: inv.branch.longitude,
-                      stockQuantity: inv.stockQuantity,
-                    }))}
-                  />
-                ) : (
-                  <PoppinsText
-                    style={{
-                      textAlign: 'center',
-                      color: Colors.textLowContrast,
-                      marginVertical: 10,
-                    }}
-                  >
-                    No hay productos disponibles
-                  </PoppinsText>
-                )}
-              </View>
+              {showMap ? (
+                <View style={{ flex: 1, height: 300 }}>
+                  {inventory && inventory.length > 0 ? (
+                    <BranchMap
+                      branches={inventory.map((inv) => ({
+                        id: inv.branch.id,
+                        name: inv.branch.name,
+                        address: inv.branch.address,
+                        latitude: inv.branch.latitude,
+                        longitude: inv.branch.longitude,
+                        stockQuantity: inv.stockQuantity,
+                      }))}
+                    />
+                  ) : (
+                    <PoppinsText
+                      style={{
+                        textAlign: 'center',
+                        color: Colors.textLowContrast,
+                        marginVertical: 10,
+                      }}
+                    >
+                      No hay productos disponibles
+                    </PoppinsText>
+                  )}
+                </View>
+              ) : (
+                <View style={{ flex: 1 }}>
+                  <Button title="Ver Mapa" onPress={() => setShowMap(true)} />
+                </View>
+              )}
             </View>
             <PoppinsText style={styles.sectionTitle}>
               Selecciona el estado
