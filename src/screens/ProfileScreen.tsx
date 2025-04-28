@@ -14,7 +14,6 @@ import Button from '../components/Button';
 import { UserService } from '../services/user';
 import { UpdateUser, UserList } from '@pharmatech/sdk';
 import { PencilIcon, TrashIcon } from 'react-native-heroicons/outline';
-import { useRouter } from 'expo-router';
 import DatePickerInput from '../components/DatePickerInput';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -41,7 +40,6 @@ const ProfileScreen = () => {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -107,9 +105,10 @@ const ProfileScreen = () => {
 
       if (response.success) {
         setIsEditable(false);
-        alert('Perfil actualizado exitosamente');
+        setShowSuccessAlert(true);
       } else {
-        alert('Error al actualizar el perfil');
+        setShowErrorAlert(true);
+        setErrorMessage('Error al actualizar el perfil');
       }
       setLoading(false);
     } catch (error) {
@@ -149,10 +148,9 @@ const ProfileScreen = () => {
           <Alert
             type="success"
             title="Éxito"
-            message="Cuenta creada correctamente"
+            message="Perfil actualizado exitosamente"
             onClose={() => {
               setShowSuccessAlert(false);
-              router.replace('/success');
             }}
             borderColor
           />
@@ -315,9 +313,9 @@ const styles = StyleSheet.create({
   alertContainer: {
     position: 'absolute',
     width: 326,
-    left: '50%',
+    left: '56%',
     marginLeft: -162,
-    top: 20,
+    top: 60,
     right: 0,
     zIndex: 1000,
   },
