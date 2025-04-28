@@ -354,23 +354,35 @@ const ProductDetailScreen: React.FC = () => {
               Selecciona la presentación
             </PoppinsText>
             <View style={styles.quantitySelector}>
-              <Dropdown
-                placeholder="Presentación..."
-                options={
-                  presentations?.map(
-                    (p: ProductPresentationResponse) =>
-                      product?.product.name +
-                      ' ' +
-                      p.presentation.name +
-                      ' ' +
-                      p.presentation.quantity +
-                      ' ' +
-                      p.presentation.measurementUnit,
-                  ) || []
-                }
-                borderColor={Colors.gray_100}
-                onSelect={(e) => changePresentation(e)}
-              />
+              {product ? (
+                <Dropdown
+                  placeholder={
+                    product?.product.name +
+                    ' ' +
+                    product?.presentation.name +
+                    ' ' +
+                    product?.presentation.quantity +
+                    ' ' +
+                    product?.presentation.measurementUnit
+                  }
+                  options={
+                    presentations?.map(
+                      (p: ProductPresentationResponse) =>
+                        product?.product.name +
+                        ' ' +
+                        p.presentation.name +
+                        ' ' +
+                        p.presentation.quantity +
+                        ' ' +
+                        p.presentation.measurementUnit,
+                    ) || []
+                  }
+                  borderColor={Colors.gray_100}
+                  onSelect={(e) => changePresentation(e)}
+                />
+              ) : (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              )}
             </View>
             <PoppinsText
               style={[
