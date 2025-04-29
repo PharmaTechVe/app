@@ -14,6 +14,7 @@ import Alert from '../components/Alerts';
 import { UserService } from '../services/user';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { OrderDetailedResponse } from '@pharmatech/sdk';
+import { truncateString } from '../utils/commons';
 
 const OrderDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -66,7 +67,6 @@ const OrderDetailScreen = () => {
             message="Pedido agregado al carrito"
             onClose={() => {
               setShowSuccessAlert(false);
-              router.replace('/cart');
             }}
             borderColor
           />
@@ -91,7 +91,9 @@ const OrderDetailScreen = () => {
         >
           <View>
             <PoppinsText>Número de pedido:</PoppinsText>
-            <PoppinsText>{order?.id}</PoppinsText>
+            <PoppinsText>
+              {order ? truncateString(order?.id, 8) : ''}
+            </PoppinsText>
           </View>
           <Button
             title="Re ordenar"
