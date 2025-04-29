@@ -69,6 +69,7 @@ export default function RootLayout() {
         <Stack.Screen name="splash" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="products" options={{ headerShown: false }} />
+        <Stack.Screen name="search" options={{ headerShown: false }} />
         <Stack.Screen
           name="profile"
           options={{ headerTitle: '', headerTransparent: true }}
@@ -137,6 +138,21 @@ export default function RootLayout() {
         <Stack.Screen
           name="change-password"
           options={{ headerTitle: '', headerTransparent: true }}
+        />
+        <Stack.Screen name="(delivery-tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="deliveryDetail" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="deliveryHistoryDetail"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="checkout"
+          options={{
+            headerTitle: '',
+            headerTransparent: true,
+            headerLeft: undefined,
+            headerShown: false,
+          }}
         />
       </Stack>
     </Provider>

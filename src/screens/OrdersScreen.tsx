@@ -5,8 +5,9 @@ import PoppinsText from '../components/PoppinsText';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
 import Button from '../components/Button';
+import { OrderResponse } from '@pharmatech/sdk'; // Usar el tipo del SDK
 import { UserService } from '../services/user';
-import { OrderResponse } from '../types/api';
+import { truncateString } from '../utils/commons';
 
 const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
@@ -67,9 +68,6 @@ const OrdersScreen = () => {
           Mis Pedidos
         </PoppinsText>
       </View>
-      <TouchableOpacity onPress={() => router.push(`order`)}>
-        <PoppinsText>Ver detalle de orden</PoppinsText>
-      </TouchableOpacity>
       <View style={styles.orderInfo}>
         {ordersList &&
           ordersList.length > 0 &&
@@ -95,12 +93,15 @@ const OrdersScreen = () => {
                   }}
                 >
                   <View>
-                    <PoppinsText>{order.id}</PoppinsText>
+                    <PoppinsText>
+                      {order ? truncateString(order?.id, 8) : ''}
+                    </PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
-                      {order.createdAt}
+                      {new Date(order.createdAt).toLocaleDateString()}{' '}
+                      {/* Formatear fecha */}
                     </PoppinsText>
                   </View>
-                  <PoppinsText>${order.totalPrice}</PoppinsText>
+                  <PoppinsText>${order.totalPrice.toFixed(2)}</PoppinsText>
                 </View>
                 <View
                   style={{
@@ -123,26 +124,18 @@ const OrdersScreen = () => {
                   >
                     {order.status}
                   </PoppinsText>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
+                  <TouchableOpacity
+                    onPress={() => router.push(`order/${order.id}`)}
                   >
-                    <TouchableOpacity
-                      onPress={() => router.push(`order/${order.id}`)}
-                    >
-                      <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
-                        Ver detalles
-                      </PoppinsText>
-                    </TouchableOpacity>
-                    <Button
-                      title="Re ordenar"
-                      size="small"
-                      style={{ marginLeft: 20, paddingVertical: 0 }}
-                    />
-                  </View>
+                    <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
+                      Ver detalles
+                    </PoppinsText>
+                  </TouchableOpacity>
+                  <Button
+                    title="Re ordenar"
+                    size="small"
+                    style={{ paddingVertical: 0 }}
+                  />
                 </View>
               </View>
             </View>
@@ -172,49 +165,8 @@ const styles = StyleSheet.create({
     marginTop: 30,
     marginBottom: 15,
   },
-  orderImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-  },
-  editButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: Colors.primary,
-  },
   orderInfo: {
     marginVertical: 5,
-  },
-  fieldContainer: {
-    marginBottom: 15,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  fieldValue: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 10,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 15,
-  },
-  bottomEditButton: {
-    alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-    width: '50%',
-    alignItems: 'center',
   },
 });
 

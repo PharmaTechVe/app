@@ -136,3 +136,96 @@ type Inventory = BaseModel & {
   branch: BranchResponse;
   productPresentation: ProductPresentation;
 };
+
+export type Branch = {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+};
+
+export type CreateBranchRequest = Branch & {
+  cityId: string;
+};
+
+export type BranchResponse = Branch &
+  BaseModel & {
+    city: CityResponse;
+  };
+
+export type Coupon = {
+  code: string;
+  discount: number;
+  minPurchase: number;
+  maxUses: number;
+  expirationDate: Date;
+};
+
+export type CouponResponse = Coupon & BaseModel;
+
+export enum OrderType {
+  PICKUP = 'pickup',
+  DELIVERY = 'delivery',
+}
+
+export enum OrderStatus {
+  REQUESTED = 'requested',
+  APPROVED = 'approved',
+  READY = 'ready',
+  COMPLETED = 'completed',
+  CANCELED = 'canceled',
+}
+
+export interface CreateOrderDetail {
+  productPresentationId: string;
+  quantity: number;
+}
+
+export interface CreateOrder {
+  type: OrderType;
+  branchId?: string;
+  userAddressId?: string;
+  products: {
+    productPresentationId: string;
+    quantity: number;
+  }[];
+}
+
+export enum PaymentMethod {
+  CARD = 'card',
+  MOBILE_PAYMENT = 'mobile_payment',
+  BANK_TRANSFER = 'bank_transfer',
+  CASH = 'cash',
+}
+
+export interface PaymentConfirmation {
+  bank: string;
+  reference: string;
+  documentId: string;
+  phoneNumber: string;
+}
+
+export interface PaymentConfirmationResponse extends BaseModel {
+  bank: string;
+  reference: string;
+  documentId: string;
+  phoneNumber: string;
+}
+
+export interface PaymentInformation {
+  bank: string;
+  accountType: string;
+  account: string;
+  documentId: string;
+  phoneNumber: string;
+  paymentMethod: PaymentMethod;
+}
+
+export interface PaymentInfoResponse extends BaseModel {
+  bank: string;
+  accountType: string;
+  account: string;
+  documentId: string;
+  phoneNumber: string;
+  paymentMethod: PaymentMethod;
+}
