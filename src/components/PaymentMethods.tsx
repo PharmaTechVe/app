@@ -4,6 +4,8 @@ import RadioButton from './RadioButton';
 import PoppinsText from './PoppinsText';
 import { Colors } from '../styles/theme';
 import { PaymentMethod } from '@pharmatech/sdk';
+import { useDispatch } from 'react-redux';
+import { setPaymentInfoValid } from '../redux/slices/checkoutSlice';
 
 type PaymentOptionValue =
   | 'punto_de_venta'
@@ -43,11 +45,22 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
   selectedPayment,
   setSelectedPayment,
 }) => {
+  const dispatch = useDispatch();
+
+  // Filtramos según pickup vs delivery
   const filtered = ALL_METHODS.filter((m) => {
     if (selectedOption === 'pickup' && m === PaymentMethod.CASH) return false;
     if (selectedOption === 'delivery' && m === PaymentMethod.CARD) return false;
     return true;
   });
+
+  // Cuando el usuario elige un método:
+  const onPaymentChange = (value: string) => {
+    const v = value as PaymentOptionValue;
+    setSelectedPayment(v);
+    // Marcamos el formulario de pago como válido para avanzar
+    dispatch(setPaymentInfoValid(true));
+  };
 
   return (
     <View style={styles.container}>
@@ -64,9 +77,7 @@ const PaymentMethods: React.FC<PaymentMethodsProps> = ({
               label={labelMap[m]}
               value={uiValue}
               selectedValue={selectedPayment ?? ''}
-              onValueChange={(value) =>
-                setSelectedPayment(value as PaymentOptionValue)
-              }
+              onValueChange={onPaymentChange}
             />
           </View>
         );

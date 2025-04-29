@@ -176,7 +176,7 @@ const CheckoutScreen = () => {
       dispatch(setStep(step + 1));
     } else if (step === stepsLabels.length - 1) {
       // Ensure payment form is valid before creating the order
-      if (!paymentInfoValid) {
+      if (!isSimplifiedSteps && !paymentInfoValid) {
         setPopupMessages(['Completar la información de pago correctamente.']);
         setPopupVisible(true);
         return;

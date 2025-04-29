@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.2.3",
-    "@pharmatech/sdk": "^0.4.9",
+    "@pharmatech/sdk": "^0.4.11",
     "@reduxjs/toolkit": "^2.6.1",
     "cloudinary-react-native": "^1.0.1",
     "date-fns": "^4.1.0",

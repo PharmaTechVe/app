@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import PoppinsText from './PoppinsText';
 import Input from './Input';
 import { FontSizes, Colors } from '../styles/theme';
 import Dropdown from './Dropdown';
 
-const PaymentInfoForm = ({
-  paymentMethod,
-  total,
-  onValidationChange,
-  onBankChange,
-  onReferenceChange,
-  onDocumentNumberChange,
-  onPhoneChange,
-}: {
+interface Props {
   paymentMethod:
     | 'punto_de_venta'
     | 'efectivo'
@@ -26,6 +18,16 @@ const PaymentInfoForm = ({
   onReferenceChange: (value: string) => void;
   onDocumentNumberChange: (value: string) => void;
   onPhoneChange: (value: string) => void;
+}
+
+const PaymentInfoForm: React.FC<Props> = ({
+  paymentMethod,
+  total,
+  onValidationChange,
+  onBankChange,
+  onReferenceChange,
+  onDocumentNumberChange,
+  onPhoneChange,
 }) => {
   const [bank, setBank] = useState('');
   const [hasBankTouched, setHasBankTouched] = useState(false);
@@ -33,22 +35,42 @@ const PaymentInfoForm = ({
   const [documentNumber, setDocumentNumber] = useState('');
   const [phone, setPhone] = useState('');
 
+  // Memoized handlers
+  const handleBankSelect = useCallback((val: string) => {
+    setBank(val);
+    setHasBankTouched(true);
+  }, []);
+
+  const handleReferenceChange = useCallback((val: string) => {
+    setReference(val.replace(/\D/g, ''));
+  }, []);
+
+  const handleDocumentNumberChange = useCallback((val: string) => {
+    setDocumentNumber(val.replace(/\D/g, '').slice(0, 8));
+  }, []);
+
+  const handlePhoneChange = useCallback((val: string) => {
+    setPhone(val.replace(/\D/g, '').slice(0, 11));
+  }, []);
+
+  // Sync up with parent callbacks
   useEffect(() => {
     onBankChange(bank);
-  }, [bank]);
+  }, [bank, onBankChange]);
 
   useEffect(() => {
     onReferenceChange(reference);
-  }, [reference]);
+  }, [reference, onReferenceChange]);
 
   useEffect(() => {
     onDocumentNumberChange(documentNumber);
-  }, [documentNumber]);
+  }, [documentNumber, onDocumentNumberChange]);
 
   useEffect(() => {
     onPhoneChange(phone);
-  }, [phone]);
+  }, [phone, onPhoneChange]);
 
+  // Validation effect
   useEffect(() => {
     const isValid =
       paymentMethod !== null &&
@@ -61,21 +83,33 @@ const PaymentInfoForm = ({
         : true;
 
     onValidationChange(isValid);
-  }, [bank, reference, documentNumber, phone, paymentMethod]);
+  }, [
+    bank,
+    reference,
+    documentNumber,
+    phone,
+    paymentMethod,
+    onValidationChange,
+  ]);
 
   if (!paymentMethod) {
     return null;
   }
 
-  const staticInputProps = {
-    isEditable: false,
-    backgroundColor: Colors.gray_100,
-    border: 'default' as const,
-  };
+  // Memoized props to avoid recreating objects
+  const staticInputProps = useMemo(
+    () => ({
+      isEditable: false,
+      backgroundColor: Colors.gray_100,
+      border: 'default' as const,
+    }),
+    [],
+  );
 
-  const editableInputProps = {
-    backgroundColor: Colors.iconWhite,
-  };
+  const editableInputProps = useMemo(
+    () => ({ backgroundColor: Colors.iconWhite }),
+    [],
+  );
 
   return (
     <View style={styles.container}>
@@ -132,10 +166,7 @@ const PaymentInfoForm = ({
             label="Banco"
             placeholder="Seleccione el Banco Emisor"
             options={['Banesco', 'Provincial', 'Mercantil']}
-            onSelect={(val) => {
-              setBank(val);
-              setHasBankTouched(true);
-            }}
+            onSelect={handleBankSelect}
             border="default"
             borderColor={
               hasBankTouched && bank === ''
@@ -159,7 +190,7 @@ const PaymentInfoForm = ({
             label="Referencia"
             value={reference}
             placeholder="Ingrese la referencia"
-            getValue={(val) => setReference(val.replace(/\D/g, ''))}
+            getValue={handleReferenceChange}
             fieldType="number"
             errorText="Debe ser un número válido"
             validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
@@ -171,9 +202,7 @@ const PaymentInfoForm = ({
             label="Número de documento"
             placeholder="Ingrese el número de documento"
             value={documentNumber}
-            getValue={(val) =>
-              setDocumentNumber(val.replace(/\D/g, '').slice(0, 8))
-            }
+            getValue={handleDocumentNumberChange}
             fieldType="number"
             errorText="El campo no debe estar vacío"
             validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
@@ -185,7 +214,7 @@ const PaymentInfoForm = ({
             label="Teléfono"
             placeholder="Ingrese el teléfono"
             value={phone}
-            getValue={(val) => setPhone(val.replace(/\D/g, '').slice(0, 11))}
+            getValue={handlePhoneChange}
             fieldType="number"
             errorText="Debe tener exactamente 11 dígitos"
             validation={(val) => /^\d{11}$/.test(val)}
@@ -230,4 +259,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PaymentInfoForm;
+export default React.memo(PaymentInfoForm);
