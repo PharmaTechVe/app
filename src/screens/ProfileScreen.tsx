@@ -97,8 +97,11 @@ const ProfileScreen = () => {
 
       if (image !== null) {
         const imageResponse = await ImageService.uploadImage(image);
-        if (imageResponse)
+        if (imageResponse) {
           updatedProfile.profilePicture = imageResponse.secure_url;
+          setErrorMessage(imageResponse.json());
+          setShowErrorAlert(true);
+        }
       }
 
       const response = await UserService.updateProfile(updatedProfile);
