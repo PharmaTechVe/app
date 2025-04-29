@@ -34,6 +34,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
 import { useFocusEffect } from '@react-navigation/native';
 import Popup from '../components/Popup'; // Import the Popup component
+import EmailVerificationModal from './tab/EmailVerificationModal';
 import { RootState, AppDispatch } from '../redux/store';
 import {
   setStep,
@@ -72,13 +73,19 @@ const CheckoutScreen = () => {
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupMessages, setPopupMessages] = useState<string[]>([]);
+  const [validationPopupVisible, setValidationPopupVisible] = useState(false);
+  const [emailVerificationModalVisible, setEmailVerificationModalVisible] =
+    useState(false); // Track modal visibility
 
   useEffect(() => {
     const fetchUserName = async () => {
       const response = await UserService.getProfile();
       if (response.success && response.data) {
-        const { firstName } = response.data; // Solo obtenemos el primer nombre
+        const { firstName, isValidated } = response.data;
         setUserName(firstName);
+        if (!isValidated) {
+          setValidationPopupVisible(true);
+        }
       } else if (!response.success) {
         console.error(
           'Error al obtener el nombre del usuario:',
@@ -360,17 +367,27 @@ const CheckoutScreen = () => {
   return (
     <>
       <Popup
-        visible={popupVisible}
+        visible={validationPopupVisible}
         type="center"
-        headerText="Datos Incompletos"
-        bodyText={popupMessages
-          .map((msg, index) => `${index + 1}. ${msg}`)
-          .join('\n')}
+        headerText="Validación Requerida"
+        bodyText="Debe validar su usuario para continuar con el proceso de compra."
         primaryButton={{
-          text: 'Aceptar',
-          onPress: () => setPopupVisible(false),
+          text: 'Validar Usuario',
+          onPress: () => {
+            setValidationPopupVisible(false);
+            setEmailVerificationModalVisible(true);
+          },
         }}
-        onClose={() => setPopupVisible(false)}
+        onClose={() => {
+          setValidationPopupVisible(false);
+          router.replace({
+            pathname: '/(tabs)',
+          });
+        }}
+      />
+      <EmailVerificationModal
+        visible={emailVerificationModalVisible}
+        onClose={() => setEmailVerificationModalVisible(false)} // Close the modal
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
@@ -553,6 +570,19 @@ const CheckoutScreen = () => {
           />
         </View>
       </ScrollView>
+      <Popup
+        visible={popupVisible}
+        type="center"
+        headerText="Datos Incompletos"
+        bodyText={popupMessages
+          .map((msg, index) => `${index + 1}. ${msg}`)
+          .join('\n')}
+        primaryButton={{
+          text: 'Aceptar',
+          onPress: () => setPopupVisible(false), // Close popup
+        }}
+        onClose={() => setPopupVisible(false)}
+      />
     </>
   );
 };
