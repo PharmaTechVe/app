@@ -38,6 +38,7 @@ import {
   ProductPresentationResponse,
 } from '@pharmatech/sdk';
 import Button from '../components/Button';
+import { BranchService } from '../services/branches';
 
 const ProductDetailScreen: React.FC = () => {
   const { id, productId } = useLocalSearchParams<{
@@ -49,6 +50,7 @@ const ProductDetailScreen: React.FC = () => {
   const [showMap, setShowMap] = useState(false);
   const [inventory, setInventory] = useState<Inventory[]>([]);
   const [states, setStates] = useState<State[]>([]);
+  const [selectedState, setSelectedState] = useState('');
   const [product, setProduct] = useState<ProductPresentationDetailResponse>();
   const [images, setImages] = useState<ProductImage[]>();
   const [presentations, setPresentations] =
@@ -116,6 +118,14 @@ const ProductDetailScreen: React.FC = () => {
     }
   };
 
+  const changeState = async (name: string) => {
+    if (!states) return;
+    const state = states.find((p) => p.name === name);
+    if (state) {
+      setSelectedState(state.id);
+    }
+  };
+
   const changePresentation = async (description: string) => {
     if (!presentations) return;
     const presentation = presentations.find(
@@ -167,43 +177,52 @@ const ProductDetailScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchInventory = async () => {
-      if (presentations) {
-        for (const p of presentations) {
-          const inventoryData = await InventoryService.getPresentationInventory(
-            1,
-            20,
-            p.id || '',
-          );
-          if (inventoryData.success) {
-            const newInventory = inventoryData.data.results.map((inv) => ({
-              id: inv.id,
-              branch: {
-                id: inv.branch.id,
-                name: inv.branch.name,
-                address: inv.branch.address,
-                latitude: inv.branch.latitude,
-                longitude: inv.branch.longitude,
-              },
-              stockQuantity: inv.stockQuantity, // Mover al nivel superior
-            }));
+      if (!selectedState) return;
+      if (product) {
+        const inventoryData = await InventoryService.getPresentationInventory(
+          1,
+          20,
+          product.id || '',
+        );
+        if (inventoryData.success) {
+          const newInventory = inventoryData.data.results.map((inv) => ({
+            id: inv.id,
+            branch: {
+              id: inv.branch.id,
+              name: inv.branch.name,
+              address: inv.branch.address,
+              latitude: inv.branch.latitude,
+              longitude: inv.branch.longitude,
+            },
+            stockQuantity: inv.stockQuantity,
+          }));
 
-            setInventory((prevInventory) => {
-              const updatedInventory = [...prevInventory];
-              newInventory.forEach((newItem) => {
-                if (!prevInventory.some((item) => item.id === newItem.id)) {
-                  updatedInventory.push(newItem as Inventory);
-                }
-              });
-              return updatedInventory;
+          const stateBranches = await BranchService.findAll({
+            page: 1,
+            limit: 20,
+            stateId: selectedState,
+          });
+
+          const commonBranches = newInventory.filter((inv) =>
+            stateBranches.results.find((branch) => branch.id === inv.branch.id),
+          );
+
+          setInventory((prevInventory) => {
+            const updatedInventory: Inventory[] = [];
+            commonBranches.forEach((newItem) => {
+              if (!prevInventory.some((item) => item.id === newItem.id)) {
+                updatedInventory.push(newItem as Inventory);
+              }
             });
-          } else {
-            console.error(inventoryData.error);
-          }
+            return updatedInventory;
+          });
+        } else {
+          console.error(inventoryData.error);
         }
       }
     };
     fetchInventory();
-  }, [product]);
+  }, [selectedState]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -432,7 +451,7 @@ const ProductDetailScreen: React.FC = () => {
                 placeholder="Estado..."
                 options={states.map((state) => state.name)}
                 borderColor={Colors.gray_100}
-                onSelect={() => console.log('p')}
+                onSelect={(e) => changeState(e)}
               />
             </View>
             <View style={styles.availableContainer}>
