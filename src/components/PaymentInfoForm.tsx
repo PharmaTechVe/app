@@ -4,6 +4,7 @@ import PoppinsText from './PoppinsText';
 import Input from './Input';
 import { FontSizes, Colors } from '../styles/theme';
 import Dropdown from './Dropdown';
+import { PharmaTech } from '@pharmatech/sdk';
 
 interface Props {
   paymentMethod:
@@ -34,6 +35,21 @@ const PaymentInfoForm: React.FC<Props> = ({
   const [reference, setReference] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const [phone, setPhone] = useState('');
+  const [bankOptions, setBankOptions] = useState<string[]>([]);
+
+  // Fetch bank options from SDK
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const sdk = PharmaTech.getInstance();
+        const banks = sdk.bank.findAll();
+        setBankOptions(banks);
+      } catch (error) {
+        console.error('Error fetching banks:', error);
+      }
+    };
+    fetchBanks();
+  }, []);
 
   // Memoized handlers
   const handleBankSelect = useCallback((val: string) => {
@@ -165,7 +181,7 @@ const PaymentInfoForm: React.FC<Props> = ({
           <Dropdown
             label="Banco"
             placeholder="Seleccione el Banco Emisor"
-            options={['Banesco', 'Provincial', 'Mercantil']}
+            options={bankOptions}
             onSelect={handleBankSelect}
             border="default"
             borderColor={
