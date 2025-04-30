@@ -47,7 +47,7 @@ export function NotificationsProvider(props: { children: ReactNode }) {
         setNotifications(
           rawArray.map((n: NotificationResponse) => ({
             ...n,
-            isRead: Boolean(n.isRead), // Explicitly use the type from NotificationResponse
+            isRead: Boolean(n.isRead),
           })),
         );
       } else {
@@ -58,8 +58,18 @@ export function NotificationsProvider(props: { children: ReactNode }) {
     }
   }, []);
 
+  // carga inicial
   useEffect(() => {
     void refreshNotifications();
+  }, [refreshNotifications]);
+
+  // polling automático cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void refreshNotifications();
+    }, 10_000); // ajusta intervalo según necesidad
+
+    return () => clearInterval(interval);
   }, [refreshNotifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -82,7 +92,7 @@ export function NotificationsProvider(props: { children: ReactNode }) {
 
   const markAsUnread = useCallback(async (notificationId: string) => {
     try {
-      // Si la API soporta 'unread', aquí iría la llamada a NotificationService.markAsUnread(...)
+      // Si la API soporta 'unread', aquí iría NotificationService.markAsUnread(...)
       setNotifications((prev) =>
         prev.map((n) =>
           n.id === notificationId ? { ...n, isRead: false } : n,
