@@ -7,7 +7,6 @@ import {
   Dimensions,
   FlatList,
   ListRenderItem,
-  ScrollView,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
@@ -23,10 +22,10 @@ import {
   ProductPresentation,
 } from '@pharmatech/sdk';
 import Checkbox from '../components/Checkbox';
-import Steps from '../components/Steps';
-import Button from '../components/Button';
+import { ChevronLeftIcon } from 'react-native-heroicons/solid';
 import ProductCard from '../components/Card';
 import { CategoryService } from '../services/category';
+import { useNavigation } from '@react-navigation/native';
 
 export default function SearchProductScreen() {
   const { query } = useLocalSearchParams<{ query: string }>();
@@ -36,6 +35,7 @@ export default function SearchProductScreen() {
   const [brands, setBrands] = useState<ManufacturerResponse[]>();
   const [categories, setCategories] = useState<CategoryResponse[]>();
   const [presentations, setPresentations] = useState<PresentationResponse[]>();
+  const navigation = useNavigation();
 
   const [selectedPresentations, setSelectedPresentations] = useState<string[]>(
     [],
@@ -77,14 +77,21 @@ export default function SearchProductScreen() {
   };
 
   const submitFilters = async () => {
-    const searchData = await ProductService.getProducts(1, 20, {
-      q: query,
-      manufacturerId: selectedBrands,
-      categoryId: selectedCategories,
-      presentationId: selectedPresentations,
-    });
+    try {
+      const searchData = await ProductService.getProducts(1, 20, {
+        q: query,
+        manufacturerId: selectedBrands,
+        categoryId: selectedCategories,
+        presentationId: selectedPresentations,
+      });
 
-    if (searchData.success) setSearch(searchData.data.results);
+      if (searchData.success) {
+        // Combinar los resultados actuales con los nuevos resultados
+        setSearch((prev) => [...(prev || []), ...searchData.data.results]);
+      }
+    } catch (error) {
+      console.error('Error al aplicar filtros:', error);
+    }
   };
 
   useEffect(() => {
@@ -128,9 +135,41 @@ export default function SearchProductScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bgColor }}>
       <TopBar />
-      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          paddingHorizontal: 10,
+          marginBottom: -4,
+          flexDirection: 'row',
+          alignSelf: 'flex-start',
+        }}
+      >
+        <ChevronLeftIcon
+          width={20}
+          height={20}
+          color={Colors.primary}
+          style={{ marginRight: 2, marginLeft: 6 }}
+        />
+        <PoppinsText
+          weight="medium"
+          style={{
+            fontSize: FontSizes.b1.size,
+            lineHeight: FontSizes.b1.lineHeight,
+            color: Colors.primary,
+          }}
+        >
+          Volver
+        </PoppinsText>
+      </TouchableOpacity>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          marginBottom: 10,
+        }}
+      >
         <TouchableOpacity
           style={{ flexDirection: 'row', justifyContent: 'center' }}
           onPress={() => setIsVisible(true)}
@@ -141,117 +180,80 @@ export default function SearchProductScreen() {
           <AdjustmentsHorizontalIcon size={20} color={Colors.iconMainDefault} />
         </TouchableOpacity>
       </View>
-      <View style={{ marginHorizontal: 20 }}>
-        <View style={{ marginVertical: 5 }}>
-          <PoppinsText>Resultados de la búsqueda: {query}</PoppinsText>
-          <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
-            {search?.length} resultados
-          </PoppinsText>
-        </View>
+      <View style={{ marginHorizontal: 20, marginBottom: 10 }}>
+        <PoppinsText>Resultados de la búsqueda: {query}</PoppinsText>
+        <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
+          {search?.length} resultados
+        </PoppinsText>
       </View>
-      <SafeAreaView style={styles.container}>
-        <FlatList
-          data={search}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={true}
-          alwaysBounceVertical={true}
-        />
-      </SafeAreaView>
-      <FilterOptions visible={isVisible} onClose={() => setIsVisible(false)}>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            paddingVertical: 10,
-            borderBottomWidth: 1,
-            borderColor: Colors.gray_100,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              marginHorizontal: 80,
-              paddingStart: 60,
-            }}
-          >
-            <PoppinsText style={{ color: Colors.primary, paddingEnd: 5 }}>
-              Filtros
-            </PoppinsText>
-            <AdjustmentsHorizontalIcon
-              size={20}
-              color={Colors.iconMainDefault}
-            />
-          </View>
-          <TouchableOpacity onPress={clearFilters}>
-            <PoppinsText>Limpiar</PoppinsText>
-          </TouchableOpacity>
-        </View>
-        <ScrollView>
-          <View style={{ paddingVertical: 10 }}>
+      <FlatList
+        data={search}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        numColumns={2}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+        showsVerticalScrollIndicator={true}
+        alwaysBounceVertical={true}
+      />
+      <FilterOptions
+        visible={isVisible}
+        onClose={() => setIsVisible(false)}
+        onClearFilters={clearFilters}
+        onApplyFilters={submitFilters}
+      >
+        {/* Filtros */}
+        <View style={{ paddingVertical: 10 }}>
+          <View>
+            <PoppinsText style={styles.text}>Categoría</PoppinsText>
             <View>
-              <PoppinsText weight="medium">Categoría</PoppinsText>
-              <View>
-                {categories?.map((b, index) => (
-                  <Checkbox
-                    key={index}
-                    checked={selectedCategories.includes(b.id)}
-                    label={b.name}
-                    value={b.id}
-                    onChange={(e, val) => handleCategoryToggle(e, val)}
-                    style={{ margin: 3 }}
-                    size={20}
-                  />
-                ))}
-              </View>
-            </View>
-            <View style={{ marginTop: 20 }}>
-              <PoppinsText weight="medium">Marca o Laboratorio</PoppinsText>
-              <View>
-                {brands?.map((b, index) => (
-                  <Checkbox
-                    key={index}
-                    checked={selectedBrands.includes(b.id)}
-                    label={b.name}
-                    value={b.id}
-                    onChange={(e, val) => handleBrandToggle(e, val)}
-                    style={{ margin: 3 }}
-                    size={20}
-                  />
-                ))}
-              </View>
-            </View>
-            <View style={{ marginTop: 20 }}>
-              <PoppinsText weight="medium">Presentación</PoppinsText>
-              <View>
-                {presentations?.map((b, index) => (
-                  <Checkbox
-                    key={index}
-                    checked={selectedPresentations.includes(b.id)}
-                    label={b.name + ' ' + b.quantity + ' ' + b.measurementUnit}
-                    value={b.id}
-                    onChange={(e, val) => handlePresentationToggle(e, val)}
-                    style={{ margin: 3 }}
-                    size={20}
-                  />
-                ))}
-              </View>
+              {categories?.map((b, index) => (
+                <Checkbox
+                  key={index}
+                  checked={selectedCategories.includes(b.id)}
+                  label={b.name}
+                  value={b.id}
+                  onChange={(e, val) => handleCategoryToggle(e, val)}
+                  style={{ margin: 3 }}
+                  size={20}
+                />
+              ))}
             </View>
           </View>
           <View style={{ marginTop: 20 }}>
-            <PoppinsText weight="medium">Precio</PoppinsText>
-            <Steps
-              totalSteps={2}
-              currentStep={2}
-              labels={['Bs. 40.00', 'Bs. 1000.00']}
-            />
-            <Button title="Filtrar" onPress={submitFilters} />
+            <PoppinsText style={styles.text}>Marca o Laboratorio</PoppinsText>
+            <View>
+              {brands?.map((b, index) => (
+                <Checkbox
+                  key={index}
+                  checked={selectedBrands.includes(b.id)}
+                  label={b.name}
+                  value={b.id}
+                  onChange={(e, val) => handleBrandToggle(e, val)}
+                  style={{ margin: 3 }}
+                  size={20}
+                />
+              ))}
+            </View>
           </View>
-        </ScrollView>
+          <View style={{ marginTop: 20 }}>
+            <PoppinsText style={styles.text}>Presentación</PoppinsText>
+            <View>
+              {presentations?.map((b, index) => (
+                <Checkbox
+                  key={index}
+                  checked={selectedPresentations.includes(b.id)}
+                  label={b.name + ' ' + b.quantity + ' ' + b.measurementUnit}
+                  value={b.id}
+                  onChange={(e, val) => handlePresentationToggle(e, val)}
+                  style={{ margin: 3 }}
+                  size={20}
+                />
+              ))}
+            </View>
+          </View>
+        </View>
       </FilterOptions>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -275,6 +277,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginVertical: 8,
+  },
+  text: {
+    fontSize: FontSizes.s1.size,
+    lineHeight: FontSizes.s1.lineHeight,
+    marginBottom: 8,
   },
   imageIndicator: {
     width: 8,

@@ -30,7 +30,7 @@ import Carousel from '../components/Carousel';
 import { StateService } from '../services/state';
 import { Inventory, State } from '../types/api';
 import { InventoryService } from '../services/inventory';
-import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
+import { useNavigation } from '@react-navigation/native';
 import BranchMap from '../components/BranchMap';
 import {
   ProductImage,
@@ -259,7 +259,7 @@ const ProductDetailScreen: React.FC = () => {
           paddingHorizontal: 10,
           marginBottom: -4,
           flexDirection: 'row',
-          alignItems: 'center',
+          alignSelf: 'flex-start',
         }}
       >
         <ChevronLeftIcon

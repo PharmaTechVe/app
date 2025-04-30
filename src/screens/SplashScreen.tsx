@@ -27,7 +27,7 @@ export default function SplashScreen() {
             }
           } else {
             console.error(
-              'Error al obtener el perfil del usuario:',
+              'Error al obtener el perfil del usuario (se lleva al login):',
               profileResponse.error,
             );
             router.replace('/login'); // Redirigir al login en caso de error

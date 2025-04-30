@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from 'react-native';
 import {
   ArrowRightIcon,
@@ -37,6 +38,12 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [search, setSearch] = useState('');
   const [result, setResult] = useState<ProductPresentation[]>();
 
+  const handleSearch = () => {
+    if (search.trim()) {
+      router.push(`/search/${encodeURIComponent(search)}`); // Redirige a la misma ruta para ambas acciones
+    }
+  };
+
   useEffect(() => {
     const fetchQuery = async () => {
       const resultData = await ProductService.getProducts(1, 20, { q: search });
@@ -61,15 +68,21 @@ const SearchInput: React.FC<SearchInputProps> = ({
           style={styles.input}
           placeholder={placeholder}
           placeholderTextColor={Colors.textLowContrast}
-          value={search}
-          onChangeText={(value) => setSearch(value)}
-          returnKeyType="search"
-          onSubmitEditing={onSearchPress}
+          value={value} // Usar el valor que se pasa como prop
+          onChangeText={(text) => {
+            setSearch(text); // Actualizar el estado local
+            onChangeText(text); // Notificar al componente padre
+          }}
+          returnKeyType="search" // Cambiar el botón del teclado a "Buscar"
+          onSubmitEditing={handleSearch}
         />
 
         {showClearButton && value.length > 0 && (
           <TouchableOpacity
-            onPress={() => onChangeText('')}
+            onPress={() => {
+              setSearch('');
+              onChangeText('');
+            }}
             style={styles.clearButton}
             testID="clear-button"
             accessibilityLabel="Limpiar búsqueda"
@@ -119,57 +132,76 @@ const SearchInput: React.FC<SearchInputProps> = ({
                 Productos que coinciden con &quot;{search}&quot;
               </PoppinsText>
             </View>
-            <ScrollView style={{ height: 400 }}>
+            <ScrollView
+              style={{
+                maxHeight: Math.min((result?.length || 0) * 80, 232),
+              }}
+            >
               {result?.map((p, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={{ flexDirection: 'row' }}
+                  style={{
+                    flexDirection: 'row', // Alinea la imagen y el contenido horizontalmente
+                    padding: 8,
+                    borderBottomWidth: 1,
+                    borderColor: Colors.gray_100,
+                  }}
                   onPress={() =>
                     router.push(
                       `/products/${p.product.id}/presentation/${p.presentation.id}`,
                     )
                   }
                 >
-                  <View style={{ width: 130 }}>
+                  {/* Imagen del producto */}
+                  <View style={{ marginRight: 8 }}>
+                    <Image
+                      source={{ uri: p.product.images[0]?.url }}
+                      style={{
+                        width: 60, // Ancho de la imagen
+                        height: 60, // Alto de la imagen
+                        borderRadius: 8, // Bordes redondeados
+                        backgroundColor: Colors.gray_100, // Color de fondo por si no hay imagen
+                      }}
+                      resizeMode="cover"
+                    />
+                  </View>
+
+                  {/* Contenido del producto */}
+                  <View style={{ flex: 1 }}>
                     <PoppinsText
                       style={{
-                        flex: 1,
-                        flexWrap: 'wrap',
                         fontSize: FontSizes.c1.size,
+                        fontWeight: 'bold',
+                        marginBottom: 4,
                       }}
                     >
-                      {p.product.categories[0].name}
+                      {p?.product?.name}
                     </PoppinsText>
-                  </View>
-                  <View>
-                    <View></View>
-                    <View style={{ padding: 1 }}>
-                      <PoppinsText
-                        style={{
-                          flex: 1,
-                          flexWrap: 'wrap',
-                          fontSize: FontSizes.c1.size,
-                        }}
-                      >
-                        {p?.product?.name +
-                          ' ' +
-                          p?.presentation?.quantity +
-                          ' ' +
-                          p?.presentation?.measurementUnit +
-                          ' ' +
-                          p?.product?.categories[0].name +
-                          '. ' +
-                          p?.product?.description +
-                          '\n' +
-                          'Bs.' +
-                          p?.price}
-                      </PoppinsText>
-                    </View>
+                    <PoppinsText
+                      style={{
+                        fontSize: FontSizes.c1.size,
+                        color: Colors.textLowContrast,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {p?.presentation?.quantity}{' '}
+                      {p?.presentation?.measurementUnit} -{' '}
+                      {p?.product?.categories[0]?.name}
+                    </PoppinsText>
+                    <PoppinsText
+                      style={{
+                        fontSize: FontSizes.c1.size,
+                        fontWeight: 'bold',
+                        color: Colors.primary,
+                      }}
+                    >
+                      Bs. {p?.price}
+                    </PoppinsText>
                   </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity onPress={() => router.push(`/search/${search}`)}>
+            <TouchableOpacity onPress={handleSearch}>
               <View
                 style={{
                   flexDirection: 'row',
