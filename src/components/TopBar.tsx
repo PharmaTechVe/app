@@ -161,6 +161,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 55,
   },
   iconButton: {
     paddingRight: 4,

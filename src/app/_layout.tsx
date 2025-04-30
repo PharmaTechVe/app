@@ -76,7 +76,11 @@ export default function RootLayout() {
         />
         <Stack.Screen
           name="notifications"
-          options={{ headerTitle: '', headerTransparent: true }}
+          options={{
+            headerShown: false,
+            headerTransparent: false,
+            headerTitle: '',
+          }}
         />
         <Stack.Screen
           name="menu"

@@ -1,45 +1,76 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Image } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Alert from '../components/Alerts';
-import { NotificationService } from '../services/notifications';
-import { NotificationResponse } from '@pharmatech/sdk';
+import TopBar from '../components/TopBar';
+import Return from '../components/Return';
+import { useNavigation } from '@react-navigation/native';
+import {
+  formatDistanceToNow,
+  parseISO,
+  differenceInDays,
+  format,
+} from 'date-fns';
+import { es } from 'date-fns/locale';
+import NotificationIcon from '../assets/images/favicon.png'; // Import the image
 
 export default function NotificationsScreen() {
-  const [notificationsList, setNotificationsList] = useState<
-    Partial<NotificationResponse>[] | undefined
-  >([
+  const [notificationsList, setNotificationsList] = useState([
     {
-      title: 'Notificacion',
-      message: 'Esta es una notificacion',
-      date: 'pepe',
+      title: 'Notificación 1',
+      message: 'Mensaje de la notificación 1',
+      date: '2025-04-29',
+    },
+    {
+      title: 'Notificación 2',
+      message: 'Mensaje de la notificación 2',
+      date: '2025-03-02',
+    },
+    {
+      title: 'Notificación 3',
+      message: 'Mensaje de la notificación 3',
+      date: '2023-10-03',
     },
   ]);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage] = useState('');
+  const navigation = useNavigation();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const notifications = await NotificationService.getNotifications();
-        if (notifications.success) {
-          if (notifications.data.results.length > 0) {
-            setNotificationsList(notifications.data.results);
-          }
-        }
-      } catch (error) {
-        console.log(error);
-        setErrorMessage('Ha ocurrido un error');
-        setShowErrorAlert(true);
-      }
-    };
-
-    fetchOrders();
+    setNotificationsList([
+      {
+        title: 'Notificación 1',
+        message: 'Mensaje de la notificación 1',
+        date: '2025-04-29',
+      },
+      {
+        title: 'Notificación 2',
+        message: 'Mensaje de la notificación 2',
+        date: '2025-03-02',
+      },
+      {
+        title: 'Notificación 3',
+        message: 'Mensaje de la notificación 3',
+        date: '2023-10-03',
+      },
+    ]);
   }, []);
+
+  const formatRelativeDate = (dateString: string) => {
+    const date = parseISO(dateString);
+    const daysDifference = differenceInDays(new Date(), date);
+
+    if (daysDifference <= 7) {
+      return formatDistanceToNow(date, { locale: es, addSuffix: true });
+    } else {
+      return format(date, 'yyyy-MM-dd', { locale: es });
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TopBar />
       <View style={styles.alertContainer}>
         {showErrorAlert && (
           <Alert
@@ -52,25 +83,47 @@ export default function NotificationsScreen() {
         )}
       </View>
       <View style={styles.orderHeader}>
-        <PoppinsText style={{ fontSize: FontSizes.s1.size }}>
-          Notificaciones
-        </PoppinsText>
+        <View
+          style={[
+            styles.headerContent,
+            { justifyContent: 'flex-start', marginLeft: 20 },
+          ]}
+        >
+          <Return onClose={() => navigation.goBack()} />
+          <PoppinsText
+            style={{
+              fontSize: FontSizes.s1.size,
+              marginLeft: 50,
+              color: Colors.textMain,
+            }}
+          >
+            Notificaciones
+          </PoppinsText>
+        </View>
       </View>
       <View style={styles.orderInfo}>
-        {notificationsList &&
-          notificationsList.length > 0 &&
-          notificationsList.map((nt, index) => (
-            <View
-              key={index}
-              style={{
-                flexDirection: 'row',
-                paddingHorizontal: 10,
-                marginVertical: 5,
-              }}
-            >
-              <View></View>
-              <View style={{ paddingVertical: 10, flex: 1 }}>
-                <View>
+        <ScrollView
+          style={styles.notificationsScroll}
+          contentContainerStyle={styles.notificationsContainer}
+        >
+          {notificationsList &&
+            notificationsList.length > 0 &&
+            notificationsList.map((nt, index) => (
+              <View
+                key={index}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 10,
+                  paddingVertical: 12,
+                  marginVertical: 5,
+                }}
+              >
+                <Image
+                  source={NotificationIcon} // Use the imported image
+                  style={{ width: 32, height: 32, marginRight: 10 }}
+                />
+                <View style={{ flex: 1 }}>
                   <View
                     style={{
                       flexDirection: 'row',
@@ -84,23 +137,21 @@ export default function NotificationsScreen() {
                         fontSize: FontSizes.c1.size,
                       }}
                     >
-                      {nt.date}
+                      {formatRelativeDate(nt.date)}
                     </PoppinsText>
                   </View>
-                  <View>
-                    <PoppinsText
-                      style={{
-                        color: Colors.textLowContrast,
-                        fontSize: FontSizes.c1.size,
-                      }}
-                    >
-                      {nt.message}
-                    </PoppinsText>
-                  </View>
+                  <PoppinsText
+                    style={{
+                      color: Colors.textLowContrast,
+                      fontSize: FontSizes.c1.size,
+                    }}
+                  >
+                    {nt.message}
+                  </PoppinsText>
                 </View>
               </View>
-            </View>
-          ))}
+            ))}
+        </ScrollView>
       </View>
     </ScrollView>
   );
@@ -110,7 +161,6 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: Colors.bgColor,
-    padding: 20,
   },
   alertContainer: {
     position: 'absolute',
@@ -122,9 +172,12 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   orderHeader: {
+    marginTop: 15,
+  },
+  headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 30,
-    marginBottom: 15,
+    justifyContent: 'center',
   },
   orderImage: {
     width: 120,
@@ -144,6 +197,7 @@ const styles = StyleSheet.create({
   },
   orderInfo: {
     marginVertical: 5,
+    padding: 20,
   },
   fieldContainer: {
     marginBottom: 15,
@@ -169,5 +223,11 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     width: '50%',
     alignItems: 'center',
+  },
+  notificationsScroll: {
+    maxHeight: 400,
+  },
+  notificationsContainer: {
+    paddingBottom: 20,
   },
 });
