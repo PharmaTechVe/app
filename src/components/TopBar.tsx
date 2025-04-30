@@ -10,6 +10,7 @@ import { AuthService } from '../services/auth';
 import Badge from './Badge';
 import { useCart } from '../hooks/useCart';
 import AvatarWithMenu from './AvatarWithMenu';
+import { useNotifications } from '../hooks/useNotifications';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
@@ -18,6 +19,8 @@ const TopBar = () => {
     useState(false);
   const router = useRouter();
   const { cartItems } = useCart();
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   // Calculate the total quantity of items in the cart
   const totalCartQuantity = cartItems.reduce(
@@ -66,10 +69,10 @@ const TopBar = () => {
           }}
         >
           <BellIcon size={26} color={Colors.textMain} />
-          {totalCartQuantity > 0 && (
+          {unreadCount > 0 && (
             <View style={styles.badgeContainer}>
-              <Badge variant="filled" color="primary" size="tiny">
-                {totalCartQuantity}
+              <Badge variant="filled" color="danger" size="tiny">
+                {unreadCount}
               </Badge>
             </View>
           )}
@@ -164,7 +167,7 @@ const styles = StyleSheet.create({
     marginLeft: 55,
   },
   iconButton: {
-    paddingRight: 4,
+    paddingRight: 5,
     position: 'relative',
   },
   badgeContainer: {

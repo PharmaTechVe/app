@@ -24,4 +24,11 @@ export const NotificationService = {
       };
     }
   },
+  markAsRead: async (orderId: string, jwt: string): Promise<void> => {
+    try {
+      await api.notification.markAsRead(orderId, jwt);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
 };
