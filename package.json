@@ -22,7 +22,7 @@
     "@expo-google-fonts/poppins": "^0.2.3",
     "@pharmatech/sdk": "^0.4.9",
     "@reduxjs/toolkit": "^2.6.1",
-    "cli": "^1.0.1",
+    "cloudinary-react-native": "^1.0.1",
     "date-fns": "^4.1.0",
     "expo": "~52.0.37",
     "expo-constants": "~17.0.7",
