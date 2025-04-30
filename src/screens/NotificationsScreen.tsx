@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Image } from 'react-native';
-import { Colors, FontSizes } from '../styles/theme';
-import PoppinsText from '../components/PoppinsText';
-import Alert from '../components/Alerts';
-import TopBar from '../components/TopBar';
-import Return from '../components/Return';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {
   formatDistanceToNow,
@@ -13,66 +15,82 @@ import {
   format,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-import NotificationIcon from '../assets/images/favicon.png'; // Import the image
+
+import TopBar from '../components/TopBar';
+import Return from '../components/Return';
+import PoppinsText from '../components/PoppinsText';
+import Alert from '../components/Alerts';
+import NotificationIcon from '../assets/images/favicon.png';
+import { Colors, FontSizes } from '../styles/theme';
+import { NotificationService } from '../services/notifications';
+import { getUserIdFromSecureStore } from '../helper/jwtHelper';
 
 export default function NotificationsScreen() {
-  const [notificationsList, setNotificationsList] = useState([
-    {
-      title: 'Notificación 1',
-      message: 'Mensaje de la notificación 1',
-      date: '2025-04-29',
-    },
-    {
-      title: 'Notificación 2',
-      message: 'Mensaje de la notificación 2',
-      date: '2025-03-02',
-    },
-    {
-      title: 'Notificación 3',
-      message: 'Mensaje de la notificación 3',
-      date: '2023-10-03',
-    },
-  ]);
-  const [showErrorAlert, setShowErrorAlert] = useState(false);
-  const [errorMessage] = useState('');
   const navigation = useNavigation();
 
+  const [notificationsList, setNotificationsList] = useState<
+    Array<{
+      id: string;
+      title: string;
+      message: string;
+      createdAt: string;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
-    setNotificationsList([
-      {
-        title: 'Notificación 1',
-        message: 'Mensaje de la notificación 1',
-        date: '2025-04-29',
-      },
-      {
-        title: 'Notificación 2',
-        message: 'Mensaje de la notificación 2',
-        date: '2025-03-02',
-      },
-      {
-        title: 'Notificación 3',
-        message: 'Mensaje de la notificación 3',
-        date: '2023-10-03',
-      },
-    ]);
+    const fetchNotifications = async () => {
+      setLoading(true);
+      setShowErrorAlert(false);
+      try {
+        const token = await getUserIdFromSecureStore();
+        if (!token) throw new Error('No se pudo obtener el token de usuario.');
+
+        const res = await NotificationService.getNotifications();
+        if (res.success && res.data && Array.isArray(res.data)) {
+          setNotificationsList(
+            res.data.map((nt) => ({
+              id: nt.id,
+              title: nt.title,
+              message: nt.message,
+              createdAt: nt.createdAt,
+            })),
+          );
+        } else {
+          throw new Error('Respuesta inesperada del servidor');
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setErrorMessage(err.message);
+        } else {
+          setErrorMessage('Ocurrió un error desconocido.');
+        }
+        setShowErrorAlert(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
   }, []);
 
   const formatRelativeDate = (dateString: string) => {
     const date = parseISO(dateString);
-    const daysDifference = differenceInDays(new Date(), date);
-
-    if (daysDifference <= 7) {
+    const daysDiff = differenceInDays(new Date(), date);
+    if (daysDiff <= 7) {
       return formatDistanceToNow(date, { locale: es, addSuffix: true });
-    } else {
-      return format(date, 'yyyy-MM-dd', { locale: es });
     }
+    return format(date, 'yyyy-MM-dd', { locale: es });
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <TopBar />
-      <View style={styles.alertContainer}>
-        {showErrorAlert && (
+
+      {showErrorAlert && (
+        <View style={styles.alertContainer}>
           <Alert
             type="error"
             title="Error"
@@ -80,154 +98,101 @@ export default function NotificationsScreen() {
             onClose={() => setShowErrorAlert(false)}
             borderColor
           />
-        )}
-      </View>
-      <View style={styles.orderHeader}>
-        <View
-          style={[
-            styles.headerContent,
-            { justifyContent: 'flex-start', marginLeft: 20 },
-          ]}
-        >
-          <Return onClose={() => navigation.goBack()} />
-          <PoppinsText
-            style={{
-              fontSize: FontSizes.s1.size,
-              marginLeft: 50,
-              color: Colors.textMain,
-            }}
-          >
-            Notificaciones
-          </PoppinsText>
         </View>
+      )}
+
+      <View style={styles.header}>
+        <Return onClose={() => navigation.goBack()} />
+        <PoppinsText style={styles.title}>Notificaciones</PoppinsText>
       </View>
-      <View style={styles.orderInfo}>
-        <ScrollView
-          style={styles.notificationsScroll}
-          contentContainerStyle={styles.notificationsContainer}
-        >
-          {notificationsList &&
-            notificationsList.length > 0 &&
-            notificationsList.map((nt, index) => (
-              <View
-                key={index}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 10,
-                  paddingVertical: 12,
-                  marginVertical: 5,
-                }}
-              >
-                <Image
-                  source={NotificationIcon} // Use the imported image
-                  style={{ width: 32, height: 32, marginRight: 10 }}
-                />
-                <View style={{ flex: 1 }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <PoppinsText>{nt.title}</PoppinsText>
-                    <PoppinsText
-                      style={{
-                        color: Colors.textLowContrast,
-                        fontSize: FontSizes.c1.size,
-                      }}
-                    >
-                      {formatRelativeDate(nt.date)}
-                    </PoppinsText>
-                  </View>
-                  <PoppinsText
-                    style={{
-                      color: Colors.textLowContrast,
-                      fontSize: FontSizes.c1.size,
-                    }}
-                  >
-                    {nt.message}
+
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color={Colors.primary}
+          style={styles.loader}
+        />
+      ) : notificationsList.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <PoppinsText>No tienes notificaciones pendientes.</PoppinsText>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.listContainer}>
+          {notificationsList.map((nt) => (
+            <TouchableOpacity
+              key={nt.id}
+              style={styles.item}
+              onPress={() => {
+                /* TODO: navegar a detalle o marcar como leído */
+              }}
+            >
+              <Image source={NotificationIcon} style={styles.icon} />
+              <View style={styles.textContainer}>
+                <View style={styles.itemHeader}>
+                  <PoppinsText weight="semibold">{nt.title}</PoppinsText>
+                  <PoppinsText style={styles.date}>
+                    {formatRelativeDate(nt.createdAt)}
                   </PoppinsText>
                 </View>
+                <PoppinsText style={styles.message}>{nt.message}</PoppinsText>
               </View>
-            ))}
+            </TouchableOpacity>
+          ))}
         </ScrollView>
-      </View>
-    </ScrollView>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: Colors.bgColor,
-  },
+  container: { flex: 1, backgroundColor: Colors.bgColor },
   alertContainer: {
     position: 'absolute',
-    width: 326,
-    left: '50%',
-    marginLeft: -162,
     top: 20,
-    right: 0,
+    left: '50%',
+    transform: [{ translateX: -162 }],
+    width: 326,
     zIndex: 1000,
   },
-  orderHeader: {
-    marginTop: 15,
-  },
-  headerContent: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  orderImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-  },
-  editButton: {
-    paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingTop: 15,
   },
-  editButtonText: {
-    color: Colors.primary,
+  title: {
+    fontSize: FontSizes.s1.size,
+    marginLeft: 20,
+    color: Colors.textMain,
   },
-  orderInfo: {
-    marginVertical: 5,
-    padding: 20,
-  },
-  fieldContainer: {
-    marginBottom: 15,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  fieldValue: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 10,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 15,
-  },
-  bottomEditButton: {
-    alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-    width: '50%',
+  loader: { marginTop: 40 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  notificationsScroll: {
-    maxHeight: 400,
+  listContainer: { paddingVertical: 10 },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.bgColor,
   },
-  notificationsContainer: {
-    paddingBottom: 20,
+  icon: { width: 32, height: 32, marginRight: 12, marginTop: 4 },
+  textContainer: { flex: 1 },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  date: {
+    color: Colors.textLowContrast,
+    fontSize: FontSizes.c1.size,
+  },
+  message: {
+    color: Colors.textLowContrast,
+    fontSize: FontSizes.c1.size,
   },
 });
