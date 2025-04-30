@@ -30,11 +30,16 @@ import { useNavigation } from '@react-navigation/native';
 export default function SearchProductScreen() {
   const { query } = useLocalSearchParams<{ query: string }>();
 
-  const [search, setSearch] = useState<ProductPresentation[]>();
+  const [initialSearchResults, setInitialSearchResults] = useState<
+    ProductPresentation[]
+  >([]); // Almacena los resultados iniciales
+  const [search, setSearch] = useState<ProductPresentation[]>([]); // Almacena los resultados actuales (filtrados)
   const [isVisible, setIsVisible] = useState(false);
-  const [brands, setBrands] = useState<ManufacturerResponse[]>();
-  const [categories, setCategories] = useState<CategoryResponse[]>();
-  const [presentations, setPresentations] = useState<PresentationResponse[]>();
+  const [brands, setBrands] = useState<ManufacturerResponse[]>([]); // Cambiado a ManufacturerResponse
+  const [categories, setCategories] = useState<CategoryResponse[]>([]); // Cambiado a CategoryResponse
+  const [presentations, setPresentations] = useState<PresentationResponse[]>(
+    [],
+  );
   const navigation = useNavigation();
 
   const [selectedPresentations, setSelectedPresentations] = useState<string[]>(
@@ -42,11 +47,11 @@ export default function SearchProductScreen() {
   );
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const priceRange = useState({ min: 0, max: 1000 });
 
   const handleBrandToggle = (brand: boolean, value: string) => {
     if (brand) {
       setSelectedBrands([...selectedBrands, value]);
-      return [...selectedBrands, value];
     } else {
       setSelectedBrands((prev) => prev.filter((item) => item !== value));
     }
@@ -55,7 +60,6 @@ export default function SearchProductScreen() {
   const handleCategoryToggle = (category: boolean, value: string) => {
     if (category) {
       setSelectedCategories([...selectedCategories, value]);
-      return [...selectedCategories, value];
     } else {
       setSelectedCategories((prev) => prev.filter((item) => item !== value));
     }
@@ -64,7 +68,6 @@ export default function SearchProductScreen() {
   const handlePresentationToggle = (presentation: boolean, value: string) => {
     if (presentation) {
       setSelectedPresentations([...selectedPresentations, value]);
-      return [...selectedPresentations, value];
     } else {
       setSelectedPresentations((prev) => prev.filter((item) => item !== value));
     }
@@ -74,37 +77,52 @@ export default function SearchProductScreen() {
     setSelectedBrands([]);
     setSelectedCategories([]);
     setSelectedPresentations([]);
+    setSearch(initialSearchResults); // Restablecer los resultados a los iniciales
   };
 
-  const submitFilters = async () => {
-    try {
-      const searchData = await ProductService.getProducts(1, 20, {
-        q: query,
-        manufacturerId: selectedBrands,
-        categoryId: selectedCategories,
-        presentationId: selectedPresentations,
-      });
+  const submitFilters = (range: { min: number; max: number }) => {
+    const filteredResults = initialSearchResults.filter((item) => {
+      const matchesBrand =
+        selectedBrands.length === 0 ||
+        selectedBrands.includes(
+          (item.product.manufacturer as ManufacturerResponse).id,
+        );
 
-      if (searchData.success) {
-        // Combinar los resultados actuales con los nuevos resultados
-        setSearch((prev) => [...(prev || []), ...searchData.data.results]);
-      }
-    } catch (error) {
-      console.error('Error al aplicar filtros:', error);
-    }
+      const matchesCategory =
+        selectedCategories.length === 0 ||
+        (item.product.categories as CategoryResponse[]).some((category) =>
+          selectedCategories.includes(category.id),
+        );
+
+      const matchesPresentation =
+        selectedPresentations.length === 0 ||
+        selectedPresentations.includes(item.presentation.id);
+
+      const matchesPrice = item.price >= range.min && item.price <= range.max; // Usar el rango pasado como argumento
+
+      return (
+        matchesBrand && matchesCategory && matchesPresentation && matchesPrice
+      );
+    });
+
+    setSearch(filteredResults);
   };
 
   useEffect(() => {
     const fetchSearchData = async () => {
       const searchData = await ProductService.getProducts(1, 20, { q: query });
-      const brands = await ProductService.getBrands(1, 100);
-      const presentations = await ProductService.getPresentations(1, 100);
-      const categories = await CategoryService.getCategories(1, 100);
+      const brandsData = await ProductService.getBrands(1, 100);
+      const presentationsData = await ProductService.getPresentations(1, 100);
+      const categoriesData = await CategoryService.getCategories(1, 100);
 
-      if (searchData.success) setSearch(searchData.data.results);
-      if (brands.success) setBrands(brands.data.results);
-      if (presentations.success) setPresentations(presentations.data.results);
-      if (categories.success) setCategories(categories.data.results);
+      if (searchData.success) {
+        setInitialSearchResults(searchData.data.results); // Guardar los resultados iniciales
+        setSearch(searchData.data.results); // Mostrar los resultados iniciales
+      }
+      if (brandsData.success) setBrands(brandsData.data.results);
+      if (presentationsData.success)
+        setPresentations(presentationsData.data.results);
+      if (categoriesData.success) setCategories(categoriesData.data.results);
     };
 
     fetchSearchData();
@@ -124,8 +142,8 @@ export default function SearchProductScreen() {
         ' ' +
         item.presentation.measurementUnit
       }
-      category={item.product.categories[0].name}
-      imageUrl={item.product.images[0].url}
+      category={item.product.categories[0]?.name}
+      imageUrl={item.product.images[0]?.url}
       originalPrice={item.price}
       discount={10}
       finalPrice={item.price * 0.1}
@@ -199,16 +217,19 @@ export default function SearchProductScreen() {
         visible={isVisible}
         onClose={() => setIsVisible(false)}
         onClearFilters={clearFilters}
-        onApplyFilters={submitFilters}
+        onApplyFilters={(range) => {
+          priceRange[1](range); // Actualizar el rango de precios
+          submitFilters(range); // Aplicar los filtros
+        }}
       >
         {/* Filtros */}
         <View style={{ paddingVertical: 10 }}>
           <View>
             <PoppinsText style={styles.text}>Categoría</PoppinsText>
             <View>
-              {categories?.map((b, index) => (
+              {categories?.map((b) => (
                 <Checkbox
-                  key={index}
+                  key={b.id}
                   checked={selectedCategories.includes(b.id)}
                   label={b.name}
                   value={b.id}
@@ -222,9 +243,9 @@ export default function SearchProductScreen() {
           <View style={{ marginTop: 20 }}>
             <PoppinsText style={styles.text}>Marca o Laboratorio</PoppinsText>
             <View>
-              {brands?.map((b, index) => (
+              {brands?.map((b) => (
                 <Checkbox
-                  key={index}
+                  key={b.id}
                   checked={selectedBrands.includes(b.id)}
                   label={b.name}
                   value={b.id}
@@ -238,9 +259,9 @@ export default function SearchProductScreen() {
           <View style={{ marginTop: 20 }}>
             <PoppinsText style={styles.text}>Presentación</PoppinsText>
             <View>
-              {presentations?.map((b, index) => (
+              {presentations?.map((b) => (
                 <Checkbox
-                  key={index}
+                  key={b.id}
                   checked={selectedPresentations.includes(b.id)}
                   label={b.name + ' ' + b.quantity + ' ' + b.measurementUnit}
                   value={b.id}

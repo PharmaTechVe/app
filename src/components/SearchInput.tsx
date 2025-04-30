@@ -195,7 +195,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
                         color: Colors.primary,
                       }}
                     >
-                      Bs. {p?.price}
+                      $ {p?.price}
                     </PoppinsText>
                   </View>
                 </TouchableOpacity>

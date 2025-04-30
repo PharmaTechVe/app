@@ -86,6 +86,11 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({
     closeSheet();
   };
 
+  const handleClearFilters = () => {
+    setPriceRange({ min: 0, max: 1000 }); // Reiniciar el rango de precios
+    onClearFilters(); // Llamar a la función pasada como prop
+  };
+
   return (
     <Modal
       animated
@@ -112,7 +117,7 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({
                   color={Colors.iconMainDefault}
                 />
               </View>
-              <TouchableWithoutFeedback onPress={onClearFilters}>
+              <TouchableWithoutFeedback onPress={handleClearFilters}>
                 <View style={styles.clearButtonContainer}>
                   <PoppinsText style={styles.clearText}>Limpiar</PoppinsText>
                 </View>
