@@ -5,7 +5,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  TouchableOpacity,
+  ImageSourcePropType,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {
@@ -25,6 +25,24 @@ import { Colors, FontSizes } from '../styles/theme';
 import { NotificationService } from '../services/notifications';
 import { getUserIdFromSecureStore } from '../helper/jwtHelper';
 
+// Importa las imágenes normalmente...
+import completedImg from '../assets/images/notifications/f.jpg';
+import inProgressImg from '../assets/images/notifications/r.jpg';
+import approvedImg from '../assets/images/notifications/image.jpg';
+import canceledImg from '../assets/images/notifications/w.jpg';
+import readyForPickupImg from '../assets/images/notifications/e.jpg';
+import deliveryImg from '../assets/images/notifications/m.jpg';
+
+// ...y luego asértalas a ImageSourcePropType
+const notificationIcons: Record<string, ImageSourcePropType> = {
+  completed: completedImg as unknown as ImageSourcePropType,
+  in_progress: inProgressImg as unknown as ImageSourcePropType,
+  approved: approvedImg as unknown as ImageSourcePropType,
+  canceled: canceledImg as unknown as ImageSourcePropType,
+  ready_for_pickup: readyForPickupImg as unknown as ImageSourcePropType,
+  delivery: deliveryImg as unknown as ImageSourcePropType,
+};
+
 export default function NotificationsScreen() {
   const navigation = useNavigation();
 
@@ -34,6 +52,7 @@ export default function NotificationsScreen() {
       title: string;
       message: string;
       createdAt: string;
+      isRead: boolean;
     }>
   >([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +75,7 @@ export default function NotificationsScreen() {
               title: nt.title,
               message: nt.message,
               createdAt: nt.createdAt,
+              isRead: !!nt.isRead,
             })),
           );
         } else {
@@ -83,6 +103,58 @@ export default function NotificationsScreen() {
       return formatDistanceToNow(date, { locale: es, addSuffix: true });
     }
     return format(date, 'yyyy-MM-dd', { locale: es });
+  };
+
+  const getNotificationIcon = (message: string): ImageSourcePropType => {
+    for (const key in notificationIcons) {
+      if (message.includes(key)) {
+        return notificationIcons[key];
+      }
+    }
+    return NotificationIcon;
+  };
+
+  const extractStatusKey = (message: string): string | null => {
+    const regex = /The order (\S+) has been updated to ([\w_]+)\.?/i;
+    const match = message.match(regex);
+    return match ? match[2].replace(/\.?$/, '').toLowerCase() : null;
+  };
+
+  const translateMessage = (message: string) => {
+    const regex = /The order (\S+) has been updated to ([\w_]+)\.?/i;
+    const match = message.match(regex);
+    if (match) {
+      const [, orderId, rawStatus] = match;
+      const statusKey = rawStatus
+        .replace(/\.?$/, '')
+        .replace(/_/g, ' ')
+        .toLowerCase();
+      const statusMap: Record<string, string> = {
+        completed: 'completada',
+        'in progress': 'en progreso',
+        approved: 'aprobada',
+        canceled: 'cancelada',
+        'ready for pickup': 'lista para recoger',
+        delivery: 'en entrega',
+      };
+      const statusSpanish = statusMap[statusKey] || statusKey;
+      return `La orden ${orderId} ha sido actualizada a ${statusSpanish}`;
+    }
+    return message;
+  };
+
+  const getTranslatedTitle = (nt: { title: string; message: string }) => {
+    const key = extractStatusKey(nt.message);
+    if (!key) return nt.title;
+    const titleMap: Record<string, string> = {
+      completed: 'Pedido Completado',
+      in_progress: 'Pedido en Progreso',
+      approved: 'Orden Aprobada',
+      canceled: 'Orden Cancelada',
+      ready_for_pickup: 'Pedido Listo para Recoger',
+      delivery: 'Pedido en Entrega',
+    };
+    return titleMap[key] || nt.title;
   };
 
   return (
@@ -119,24 +191,28 @@ export default function NotificationsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.listContainer}>
           {notificationsList.map((nt) => (
-            <TouchableOpacity
+            <View
               key={nt.id}
-              style={styles.item}
-              onPress={() => {
-                /* TODO: navegar a detalle o marcar como leído */
-              }}
+              style={[styles.item, !nt.isRead && styles.unreadBackground]}
             >
-              <Image source={NotificationIcon} style={styles.icon} />
+              <Image
+                source={getNotificationIcon(nt.message)}
+                style={styles.icon}
+              />
               <View style={styles.textContainer}>
                 <View style={styles.itemHeader}>
-                  <PoppinsText weight="semibold">{nt.title}</PoppinsText>
+                  <PoppinsText weight="semibold">
+                    {getTranslatedTitle(nt)}
+                  </PoppinsText>
                   <PoppinsText style={styles.date}>
                     {formatRelativeDate(nt.createdAt)}
                   </PoppinsText>
                 </View>
-                <PoppinsText style={styles.message}>{nt.message}</PoppinsText>
+                <PoppinsText style={styles.message}>
+                  {translateMessage(nt.message)}
+                </PoppinsText>
               </View>
-            </TouchableOpacity>
+            </View>
           ))}
         </ScrollView>
       )}
@@ -162,7 +238,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: FontSizes.s1.size,
-    marginLeft: 20,
+    marginLeft: 40,
     color: Colors.textMain,
   },
   loader: { marginTop: 40 },
@@ -180,8 +256,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.bgColor,
   },
-  icon: { width: 32, height: 32, marginRight: 12, marginTop: 4 },
-  textContainer: { flex: 1 },
+  unreadBackground: {
+    backgroundColor: '#FFFFFF',
+  },
+  icon: {
+    width: 32,
+    height: 32,
+    marginRight: 12,
+    marginTop: 4,
+    borderRadius: 16,
+  },
+  textContainer: {
+    flex: 1,
+  },
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -194,5 +281,7 @@ const styles = StyleSheet.create({
   message: {
     color: Colors.textLowContrast,
     fontSize: FontSizes.c1.size,
+    marginRight: 80,
+    flexWrap: 'wrap',
   },
 });
