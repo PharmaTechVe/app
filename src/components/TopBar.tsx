@@ -63,7 +63,7 @@ const TopBar = () => {
         </View>
 
         <TouchableOpacity
-          style={{ paddingRight: 10 }}
+          style={{ paddingRight: 5 }}
           onPress={() => {
             router.push('/notifications');
           }}
