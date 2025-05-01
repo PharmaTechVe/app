@@ -23,7 +23,6 @@ const DirectionCreateScreen = () => {
 
   const [address, setAddress] = useState<CreateUserAddressRequest>({
     adress: '',
-    zipCode: '',
     additionalInformation: '',
     referencePoint: '',
     latitude: latitude ? parseFloat(latitude as string) : null,
@@ -64,7 +63,7 @@ const DirectionCreateScreen = () => {
   }, [selectedState]);
 
   const submitAddress = async () => {
-    if (!validateRequiredFields([address.adress, address.zipCode])) {
+    if (!validateRequiredFields([address.adress])) {
       setShowErrorAlert(true);
       setErrorMessage('Por favor completa todos los campos obligatorios');
       return;
@@ -84,7 +83,6 @@ const DirectionCreateScreen = () => {
     try {
       const newAddress: CreateUserAddressRequest = {
         adress: address.adress,
-        zipCode: address.zipCode,
         latitude: address.latitude,
         longitude: address.longitude,
         cityId: selectedCity,
@@ -173,14 +171,6 @@ const DirectionCreateScreen = () => {
           label="Dirección: (Ubicación actual)"
           value={address?.adress}
           getValue={(value) => setAddress({ ...address, adress: value })}
-          errorText="El campo no puede estar vacío"
-          backgroundColor={Colors.textWhite}
-        />
-        <Input
-          label="Código Postal:"
-          value={address?.zipCode}
-          getValue={(value) => setAddress({ ...address, zipCode: value })}
-          fieldType="number"
           errorText="El campo no puede estar vacío"
           backgroundColor={Colors.textWhite}
         />

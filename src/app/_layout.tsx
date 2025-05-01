@@ -57,8 +57,16 @@ export default function RootLayout() {
             headerBackVisible: false,
             headerLeft: () =>
               navigation.canGoBack() ? (
-                <TouchableOpacity onPress={navigation.goBack}>
-                  <ChevronLeftIcon width={24} height={24} color="#000" />
+                <TouchableOpacity
+                  onPress={navigation.goBack}
+                  style={{
+                    padding: 12, // Aumentado
+                    marginLeft: -12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <ChevronLeftIcon width={28} height={28} color="#000" />
                 </TouchableOpacity>
               ) : null,
             headerBackTitleVisible: false,

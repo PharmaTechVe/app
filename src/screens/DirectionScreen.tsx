@@ -121,7 +121,6 @@ const DirectionScreen = () => {
                 </PoppinsText>
                 <PoppinsText style={styles.cityText} weight="regular">
                   {direction.nameCity}, {direction.nameState},{' '}
-                  {direction.zipCode}
                 </PoppinsText>
                 {direction.additionalInformation && (
                   <PoppinsText
