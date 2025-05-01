@@ -19,6 +19,17 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: Colors.primary,
           tabBarStyle: { backgroundColor: Colors.secondaryWhite },
+          tabBarHideOnKeyboard: true,
+          tabBarVisibilityAnimationConfig: {
+            show: {
+              animation: 'timing',
+              config: { duration: 0 },
+            },
+            hide: {
+              animation: 'timing',
+              config: { duration: 0 },
+            },
+          },
         }}
       >
         <Tabs.Screen

@@ -348,7 +348,7 @@ const CheckoutScreen = () => {
       <View style={styles.container}>
         {currentStep < stepsLabels.length && (
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
+            <ChevronLeftIcon width={28} height={28} color={Colors.textMain} />
           </TouchableOpacity>
         )}
 
@@ -544,7 +544,9 @@ const styles = StyleSheet.create({
     top: 16,
     left: 16,
     zIndex: 1,
-    padding: 8,
+    padding: 12,
+    marginLeft: -12,
+    marginTop: -8,
   },
   steps: {
     marginTop: 60,
