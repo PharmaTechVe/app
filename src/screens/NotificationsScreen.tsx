@@ -153,7 +153,10 @@ export default function NotificationsScreen() {
     const date = parseISO(dateString);
     const daysDiff = differenceInDays(new Date(), date);
     if (daysDiff <= 7) {
-      return formatDistanceToNow(date, { locale: es, addSuffix: true });
+      return formatDistanceToNow(date, { locale: es }).replace(
+        'alrededor de ',
+        'Hace ',
+      );
     }
     return format(date, 'yyyy-MM-dd', { locale: es });
   };
