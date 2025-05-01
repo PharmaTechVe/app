@@ -34,7 +34,7 @@ export const UserService = {
       console.log('Profile Data:', response); // Verificar los datos del perfil
       return { success: true, data: response };
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error fetching profile (se lleva al login):', error);
       return {
         success: false,
         error: extractErrorMessage(error),

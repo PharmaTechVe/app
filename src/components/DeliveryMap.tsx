@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { StyleSheet, View, Alert } from 'react-native';
 import * as Location from 'expo-location';
+import { Config } from '../config';
 
 interface DeliveryMapProps {
   deliveryState: number;
@@ -80,7 +81,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   ) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&key=AIzaSyC172ukD655b-4H1m1bC3xQ7g1sHFxMP_w`,
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${originLat},${originLng}&destination=${destLat},${destLng}&key=${Config.googleMapsApiKey}`,
       );
       const data = await response.json();
 

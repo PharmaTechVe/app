@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { PhoneIcon, EnvelopeIcon } from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
@@ -9,7 +15,12 @@ import HistoryMap from '../../components/HistoryMap';
 import { Colors, FontSizes } from '../../styles/theme';
 import { DeliveryService } from '../../services/delivery';
 import { BranchService } from '../../services/branches';
-import { OrderDeliveryDetailedResponse, BranchResponse } from '@pharmatech/sdk';
+import {
+  OrderDeliveryDetailedResponse,
+  BranchResponse,
+  OrderDetailedResponse,
+} from '@pharmatech/sdk';
+import { UserService } from '../../services/user';
 
 const DeliveryHistoryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -20,9 +31,39 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
   );
   const [loading, setLoading] = useState(true);
 
+  const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        if (!orderDetails) {
+          return; // No intentes cargar si no hay detalles de la orden
+        }
+
+        const orderId = orderDetails.orderId; // Extraer el ID de la orden
+        console.log('ID de la orden:', orderId);
+
+        const order = await UserService.getOrder(orderId); // Usar el ID de la orden
+
+        if (order.success) {
+          console.log('Datos del pedido:', order.data); // Log para verificar los datos
+          setOrder(order.data);
+        } else {
+          console.error('Error al obtener el pedido:', order.error);
+        }
+      } catch (error) {
+        console.error('Error en fetchOrder:', error);
+      }
+    };
+
+    fetchOrder();
+  }, [orderDetails]);
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
+        setLoading(true); // Inicia la carga
         if (!id) {
           throw new Error('ID del pedido no proporcionado');
         }
@@ -40,7 +81,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
       } catch (error) {
         console.error('Error al obtener los detalles del pedido:', error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Finaliza la carga
       }
     };
 
@@ -241,26 +282,56 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
           }}
         />
 
-        {/* Pedido 
-        <PoppinsText weight="medium" style={styles.sectionTitle}>
-          Pedido
-        </PoppinsText>
-        <PoppinsText style={styles.totalProducts}>
-          Total: {orderData.products?.length || 0} productos
-        </PoppinsText>
-        {orderData.products?.map((product: Product) => (
-          <View key={product.id} style={styles.productCard}>
-            <View style={styles.productImagePlaceholder} />
-            <View>
-              <PoppinsText style={styles.productName}>
-                {product.name}
-              </PoppinsText>
-              <PoppinsText style={styles.productQuantity}>
-                Cantidad: {product.quantity}
-              </PoppinsText>
+        {/* Pedido */}
+        <View style={styles.sectionHeader}>
+          <PoppinsText weight="medium" style={styles.sectionTitle}>
+            Pedido
+          </PoppinsText>
+          <PoppinsText style={styles.totalProducts}>
+            Total:{' '}
+            {order?.details?.reduce(
+              (total, detail) => total + detail.quantity,
+              0,
+            ) || 0}{' '}
+            productos
+          </PoppinsText>
+        </View>
+        {order?.details?.map((detail, index) => {
+          console.log(`Producto ${index + 1}:`, detail); // Log para depuración
+          return (
+            <View
+              key={detail.productPresentation.id}
+              style={styles.productCard}
+            >
+              {/* Imagen del producto */}
+              <Image
+                source={{
+                  uri: detail.productPresentation.product.images[0]?.url,
+                }}
+                style={styles.productImage}
+                resizeMode="contain"
+              />
+              <View style={styles.productInfo}>
+                {/* Nombre de la presentación del producto */}
+                <PoppinsText
+                  style={styles.productName}
+                  numberOfLines={2} // Limitar a 2 líneas
+                  ellipsizeMode="tail" // Mostrar "..." si el texto es muy largo
+                >
+                  {detail.productPresentation.product.name}{' '}
+                  {detail.productPresentation.presentation.name}{' '}
+                  {detail.productPresentation.presentation.quantity}{' '}
+                  {detail.productPresentation.presentation.measurementUnit}
+                </PoppinsText>
+                {/* Cantidad del producto */}
+                <PoppinsText style={styles.productQuantity}>
+                  Cantidad: {detail.quantity}
+                </PoppinsText>
+              </View>
             </View>
-          </View>
-        ))}*/}
+          );
+        })}
+
         <View style={styles.scrollSpacer} />
       </ScrollView>
     </View>
@@ -312,11 +383,49 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.b1.lineHeight,
     color: Colors.textMain,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: FontSizes.s1.size,
     lineHeight: FontSizes.s1.lineHeight,
     color: Colors.primary,
-    marginBottom: 8,
+  },
+  totalProducts: {
+    fontSize: FontSizes.b3.size,
+    color: Colors.textLowContrast,
+  },
+  productCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.menuWhite,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  productImage: {
+    width: 50,
+    height: 50,
+    backgroundColor: Colors.gray_100,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  productInfo: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: FontSizes.b2.size,
+    color: Colors.textMain,
+    flexShrink: 1,
+  },
+  productQuantity: {
+    fontSize: FontSizes.b3.size,
+    color: Colors.textLowContrast,
+    marginTop: 4,
   },
   locationsContainer: {
     position: 'relative',
@@ -482,34 +591,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.gray_100,
     borderRadius: 16,
     marginBottom: 16,
-  },
-  totalProducts: {
-    fontSize: FontSizes.b3.size,
-    color: Colors.textMain,
-    marginBottom: 8,
-  },
-  productCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.menuWhite,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  productImagePlaceholder: {
-    width: 50,
-    height: 50,
-    backgroundColor: Colors.gray_100,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  productName: {
-    fontSize: FontSizes.b2.size,
-    color: Colors.textMain,
-  },
-  productQuantity: {
-    fontSize: FontSizes.b3.size,
-    color: Colors.textLowContrast,
   },
   floatingButton: {
     position: 'absolute',

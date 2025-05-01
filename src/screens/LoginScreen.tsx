@@ -17,6 +17,7 @@ import { Colors, FontSizes } from '../styles/theme';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 import { AuthService } from '../services/auth';
+import { UserService } from '../services/user';
 import Alert from '../components/Alerts';
 
 export default function LoginScreen() {
@@ -35,33 +36,47 @@ export default function LoginScreen() {
     try {
       const result = await AuthService.login(email, password);
       if (result.success) {
-        const { isValidated } = result.data!;
+        const profileResponse = await UserService.getProfile();
+        if (profileResponse.success) {
+          const { role: userRole } = profileResponse.data;
+          const { isValidated } = result.data!;
 
-        // Mostrar alerta de éxito para todos los usuarios
-        setShowSuccessAlert(true);
+          // Mostrar alerta de éxito para todos los usuarios
+          setShowSuccessAlert(true);
 
-        setTimeout(() => {
-          setShowSuccessAlert(false);
+          setTimeout(() => {
+            setShowSuccessAlert(false);
 
-          if (!isValidated) {
-            // Redirigir al home con el modal de verificación de correo
-            router.replace({
-              pathname: '/(tabs)',
-              params: { showEmailVerification: 'true' },
-            });
-          } else {
-            // Redirigir al home si el correo ya está validado
-            router.replace('/(tabs)');
-          }
-        }, 2000);
+            if (!isValidated) {
+              // Redirigir al home con el modal de verificación de correo
+              router.replace({
+                pathname: '/(tabs)',
+                params: { showEmailVerification: 'true' },
+              });
+            } else if (userRole === 'delivery') {
+              // Redirigir a (delivery-tabs) si es un usuario de tipo delivery
+              router.replace('/(delivery-tabs)');
+            } else {
+              // Redirigir a (tabs) si es un usuario regular
+              router.replace('/(tabs)');
+            }
+          }, 2000);
+        } else {
+          console.error(
+            'Error al obtener el perfil del usuario:',
+            profileResponse.error,
+          );
+          setShowErrorAlert(true);
+          setErrorMessage('Error al obtener el perfil del usuario.');
+        }
       } else {
         setShowErrorAlert(true);
         setErrorMessage(result.error || 'Error al iniciar sesión.');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error during login:', error);
       setShowErrorAlert(true);
-      setErrorMessage('Error al iniciar sesión, verifica tus credenciales.');
+      setErrorMessage('Error inesperado al iniciar sesión.');
     } finally {
       setLoading(false);
     }
