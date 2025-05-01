@@ -600,7 +600,9 @@ const styles = StyleSheet.create({
     top: 16,
     left: 16,
     zIndex: 1,
-    padding: 8,
+    padding: 12,
+    marginLeft: -12,
+    marginTop: -8,
   },
   steps: {
     marginTop: 60,

@@ -17,8 +17,13 @@ interface OrderCardProps {
   branch: string;
   estimatedTime: string;
   elapsedTime: string;
+  deliveryStatus:
+    | 'assigned'
+    | 'waiting_confirmation'
+    | 'picked_up'
+    | 'in_route'; // Nueva prop
   onTakeOrder: () => void;
-  onDiscardOrder: () => void;
+  onDiscardOrder?: () => void;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({
@@ -28,6 +33,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
   branch,
   estimatedTime,
   elapsedTime,
+  deliveryStatus,
   onTakeOrder,
   onDiscardOrder,
 }) => {
@@ -75,20 +81,24 @@ const OrderCard: React.FC<OrderCardProps> = ({
       {/* Buttons */}
       <View>
         <Button
-          title="Tomar pedido"
+          title={
+            deliveryStatus === 'assigned' ? 'Tomar pedido' : 'Continuar entrega'
+          }
           variant="primary"
           size="medium"
           onPress={onTakeOrder}
           style={styles.button}
         />
-        <Button
-          title="Descartar"
-          variant="iconCancel"
-          mode="outline"
-          size="medium"
-          onPress={onDiscardOrder}
-          style={styles.button}
-        />
+        {deliveryStatus === 'assigned' && onDiscardOrder && (
+          <Button
+            title="Descartar"
+            variant="iconCancel"
+            mode="outline"
+            size="medium"
+            onPress={onDiscardOrder}
+            style={styles.button}
+          />
+        )}
       </View>
     </View>
   );
@@ -106,7 +116,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     width: '100%',
-    minHeight: 300,
+    minHeight: 250,
     flexGrow: 1,
   },
   header: {
