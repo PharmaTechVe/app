@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
 import Button from '../components/Button';
-import { OrderResponse } from '@pharmatech/sdk'; // Usar el tipo del SDK
+import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
 
@@ -13,6 +19,7 @@ const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
     undefined,
   );
+  const [loading, setLoading] = useState(true);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -33,11 +40,21 @@ const OrdersScreen = () => {
         console.log(error);
         setErrorMessage('Ha ocurrido un error');
         setShowErrorAlert(true);
+      } finally {
+        setLoading(false); // Finalizar carga
       }
     };
 
     fetchOrders();
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -167,6 +184,12 @@ const styles = StyleSheet.create({
   },
   orderInfo: {
     marginVertical: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bgColor,
   },
 });
 

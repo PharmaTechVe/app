@@ -115,7 +115,7 @@ const DeliveryHistoryScreen: React.FC = () => {
           completedOrders.map((order) => (
             <HistoryOrderCard
               key={order.id}
-              orderCode={order.id.split('-')[0]} // Mostrar solo los primeros 8 caracteres
+              orderCode={order.orderId.split('-')[0]} // Mostrar solo los primeros 8 caracteres
               orderType="pedido"
               address={order.address?.adress || 'Dirección no disponible'}
               branch={branchNames[order.branchId] || 'Sucursal no disponible'}

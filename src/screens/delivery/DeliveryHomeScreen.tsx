@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native'; // Importar useFocusEffect
+import React, { useCallback, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -23,7 +24,7 @@ import { useAlert } from '../../components/AlertProvider'; // Importar el hook u
 
 export default function DeliveryHomeScreen() {
   const router = useRouter();
-  const { showAlert } = useAlert(); // Usar el hook para acceder a la función showAlert
+  const { showAlert } = useAlert();
 
   const [orders, setOrders] = useState<OrderDeliveryDetailedResponse[]>([]);
   const [branchNames, setBranchNames] = useState<Record<string, string>>({});
@@ -81,9 +82,12 @@ export default function DeliveryHomeScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchAssignedOrders();
-  }, []);
+  // Usar useFocusEffect para refrescar la pantalla al regresar
+  useFocusEffect(
+    useCallback(() => {
+      fetchAssignedOrders(); // Refrescar las órdenes asignadas
+    }, []),
+  );
 
   const handleTakeOrder = (order: OrderDeliveryDetailedResponse) => {
     const query = encodeURIComponent(JSON.stringify(order));
@@ -179,14 +183,25 @@ export default function DeliveryHomeScreen() {
           orders.map((order) => (
             <OrderCard
               key={order.id}
-              orderCode={order.id.split('-')[0]} // Mostrar solo los primeros 8 caracteres
+              orderCode={order.orderId.split('-')[0]} // Mostrar solo los primeros 8 caracteres
               orderType="pedido"
               address={order.address?.adress || 'Dirección no disponible'}
               branch={branchNames[order.branchId] || 'Sucursal no disponible'}
               estimatedTime={formatTime(order.estimatedTime)} // Pasar directamente la cadena ISO
               elapsedTime={calculateElapsedTime(order.createdAt)}
+              deliveryStatus={
+                order.deliveryStatus as
+                  | 'assigned'
+                  | 'waiting_confirmation'
+                  | 'picked_up'
+                  | 'in_route'
+              }
               onTakeOrder={() => handleTakeOrder(order)}
-              onDiscardOrder={() => handleDiscardOrder(order)}
+              onDiscardOrder={
+                order.deliveryStatus === 'assigned'
+                  ? () => handleDiscardOrder(order)
+                  : undefined
+              }
             />
           ))
         )}
