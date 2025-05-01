@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   InformationCircleIcon,
@@ -16,7 +22,8 @@ import Alert from '../../components/Alerts';
 import { Colors, FontSizes } from '../../styles/theme';
 import { DeliveryService } from '../../services/delivery';
 import { BranchService } from '../../services/branches';
-import { OrderDeliveryStatus } from '@pharmatech/sdk';
+import { OrderDeliveryStatus, OrderDetailedResponse } from '@pharmatech/sdk';
+import { UserService } from '../../services/user';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../redux/store';
 import {
@@ -31,6 +38,40 @@ const DeliveryDetailScreen: React.FC = () => {
   const orderDetails = useSelector(
     (state: RootState) => state.delivery.orders[id as string],
   );
+  const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        if (!orderDetails) {
+          console.error(
+            'No se encontraron detalles de la orden de tipo delivery.',
+          );
+          return;
+        }
+
+        const orderId = orderDetails.orderId; // Extraer el ID de la orden
+        console.log('ID de la orden:', orderId);
+
+        const order = await UserService.getOrder(orderId); // Usar el ID de la orden
+
+        if (order.success) {
+          console.log('Datos del pedido:', order.data); // Log para verificar los datos
+          setOrder(order.data);
+        } else {
+          console.error('Error al obtener el pedido:', order.error);
+        }
+      } catch (error) {
+        console.error('Error en fetchOrder:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderDetails]);
+
   const deliveryState = useSelector(
     (state: RootState) => state.delivery.deliveryState[id as string] || 0,
   );
@@ -342,28 +383,54 @@ const DeliveryDetailScreen: React.FC = () => {
         />
 
         {/* Pedido (contenido comentado) */}
-        {/* <PoppinsText weight="medium" style={styles.sectionTitle}>
-          Pedido
-        </PoppinsText>
-        <PoppinsText style={styles.totalProducts}>
-          Total: {products.length} productos
-        </PoppinsText>
-        {products.map((product) => (
-          <View key={product.id} style={styles.productCard}>
-            <View style={styles.productImagePlaceholder} />
-            <View>
-              <PoppinsText style={styles.productName}>
-                {product.productPresentation.product.name}
-              </PoppinsText>
-              <PoppinsText style={styles.productQuantity}>
-                Cantidad: {product.quantity}
-              </PoppinsText>
-              <PoppinsText style={styles.productPrice}>
-                Subtotal: ${product.subtotal.toFixed(2)}
-              </PoppinsText>
+        <View style={styles.sectionHeader}>
+          <PoppinsText weight="medium" style={styles.sectionTitle}>
+            Pedido
+          </PoppinsText>
+          <PoppinsText style={styles.totalProducts}>
+            Total:{' '}
+            {order?.details?.reduce(
+              (total, detail) => total + detail.quantity,
+              0,
+            ) || 0}{' '}
+            productos
+          </PoppinsText>
+        </View>
+        {order?.details?.map((detail, index) => {
+          console.log(`Producto ${index + 1}:`, detail); // Log para depuración
+          return (
+            <View
+              key={detail.productPresentation.id}
+              style={styles.productCard}
+            >
+              {/* Imagen del producto */}
+              <Image
+                source={{
+                  uri: detail.productPresentation.product.images[0]?.url,
+                }}
+                style={styles.productImage}
+                resizeMode="contain"
+              />
+              <View style={styles.productInfo}>
+                {/* Nombre de la presentación del producto */}
+                <PoppinsText
+                  style={styles.productName}
+                  numberOfLines={2} // Limitar a 2 líneas
+                  ellipsizeMode="tail" // Mostrar "..." si el texto es muy largo
+                >
+                  {detail.productPresentation.product.name}{' '}
+                  {detail.productPresentation.presentation.name}{' '}
+                  {detail.productPresentation.presentation.quantity}{' '}
+                  {detail.productPresentation.presentation.measurementUnit}
+                </PoppinsText>
+                {/* Cantidad del producto */}
+                <PoppinsText style={styles.productQuantity}>
+                  Cantidad: {detail.quantity}
+                </PoppinsText>
+              </View>
             </View>
-          </View>
-        ))} */}
+          );
+        })}
 
         {/* Espaciado adicional al final */}
         <View style={styles.scrollSpacer} />
@@ -421,11 +488,16 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.b1.lineHeight,
     color: Colors.primary,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: FontSizes.s1.size,
     lineHeight: FontSizes.s1.lineHeight,
     color: Colors.primary,
-    marginBottom: 8,
   },
   locationsContainer: {
     position: 'relative',
@@ -514,8 +586,7 @@ const styles = StyleSheet.create({
   },
   totalProducts: {
     fontSize: FontSizes.b3.size,
-    color: Colors.textMain,
-    marginBottom: 8,
+    color: Colors.textLowContrast,
   },
   productCard: {
     flexDirection: 'row',
@@ -524,21 +595,27 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
+    overflow: 'hidden', // Asegura que el contenido no se salga de la carta
   },
-  productImagePlaceholder: {
+  productImage: {
     width: 50,
     height: 50,
     backgroundColor: Colors.gray_100,
     borderRadius: 8,
     marginRight: 16,
   },
+  productInfo: {
+    flex: 1, // Permite que el contenido ocupe el espacio restante
+  },
   productName: {
     fontSize: FontSizes.b2.size,
     color: Colors.textMain,
+    flexShrink: 1, // Evita que el texto desborde
   },
   productQuantity: {
     fontSize: FontSizes.b3.size,
     color: Colors.textLowContrast,
+    marginTop: 4,
   },
   productPrice: {
     fontSize: FontSizes.b3.size,
