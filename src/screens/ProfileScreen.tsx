@@ -98,6 +98,8 @@ const ProfileScreen = () => {
         const imageResponse = await ImageService.uploadImage(image);
         if (imageResponse)
           updatedProfile.profilePicture = imageResponse.secure_url;
+      } else {
+        updatedProfile.profilePicture = 'https://via.placeholder.com/150';
       }
 
       const response = await UserService.updateProfile(updatedProfile);

@@ -44,7 +44,10 @@ const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
         const { firstName, lastName } = response.data!;
         const profilePicture = response.data.profile.profilePicture;
         setProfile({
-          uri: profilePicture,
+          uri:
+            profilePicture !== 'https://via.placeholder.com/150'
+              ? profilePicture
+              : '',
           name: `${firstName} ${lastName}`,
         });
       } else {
