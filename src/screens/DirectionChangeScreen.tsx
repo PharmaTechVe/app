@@ -86,7 +86,6 @@ const ChangeDirectionScreen = () => {
     try {
       const updatedAddress: CreateUserAddressRequest = {
         adress: address.adress,
-        zipCode: address.zipCode,
         cityId: selectedCity,
         additionalInformation: address.additionalInformation,
         referencePoint: address.referencePoint,
@@ -199,16 +198,6 @@ const ChangeDirectionScreen = () => {
           isEditable={isEditable}
           border={isEditable ? 'default' : 'none'}
           getValue={(value) => setAddress({ ...address, adress: value })}
-          errorText="El campo no puede estar vacío"
-          backgroundColor={isEditable ? Colors.textWhite : undefined}
-        />
-        <Input
-          label="Código Postal:"
-          value={address?.zipCode}
-          isEditable={isEditable}
-          border={isEditable ? 'default' : 'none'}
-          getValue={(value) => setAddress({ ...address, zipCode: value })}
-          fieldType="number"
           errorText="El campo no puede estar vacío"
           backgroundColor={isEditable ? Colors.textWhite : undefined}
         />
