@@ -150,6 +150,13 @@ export default function RootLayout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="active-orders"
+          options={{
+            headerTitle: '',
+            headerTransparent: true,
+          }}
+        />
       </Stack>
     </Provider>
   );
