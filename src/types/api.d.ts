@@ -92,7 +92,6 @@ type UpdateUser = {
 
 type UserAddressResponse = {
   adress: string;
-  zipCode: string;
   latitude: number | null;
   longitude: number | null;
   cityId: string;
@@ -106,7 +105,6 @@ type UserAddressResponse = {
 
 type CreateUserAddressRequest = BaseModel & {
   adress: string;
-  zipCode?: string;
   latitude?: number | null;
   longitude?: number | null;
   cityId?: string;

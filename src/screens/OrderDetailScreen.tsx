@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
   Image,
 } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
@@ -22,6 +23,7 @@ const OrderDetailScreen = () => {
   const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
     undefined,
   );
+  const [loading, setLoading] = useState(true);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -37,16 +39,23 @@ const OrderDetailScreen = () => {
         }
       } catch (error) {
         console.log(error);
-        setErrorMessage('Ocurrio un error');
+        setErrorMessage('Ocurrió un error');
+        setShowErrorAlert(true);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchOrder();
   }, []);
 
-  const handleReorder = async () => {
-    setShowSuccessAlert(true);
-  };
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -99,7 +108,7 @@ const OrderDetailScreen = () => {
             title="Re ordenar"
             size="small"
             style={{ paddingVertical: 0 }}
-            onPress={handleReorder}
+            onPress={() => setShowSuccessAlert(true)}
           />
         </View>
         <ScrollView style={{ height: 400 }}>
@@ -207,6 +216,12 @@ const styles = StyleSheet.create({
     top: 20,
     right: 0,
     zIndex: 1000,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.bgColor,
   },
   orderHeader: {
     alignItems: 'center',
