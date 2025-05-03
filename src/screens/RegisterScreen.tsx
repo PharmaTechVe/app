@@ -59,16 +59,32 @@ export default function RegisterScreen() {
     if (currentStep === 2) {
       navigation.setOptions({
         headerLeft: () => (
-          <TouchableOpacity onPress={() => handleStepChange(1)}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
+          <TouchableOpacity
+            onPress={() => handleStepChange(1)}
+            style={{
+              padding: 12, // Aumentado
+              marginLeft: -12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <ChevronLeftIcon width={28} height={28} color={Colors.primary} />
           </TouchableOpacity>
         ),
       });
     } else if (currentStep === 1) {
       navigation.setOptions({
         headerLeft: () => (
-          <TouchableOpacity onPress={() => router.replace('/login')}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
+          <TouchableOpacity
+            onPress={() => router.replace('/login')}
+            style={{
+              padding: 12, // Aumentado
+              marginLeft: -12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <ChevronLeftIcon width={28} height={28} color={Colors.primary} />
           </TouchableOpacity>
         ),
       });

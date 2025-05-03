@@ -25,73 +25,25 @@ export default function HomeScreen() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  const obtainProducts = async () => {
-    const productsData = await ProductService.getProducts(1, 20);
-
-    if (productsData.success) {
-      const pd = productsData.data.results;
-      const carouselProducts = pd.map((p) => ({
-        id: p.id,
-        presentationId: p.presentation.id,
-        productId: p.product.id,
-        imageUrl: p.product.images[0].url,
-        name:
-          p.product.name +
-          ' ' +
-          p.presentation.name +
-          ' ' +
-          p.presentation.quantity +
-          ' ' +
-          p.presentation.measurementUnit,
-        category: p.product.categories[0].name,
-        originalPrice: p.price,
-        discount: 10,
-        finalPrice: p.price - p.price * 0.1,
-        quantity: getItemQuantity(p.id),
-        getQuantity: (quantity: number) => {
-          addToCart({
-            id: p.id,
-            name:
-              p.product.name +
-              ' ' +
-              p.presentation.name +
-              ' ' +
-              p.presentation.quantity +
-              ' ' +
-              p.presentation.measurementUnit,
-            price: p.price,
-            quantity,
-            image:
-              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
-          });
-          updateCartQuantity(p.id, quantity);
-        },
-      }));
-
-      setProducts(carouselProducts);
-    } else {
-      console.log(productsData.error);
-    }
-  };
-
   useEffect(() => {
-    const checkAuthToken = async () => {
+    const initialize = async () => {
+      setLoading(true); // Asegúrate de que loading sea true al inicio
       const token = await SecureStore.getItemAsync('auth_token');
       if (!token) {
-        router.replace('/login'); // Redirige al login si no hay token
+        router.replace('/login');
       } else {
-        console.log('JWT Token:', token); // Log del JWT
         const decoded = decodeJWT(token);
         if (decoded?.userId) {
-          setCartUserId(decoded.userId); // Set the userId in the cart
+          setCartUserId(decoded.userId);
         }
-        setLoading(false);
       }
+
+      await obtainProducts(); // Espera a que los productos se carguen
+      setLoading(false); // Cambia loading a false solo después de que todo termine
     };
 
-    checkAuthToken();
-    obtainProducts();
-  }, [cartItems]);
+    initialize();
+  }, []); // Elimina `cartItems` de las dependencias
 
   useEffect(() => {
     if (showEmailVerificationParam) {
@@ -102,16 +54,60 @@ export default function HomeScreen() {
     }
   }, [showEmailVerificationParam]);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <PoppinsText weight="regular" style={styles.loadingText}>
-          Verificando autenticación...
-        </PoppinsText>
-      </View>
-    );
-  }
+  const obtainProducts = async () => {
+    setLoading(true); // Inicia el indicador de carga
+    try {
+      const productsData = await ProductService.getProducts(1, 20);
+      if (productsData.success) {
+        const pd = productsData.data.results;
+        const carouselProducts = pd.map((p) => ({
+          id: p.id,
+          presentationId: p.presentation.id,
+          productId: p.product.id,
+          imageUrl: p.product.images[0].url,
+          name:
+            p.product.name +
+            ' ' +
+            p.presentation.name +
+            ' ' +
+            p.presentation.quantity +
+            ' ' +
+            p.presentation.measurementUnit,
+          category: p.product.categories[0].name,
+          originalPrice: p.price,
+          discount: 10,
+          finalPrice: p.price - p.price * 0.1,
+          quantity: getItemQuantity(p.id),
+          getQuantity: (quantity: number) => {
+            addToCart({
+              id: p.id,
+              name:
+                p.product.name +
+                ' ' +
+                p.presentation.name +
+                ' ' +
+                p.presentation.quantity +
+                ' ' +
+                p.presentation.measurementUnit,
+              price: p.price,
+              quantity,
+              image:
+                p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
+            });
+            updateCartQuantity(p.id, quantity);
+          },
+        }));
+
+        setProducts(carouselProducts);
+      } else {
+        console.log(productsData.error);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false); // Finaliza el indicador de carga
+    }
+  };
 
   return (
     <View testID="home-screen" style={styles.container}>
@@ -121,7 +117,16 @@ export default function HomeScreen() {
             Ofertas especiales
           </PoppinsText>
           <View style={styles.rowFullWidth}>
-            <Carousel cards={products} />
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <PoppinsText style={styles.loadingText}>
+                  Cargando ofertas...
+                </PoppinsText>
+                <ActivityIndicator size="large" color={Colors.primary} />
+              </View>
+            ) : (
+              <Carousel cards={products} />
+            )}
           </View>
         </View>
         <View>
@@ -129,7 +134,16 @@ export default function HomeScreen() {
             Medicamentos
           </PoppinsText>
           <View style={styles.rowFullWidth}>
-            <Carousel cards={products} />
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <PoppinsText style={styles.loadingText}>
+                  Cargando medicamentos...
+                </PoppinsText>
+                <ActivityIndicator size="large" color={Colors.primary} />
+              </View>
+            ) : (
+              <Carousel cards={products} />
+            )}
           </View>
         </View>
       </ScrollView>
