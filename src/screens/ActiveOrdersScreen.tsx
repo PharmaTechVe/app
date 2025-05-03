@@ -9,6 +9,20 @@ import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
 
+const STATUS_LABELS: Record<string, string> = {
+  requested: 'Pendiente',
+  ready_for_pickup: 'A Enviar',
+  in_progress: 'En Proceso',
+  approved: 'Aprobado',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  requested: Colors.semanticDanger,
+  ready_for_pickup: Colors.semanticInfo,
+  in_progress: Colors.secondaryGray,
+  approved: Colors.secondary,
+};
+
 const ActiveOrdersScreen = () => {
   const [activeOrdersList, setActiveOrdersList] = useState<
     OrderResponse[] | undefined
@@ -24,7 +38,11 @@ const ActiveOrdersScreen = () => {
         const order = await UserService.getUserOrders();
         if (order.success) {
           const activeOrders = order.data.results.filter(
-            (o) => o.status === 'requested' || o.status === 'approved', // Include requested and approved statuses
+            (o) =>
+              o.status === 'requested' ||
+              o.status === 'approved' ||
+              o.status === 'ready_for_pickup' ||
+              o.status === 'in_progress',
           );
           if (activeOrders.length > 0) {
             setActiveOrdersList(activeOrders);
@@ -116,15 +134,16 @@ const ActiveOrdersScreen = () => {
                   <PoppinsText
                     style={{
                       padding: 5,
-                      backgroundColor: Colors.semanticDanger,
+                      backgroundColor:
+                        STATUS_COLORS[order.status] || Colors.semanticDanger,
                       borderRadius: 5,
                       width: 80,
-                      textAlign: 'center',
                       color: Colors.textWhite,
                       fontSize: FontSizes.c1.size,
+                      textAlign: 'center',
                     }}
                   >
-                    {order.status}
+                    {STATUS_LABELS[order.status] || order.status}
                   </PoppinsText>
                   <TouchableOpacity
                     onPress={() => router.push(`order/${order.id}`)}
