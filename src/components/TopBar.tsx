@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { ShoppingCartIcon } from 'react-native-heroicons/outline';
+import { BellIcon, ShoppingCartIcon } from 'react-native-heroicons/outline';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
@@ -10,6 +10,7 @@ import { AuthService } from '../services/auth';
 import Badge from './Badge';
 import { useCart } from '../hooks/useCart';
 import AvatarWithMenu from './AvatarWithMenu';
+import { useNotifications } from '../hooks/useNotifications';
 
 const TopBar = () => {
   const [searchText, setSearchText] = useState('');
@@ -18,6 +19,8 @@ const TopBar = () => {
     useState(false);
   const router = useRouter();
   const { cartItems } = useCart();
+  const { notifications } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   // Calculate the total quantity of items in the cart
   const totalCartQuantity = cartItems.reduce(
@@ -58,6 +61,22 @@ const TopBar = () => {
         <View style={styles.logoContainer}>
           <Logo width={118} height={48} />
         </View>
+
+        <TouchableOpacity
+          style={{ paddingRight: 8 }}
+          onPress={() => {
+            router.push('/notifications');
+          }}
+        >
+          <BellIcon size={26} color={Colors.textMain} />
+          {unreadCount > 0 && (
+            <View style={styles.badgeContainerBell}>
+              <Badge variant="filled" color="danger" size="tiny">
+                {unreadCount}
+              </Badge>
+            </View>
+          )}
+        </TouchableOpacity>
 
         {/* Right cart icon with badge */}
         <TouchableOpacity
@@ -145,15 +164,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 55 + 8,
   },
   iconButton: {
     paddingRight: 4,
     position: 'relative',
   },
+  badgeContainerBell: {
+    position: 'absolute',
+    top: -5,
+    right: 4,
+  },
   badgeContainer: {
     position: 'absolute',
     top: -5,
-    right: -5,
+    right: -2,
   },
   searchInput: {
     backgroundColor: Colors.menuWhite,
