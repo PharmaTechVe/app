@@ -63,14 +63,14 @@ const TopBar = () => {
         </View>
 
         <TouchableOpacity
-          style={{ paddingRight: 5 }}
+          style={{ paddingRight: 8 }}
           onPress={() => {
             router.push('/notifications');
           }}
         >
           <BellIcon size={26} color={Colors.textMain} />
           {unreadCount > 0 && (
-            <View style={styles.badgeContainer}>
+            <View style={styles.badgeContainerBell}>
               <Badge variant="filled" color="danger" size="tiny">
                 {unreadCount}
               </Badge>
@@ -164,16 +164,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 55,
+    marginLeft: 55 + 8,
   },
   iconButton: {
-    paddingRight: 5,
+    paddingRight: 4,
     position: 'relative',
+  },
+  badgeContainerBell: {
+    position: 'absolute',
+    top: -5,
+    right: 4,
   },
   badgeContainer: {
     position: 'absolute',
     top: -5,
-    right: -5,
+    right: -2,
   },
   searchInput: {
     backgroundColor: Colors.menuWhite,

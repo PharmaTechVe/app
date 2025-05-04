@@ -17,9 +17,8 @@ import {
   format,
 } from 'date-fns';
 import { es } from 'date-fns/locale';
-
+import { ChevronLeftIcon } from 'react-native-heroicons/solid';
 import TopBar from '../components/TopBar';
-import Return from '../components/Return';
 import PoppinsText from '../components/PoppinsText';
 import Alert from '../components/Alerts';
 // Importamos y casteamos explicitamente el ícono por defecto
@@ -208,6 +207,32 @@ export default function NotificationsScreen() {
   return (
     <View style={styles.container}>
       <TopBar />
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          paddingHorizontal: 10,
+          marginBottom: -4,
+          flexDirection: 'row',
+          alignSelf: 'flex-start',
+        }}
+      >
+        <ChevronLeftIcon
+          width={20}
+          height={20}
+          color={Colors.primary}
+          style={{ marginRight: 2, marginLeft: 6 }}
+        />
+        <PoppinsText
+          weight="medium"
+          style={{
+            fontSize: FontSizes.b1.size,
+            lineHeight: FontSizes.b1.lineHeight,
+            color: Colors.primary,
+          }}
+        >
+          Volver
+        </PoppinsText>
+      </TouchableOpacity>
 
       {showErrorAlert && (
         <View style={styles.alertContainer}>
@@ -222,7 +247,6 @@ export default function NotificationsScreen() {
       )}
 
       <View style={styles.header}>
-        <Return onClose={() => navigation.goBack()} />
         <PoppinsText style={styles.title}>Notificaciones</PoppinsText>
       </View>
 
@@ -274,7 +298,10 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.bgColor },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bgColor,
+  },
   alertContainer: {
     position: 'absolute',
     top: 20,
@@ -285,14 +312,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 15,
+    paddingTop: 16,
   },
   title: {
     fontSize: FontSizes.s1.size,
-    marginLeft: 40,
-    color: Colors.textMain,
+    color: Colors.primary,
+    marginLeft: 20,
   },
   loader: { marginTop: 40 },
   emptyContainer: {
