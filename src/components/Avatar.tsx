@@ -4,6 +4,7 @@ import { Colors } from '../styles/theme';
 import { UserService } from '../services/user';
 import PoppinsText from './PoppinsText';
 import * as SecureStore from 'expo-secure-store';
+import { usePathname } from 'expo-router';
 
 type AvatarProps = {
   scale?: number; // Propiedad para definir el tamaño del avatar
@@ -12,6 +13,7 @@ type AvatarProps = {
 const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
   const [profile, setProfile] = useState<{ uri?: string; name?: string }>({});
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -42,7 +44,10 @@ const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
         const { firstName, lastName } = response.data!;
         const profilePicture = response.data.profile.profilePicture;
         setProfile({
-          uri: profilePicture,
+          uri:
+            profilePicture !== 'https://via.placeholder.com/150'
+              ? profilePicture
+              : '',
           name: `${firstName} ${lastName}`,
         });
       } else {
@@ -52,7 +57,7 @@ const Avatar: React.FC<AvatarProps> = ({ scale = 32 }) => {
     };
 
     fetchProfile();
-  }, []);
+  }, [pathname]);
 
   const getInitials = (fullName: string): string => {
     const words = fullName.trim().split(' ');
