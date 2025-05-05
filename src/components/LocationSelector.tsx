@@ -15,6 +15,7 @@ type Branch = {
   name: string;
   latitude: number;
   longitude: number;
+  address: string;
 };
 
 const LocationSelector = ({
@@ -54,6 +55,7 @@ const LocationSelector = ({
             name: branch.name,
             latitude: branch.latitude,
             longitude: branch.longitude,
+            address: branch.address,
           }));
 
           setPickupBranches(branches);
@@ -95,7 +97,7 @@ const LocationSelector = ({
 
   const options =
     selectedOption === 'pickup'
-      ? pickupBranches.map((branch) => branch.name)
+      ? pickupBranches.map((branch) => `${branch.name} - ${branch.address}`)
       : deliveryAddresses.map((item) => item.address);
 
   return (
@@ -114,7 +116,9 @@ const LocationSelector = ({
           options={options}
           placeholder="Selecciona una opción"
           onSelect={(val) => {
-            const branch = pickupBranches.find((b) => b.name === val);
+            const branch = pickupBranches.find(
+              (b) => `${b.name} - ${b.address}` === val,
+            );
             setSelectedBranch(branch || null);
             setSelectedBranchState(branch || null);
             onSelect(branch ? branch.id : null);
