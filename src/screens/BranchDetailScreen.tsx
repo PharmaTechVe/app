@@ -8,13 +8,14 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BranchService } from '../services/branches';
-import { ProductService } from '../services/products'; // Importar el servicio de productos
-import { InventoryService } from '../services/inventory'; // Importar el servicio de inventario
+import { ProductService } from '../services/products';
+import { InventoryService } from '../services/inventory';
 import { BranchResponse, ProductPresentation } from '@pharmatech/sdk';
 import BranchMapModal from '../components/BranchMapModal';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { usePagination } from '../hooks/usePagination';
+import { MapPinIcon } from 'react-native-heroicons/solid';
 
 export default function BranchDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -123,14 +124,14 @@ export default function BranchDetailScreen() {
       {branch ? (
         <>
           <PoppinsText style={styles.title}>{branch.name}</PoppinsText>
+          <PoppinsText style={styles.titleAddress}>Dirección</PoppinsText>
           <PoppinsText style={styles.address}>{branch.address}</PoppinsText>
           <TouchableOpacity
-            style={styles.mapButton}
             onPress={() => setMapVisible(true)}
+            style={styles.mapButton}
           >
-            <PoppinsText style={styles.mapButtonText}>
-              Ver en el mapa
-            </PoppinsText>
+            <MapPinIcon size={22} color={Colors.primary} />
+            <PoppinsText style={styles.map}>Ubicar en el mapa</PoppinsText>
           </TouchableOpacity>
         </>
       ) : (
@@ -138,6 +139,10 @@ export default function BranchDetailScreen() {
           No se pudo cargar la información de la sucursal.
         </PoppinsText>
       )}
+      <View style={styles.divider} />
+      <PoppinsText style={styles.titleAddress}>
+        Productos disponibles en {branch?.name || 'la sucursal'}
+      </PoppinsText>
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -173,22 +178,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
     padding: 16,
+    paddingTop: 52,
   },
   title: {
-    fontSize: FontSizes.h4.size,
+    fontSize: FontSizes.h5.size,
+    lineHeight: FontSizes.h5.lineHeight,
     color: Colors.textMain,
-    marginBottom: 10,
+    marginBottom: 8,
+  },
+  titleAddress: {
+    fontSize: FontSizes.s2.size,
+    lineHeight: FontSizes.s2.lineHeight,
+    color: Colors.primary,
+    marginBottom: 4,
   },
   address: {
-    fontSize: FontSizes.b2.size,
+    fontSize: FontSizes.b3.size,
+    lineHeight: FontSizes.b3.lineHeight,
     color: Colors.textLowContrast,
-    marginBottom: 20,
+    marginBottom: 12,
+  },
+  map: {
+    fontSize: FontSizes.b2.size,
+    lineHeight: FontSizes.b2.lineHeight,
+    color: Colors.primary,
+    marginBottom: 4,
   },
   mapButton: {
-    backgroundColor: Colors.primary,
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 20,
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  divider: {
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.stroke,
   },
   mapButtonText: {
     color: Colors.textWhite,
