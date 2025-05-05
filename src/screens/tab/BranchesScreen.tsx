@@ -7,6 +7,7 @@ import {
   Modal,
   Pressable,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { StateService } from '../../services/state';
 import { BranchService } from '../../services/branches';
 import { StateResponse, BranchResponse } from '@pharmatech/sdk';
@@ -49,6 +50,14 @@ export default function BranchesScreen() {
     }
   }, [selectedState]);
 
+  // Restablecer el estado del modal y el estado seleccionado al volver a la pantalla
+  useFocusEffect(
+    React.useCallback(() => {
+      setModalVisible(false); // Cerramos el modal
+      setSelectedState(null); // Restablecemos el estado seleccionado
+    }, []),
+  );
+
   return (
     <View style={styles.container}>
       <PoppinsText weight="medium" style={styles.title}>
@@ -80,7 +89,7 @@ export default function BranchesScreen() {
 
       {/* Modal para mostrar las sucursales */}
       <Modal
-        animationType="slide"
+        animationType="none"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
@@ -88,13 +97,18 @@ export default function BranchesScreen() {
           setSelectedState(null);
         }}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => {
-            setModalVisible(false);
-            setSelectedState(null);
-          }}
-        >
+        {/* Overlay fijo */}
+        <View style={styles.modalOverlay} />
+
+        {/* Contenido del modal */}
+        <View style={styles.modalContainer}>
+          <Pressable
+            style={styles.modalDismissArea}
+            onPress={() => {
+              setModalVisible(false);
+              setSelectedState(null);
+            }}
+          />
           <View style={styles.modalContent}>
             {/* Indicador de deslizamiento */}
             <View style={styles.modalHandle} />
@@ -114,10 +128,6 @@ export default function BranchesScreen() {
                 <BranchCard
                   branch={item}
                   onPress={() => {
-                    console.log(
-                      'Navigating to branch detail with ID:',
-                      item.id,
-                    );
                     router.push(`/branchDetail/${item.id}`);
                   }}
                 />
@@ -132,7 +142,7 @@ export default function BranchesScreen() {
               }
             />
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </View>
   );
@@ -175,9 +185,21 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1,
+  },
+  modalContainer: {
+    flex: 1,
     justifyContent: 'flex-end',
+    zIndex: 2,
+  },
+  modalDismissArea: {
+    flex: 1,
   },
   modalContent: {
     backgroundColor: Colors.bgColor,

@@ -9,7 +9,6 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BranchService } from '../services/branches';
 import { ProductService } from '../services/products';
-import { InventoryService } from '../services/inventory';
 import { BranchResponse, ProductPresentation } from '@pharmatech/sdk';
 import BranchMapModal from '../components/BranchMapModal';
 import { Colors, FontSizes } from '../styles/theme';
@@ -29,36 +28,20 @@ export default function BranchDetailScreen() {
     fetchData,
     loading,
     hasMore,
-  } = usePagination<ProductPresentation & { stockQuantity: number }>(
-    async (page) => {
-      const [productResponse, inventoryResponse] = await Promise.all([
-        ProductService.getProducts(page, 10, { branchId: [id!] }),
-        InventoryService.getBranchInventory({ page, limit: 10, branchId: id! }),
-      ]);
+  } = usePagination<ProductPresentation>(async (page) => {
+    const productResponse = await ProductService.getProducts(page, 10, {
+      branchId: [id!],
+    });
 
-      if (!productResponse.success || !inventoryResponse) {
-        return { data: [], next: null };
-      }
+    if (!productResponse.success) {
+      return { data: [], next: null };
+    }
 
-      // Map inventory stockQuantity to products
-      const inventoryMap = new Map(
-        inventoryResponse.results.map((item) => [
-          item.productPresentation.id,
-          item.stockQuantity,
-        ]),
-      );
-
-      const productsWithStock = productResponse.data.results.map((product) => ({
-        ...product,
-        stockQuantity: inventoryMap.get(product.id) || 0, // Default to 0 if not found
-      }));
-
-      return {
-        data: productsWithStock,
-        next: productResponse.data.next,
-      };
-    },
-  );
+    return {
+      data: productResponse.data.results,
+      next: productResponse.data.next,
+    };
+  });
 
   useEffect(() => {
     if (!id) {
@@ -78,12 +61,8 @@ export default function BranchDetailScreen() {
     fetchBranchDetails();
   }, [id]);
 
-  const renderProduct = ({
-    item,
-  }: {
-    item: ProductPresentation & { stockQuantity: number };
-  }) => {
-    const { product, presentation, stockQuantity } = item;
+  const renderProduct = ({ item }: { item: ProductPresentation }) => {
+    const { product, presentation, stock } = item;
 
     return (
       <TouchableOpacity
@@ -104,7 +83,7 @@ export default function BranchDetailScreen() {
             {presentation.quantity} {presentation.measurementUnit}
           </PoppinsText>
           <PoppinsText style={styles.productQuantity}>
-            Cantidad disponible en sucursal: {stockQuantity}
+            Cantidad disponible en sucursal: {stock}
           </PoppinsText>
         </View>
       </TouchableOpacity>
