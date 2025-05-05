@@ -161,6 +161,7 @@ export default function RootLayout() {
             name="deliveryDetail"
             options={{ headerShown: false }}
           />
+          <Stack.Screen name="branchDetail" options={{ headerShown: false }} />
           <Stack.Screen
             name="deliveryHistoryDetail"
             options={{ headerShown: false }}

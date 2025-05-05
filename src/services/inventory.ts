@@ -1,6 +1,13 @@
 import { api } from '../lib/sdkConfig';
-import { ServiceResponse, Pagination, Inventory } from '../types/api.d';
+import { ServiceResponse, Inventory } from '../types/api.d';
+import { Pagination, InventoryResponse } from '@pharmatech/sdk';
 import { extractErrorMessage } from '../utils/errorHandler';
+
+type GetBranchInventoryParams = {
+  page?: number;
+  limit?: number;
+  branchId: string;
+};
 
 export const InventoryService = {
   getPresentationInventory: async (
@@ -21,6 +28,20 @@ export const InventoryService = {
         success: false,
         error: extractErrorMessage(error),
       };
+    }
+  },
+
+  getBranchInventory: async ({
+    page = 1,
+    limit = 10,
+    branchId,
+  }: GetBranchInventoryParams): Promise<Pagination<InventoryResponse>> => {
+    try {
+      const response = await api.inventory.findAll({ page, limit, branchId });
+      return response;
+    } catch (error) {
+      console.error('Error en InventoryService.getBranchInventory:', error);
+      throw new Error(extractErrorMessage(error));
     }
   },
 };
