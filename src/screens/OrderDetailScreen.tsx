@@ -211,8 +211,8 @@ const OrderDetailScreen = () => {
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
-            <PoppinsText>IVA</PoppinsText>
-            <PoppinsText>${order?.totalPrice}</PoppinsText>
+            {/* <PoppinsText>IVA</PoppinsText>
+<PoppinsText>${order?.totalPrice}</PoppinsText> */}
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}

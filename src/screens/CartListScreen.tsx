@@ -27,8 +27,7 @@ const CartListScreen = () => {
     (sum, item) => sum + item.price * (item.quantity * 0.1), // 12% discount
     0,
   ); // Discount sum
-  const iva = (subtotal - totalDiscount) * 0.16; // 10% subtotal minus discount
-  const total = subtotal - totalDiscount + iva; // Subtotal, discount and IVA sum
+  const total = subtotal - totalDiscount; // Subtotal minus discount
 
   const renderItem = ({ item }: { item: CartItem }) => {
     const discount = 10; // Discount percentage
@@ -130,12 +129,6 @@ const CartListScreen = () => {
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
               <PoppinsText style={styles.discountText}>
                 -${totalDiscount.toFixed(2)}
-              </PoppinsText>
-            </View>
-            <View style={styles.row}>
-              <PoppinsText style={styles.ivaText}>IVA</PoppinsText>
-              <PoppinsText style={styles.ivaText}>
-                ${iva.toFixed(2)}
               </PoppinsText>
             </View>
             <View style={styles.row}>
