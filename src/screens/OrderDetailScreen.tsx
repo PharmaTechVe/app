@@ -201,18 +201,18 @@ const OrderDetailScreen = () => {
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
-            <PoppinsText style={{ color: Colors.semanticSuccess }}>
+            {/*  <PoppinsText style={{ color: Colors.semanticSuccess }}>
               Descuentos
             </PoppinsText>
-            <PoppinsText style={{ color: Colors.semanticSuccess }}>
-              -${order?.totalPrice}
-            </PoppinsText>
+            <PoppinsText style={{ color: Colors.semanticSuccess }}> // Comentado */}
+            {/*   -${order?.totalPrice} */}
+            {/* </PoppinsText> */}
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
-            <PoppinsText>IVA</PoppinsText>
-            <PoppinsText>${order?.totalPrice}</PoppinsText>
+            {/* <PoppinsText>IVA</PoppinsText>
+<PoppinsText>${order?.totalPrice}</PoppinsText> */}
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}

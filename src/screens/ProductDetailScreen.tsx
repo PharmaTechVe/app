@@ -62,7 +62,7 @@ const ProductDetailScreen: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
   const imagesScrollRef = useRef<ScrollView>(null);
-  const discount = 10;
+  //const discount = 10;
   const router = useRouter();
 
   const { cartItems, addToCart, getItemQuantity, updateCartQuantity } =
@@ -91,9 +91,9 @@ const ProductDetailScreen: React.FC = () => {
           ' ' +
           p.presentation.measurementUnit,
         category: p.product.categories[0].name,
-        originalPrice: p.price,
-        discount: 10,
-        finalPrice: p.price - p.price * 0.1,
+        //originalPrice: p.price,
+        //discount: 10,
+        finalPrice: p.price,
         quantity: getItemQuantity(p.product.id),
         getQuantity: (quantity: number) => {
           addToCart({
@@ -384,9 +384,9 @@ const ProductDetailScreen: React.FC = () => {
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
               <PoppinsText style={styles.price}>$ {product?.price}</PoppinsText>
-              {discount && (
-                <PoppinsText style={styles.discount}>-{discount}%</PoppinsText>
-              )}
+              {/* {discount && ( // Comentado */}
+              {/*   <PoppinsText style={styles.discount}>-{discount}%</PoppinsText> */}
+              {/* )} */}
             </View>
             <PoppinsText
               style={[

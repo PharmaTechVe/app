@@ -14,25 +14,26 @@ const OrderSummary = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const totalDiscount = cartItems.reduce(
-    (sum, item) => sum + item.price * (item.quantity * 0.1),
-    0,
-  );
+  // const totalDiscount = cartItems.reduce(
+  //   (sum, item) => sum + item.price * (item.quantity * 0.1), // Comentado
+  //   0,
+  // );
 
   const renderItem = ({ item }: { item: CartItem }) => {
-    const discount = 10;
-    const discountedPrice = item.price * (1 - discount / 100);
-    const totalDiscountedPrice = discountedPrice * item.quantity;
+    // const discount = 10; // Comentado
+    // const discountedPrice = item.price * (1 - discount / 100); // Comentado
+    // const totalDiscountedPrice = discountedPrice * item.quantity; // Comentado
     const totalOriginalPrice = item.price * item.quantity;
 
     return (
       <View style={styles.card}>
         <View style={styles.imageContainer}>
+          {/** 
           <View style={styles.discountBadge}>
             <PoppinsText style={styles.discountBadgeText}>
-              -{discount}%
+              -10%
             </PoppinsText>
-          </View>
+          </View>*/}
           <Image
             source={{ uri: item.image }}
             style={styles.productImage}
@@ -43,12 +44,13 @@ const OrderSummary = () => {
           <View style={styles.row}>
             <PoppinsText style={styles.productName}>{item.name}</PoppinsText>
             <PoppinsText style={styles.productTotalPrice}>
-              ${totalDiscountedPrice.toFixed(2)}
+              ${totalOriginalPrice.toFixed(2)}
             </PoppinsText>
           </View>
+          {/**
           <PoppinsText style={styles.productOriginalPrice}>
             ${totalOriginalPrice.toFixed(2)}
-          </PoppinsText>
+          </PoppinsText> */}
           <PoppinsText style={styles.productPrice}>
             (${item.price} c/u)
           </PoppinsText>
@@ -105,9 +107,7 @@ const OrderSummary = () => {
             </View>
             <View style={styles.row}>
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
-              <PoppinsText style={styles.discountText}>
-                -${totalDiscount.toFixed(2)}
-              </PoppinsText>
+              <PoppinsText style={styles.discountText}>-$0.00</PoppinsText>
             </View>
           </View>
         </>

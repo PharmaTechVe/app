@@ -126,16 +126,17 @@ const CheckoutScreen = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const totalDiscount = cartItems.reduce(
+  {
+    /** const totalDiscount = cartItems.reduce(
     (sum, item) => sum + item.price * (item.quantity * 0.1),
     0,
-  );
-  const subtotalAfterDiscount = subtotal - totalDiscount;
+  );*/
+  }
+  const subtotalAfterDiscount = subtotal; // - totalDiscount;
   const subtotalAfterCoupon = couponApplied
     ? subtotalAfterDiscount * (1 - couponDiscount / 100)
     : subtotalAfterDiscount;
-  const iva = subtotalAfterCoupon * 0.16;
-  const total = subtotalAfterCoupon + iva;
+  const total = subtotalAfterCoupon;
 
   const renderFooterMessage = () => {
     if (option === 'pickup' && payment === 'punto_de_venta') {
@@ -529,10 +530,8 @@ const CheckoutScreen = () => {
                 </>
               )}
               <View style={styles.totalRow}>
-                <PoppinsText style={styles.descuentoLabel}>IVA:</PoppinsText>
-                <PoppinsText style={styles.descuentoAmount}>
-                  +${iva.toFixed(2)}
-                </PoppinsText>
+                {/* <PoppinsText style={styles.descuentoLabel}>IVA:</PoppinsText>
+<PoppinsText style={styles.descuentoAmount}>+${iva.toFixed(2)}</PoppinsText> */}
               </View>
               <View style={styles.totalRow}>
                 <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
