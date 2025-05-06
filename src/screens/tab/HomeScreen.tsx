@@ -77,9 +77,9 @@ export default function HomeScreen() {
             ' ' +
             p.presentation.measurementUnit,
           category: p.product.categories[0].name,
-          originalPrice: p.price,
-          discount: 10,
-          finalPrice: p.price - p.price * 0.1,
+          //originalPrice: p.price,
+          //discount: 10,
+          finalPrice: p.price,
           quantity: getItemQuantity(p.id),
           getQuantity: (quantity: number) => {
             addToCart({
@@ -130,9 +130,9 @@ export default function HomeScreen() {
           ' ' +
           p.presentation.measurementUnit,
         category: p.product.categories[0]?.name || 'Sin categoría',
-        originalPrice: p.price,
-        discount: 10,
-        finalPrice: p.price - p.price * 0.1,
+        //originalPrice: p.price,
+        //discount: 10,
+        finalPrice: p.price,
         quantity: getItemQuantity(p.id),
         getQuantity: (quantity: number) => {
           addToCart({

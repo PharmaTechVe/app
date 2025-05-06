@@ -126,11 +126,13 @@ const CheckoutScreen = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const totalDiscount = cartItems.reduce(
+  {
+    /** const totalDiscount = cartItems.reduce(
     (sum, item) => sum + item.price * (item.quantity * 0.1),
     0,
-  );
-  const subtotalAfterDiscount = subtotal - totalDiscount;
+  );*/
+  }
+  const subtotalAfterDiscount = subtotal; // - totalDiscount;
   const subtotalAfterCoupon = couponApplied
     ? subtotalAfterDiscount * (1 - couponDiscount / 100)
     : subtotalAfterDiscount;

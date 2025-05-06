@@ -23,27 +23,27 @@ const CartListScreen = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   ); // Total price sum
-  const totalDiscount = cartItems.reduce(
-    (sum, item) => sum + item.price * (item.quantity * 0.1), // 12% discount
-    0,
-  ); // Discount sum
-  const total = subtotal - totalDiscount; // Subtotal minus discount
+  // const totalDiscount = cartItems.reduce(
+  //   (sum, item) => sum + item.price * (item.quantity * 0.1), // Comentado
+  //   0,
+  // ); // Discount sum
+  const total = subtotal; // Subtotal without discount
 
   const renderItem = ({ item }: { item: CartItem }) => {
-    const discount = 10; // Discount percentage
-    const discountedPrice = item.price * (1 - discount / 100); // Unit price discount
-    const totalDiscountedPrice = discountedPrice * item.quantity; // Total price with discount
+    // const discount = 10; // Comentado
+    // const discountedPrice = item.price * (1 - discount / 100); // Comentado
+    // const totalDiscountedPrice = discountedPrice * item.quantity; // Comentado
     const totalOriginalPrice = item.price * item.quantity; // Original total price
 
     return (
       <View style={styles.card}>
         <View style={styles.imageContainer}>
           {/* Discount badge */}
-          <View style={styles.discountBadge}>
+          {/* <View style={styles.discountBadge}>
             <PoppinsText style={styles.discountBadgeText}>
               -{discount}%
             </PoppinsText>
-          </View>
+          </View> */}
           <Image
             source={{ uri: item.image }}
             style={styles.productImage}
@@ -54,14 +54,10 @@ const CartListScreen = () => {
           <View style={styles.row}>
             <PoppinsText style={styles.productName}>{item.name}</PoppinsText>
             <PoppinsText style={styles.productTotalPrice}>
-              ${totalDiscountedPrice.toFixed(2)}
-              {/* Total price with discount */}
+              ${totalOriginalPrice.toFixed(2)}
+              {/* Original total price */}
             </PoppinsText>
           </View>
-          <PoppinsText style={styles.productOriginalPrice}>
-            ${totalOriginalPrice.toFixed(2)}
-            {/* Original total price */}
-          </PoppinsText>
           <PoppinsText style={styles.productPrice}>
             (${item.price} c/u)
           </PoppinsText>
@@ -125,12 +121,12 @@ const CartListScreen = () => {
                 ${subtotal.toFixed(2)}
               </PoppinsText>
             </View>
-            <View style={styles.row}>
+            {/* <View style={styles.row}>
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
               <PoppinsText style={styles.discountText}>
                 -${totalDiscount.toFixed(2)}
               </PoppinsText>
-            </View>
+            </View> */}
             <View style={styles.row}>
               <PoppinsText style={styles.totalText}>Total</PoppinsText>
               <PoppinsText style={styles.totalText}>
