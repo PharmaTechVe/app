@@ -26,6 +26,24 @@ const OrdersScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
 
+  /* const handleReorder = (order: OrderResponse) => {
+
+    order.products.forEach((product) => {
+      const existingQuantity = getItemQuantity(product.productId);
+      if (existingQuantity > 0) {
+        updateCartQuantity(product.productId, existingQuantity + product.quantity);
+      } else {
+        addToCart({
+          id: product.productId,
+          quantity: product.quantity,
+          price: product.price,
+          name: product.name,
+          image: product.image,
+        });
+      }
+    }
+  }; */
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {

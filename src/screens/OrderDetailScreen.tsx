@@ -16,6 +16,7 @@ import { UserService } from '../services/user';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { OrderDetailedResponse } from '@pharmatech/sdk';
 import { truncateString } from '../utils/commons';
+import { useCart } from '../hooks/useCart';
 
 const OrderDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,7 +28,30 @@ const OrderDetailScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { addToCart, getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
+
+  const handleReorder = () => {
+    order?.details.forEach((detail) => {
+      const existingQuantity = getItemQuantity(detail.productPresentation.id);
+      if (existingQuantity > 0) {
+        updateCartQuantity(
+          detail.productPresentation.id,
+          existingQuantity + detail.quantity,
+        );
+      } else {
+        addToCart({
+          id: detail.productPresentation.id,
+          quantity: detail.quantity,
+          price: detail.subtotal,
+          name: detail.productPresentation.product.name,
+          image: detail.productPresentation.product.images[0].url,
+        });
+      }
+    });
+    setShowSuccessAlert(true);
+    router.push('/cart');
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -101,17 +125,17 @@ const OrderDetailScreen = () => {
           <View>
             <PoppinsText>Número de pedido:</PoppinsText>
             <PoppinsText>
-              {order ? truncateString(order?.id, 8) : ''}
+              #{order ? truncateString(order?.id, 8, '') : ''}
             </PoppinsText>
           </View>
           <Button
-            title="Re ordenar"
+            title="Ver Tracking"
             size="small"
             style={{ paddingVertical: 0 }}
-            onPress={() => setShowSuccessAlert(true)}
+            onPress={() => router.push(`order/tracking/${order?.id}`)}
           />
         </View>
-        <ScrollView style={{ height: 400 }}>
+        <ScrollView style={{ height: 380 }}>
           {order?.details.map((detail, index) => (
             <View
               key={index}
@@ -197,6 +221,9 @@ const OrderDetailScreen = () => {
             <PoppinsText>${order?.totalPrice}</PoppinsText>
           </View>
         </View>
+        <View style={{ marginTop: 20 }}>
+          <Button title="Re Ordenar" onPress={handleReorder} />
+        </View>
       </View>
     </ScrollView>
   );
@@ -207,6 +234,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: Colors.bgColor,
     padding: 20,
+    paddingBottom: 0,
   },
   alertContainer: {
     position: 'absolute',
@@ -236,41 +264,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#e0e0e0',
   },
-  editButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: Colors.primary,
-  },
   orderInfo: {
     marginBottom: 20,
-  },
-  fieldContainer: {
-    marginBottom: 15,
-  },
-  fieldLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  fieldValue: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 10,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginBottom: 15,
-  },
-  bottomEditButton: {
-    alignSelf: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-    width: '50%',
-    alignItems: 'center',
   },
 });
 
