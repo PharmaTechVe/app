@@ -60,6 +60,7 @@ const ProductDetailScreen: React.FC = () => {
   const [userRating, setUserRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const [isLoadingInventory, setIsLoadingInventory] = useState(false);
   const imagesScrollRef = useRef<ScrollView>(null);
   const discount = 10;
   const router = useRouter();
@@ -181,6 +182,7 @@ const ProductDetailScreen: React.FC = () => {
       if (!selectedState || !product) return;
 
       setInventory([]); // Limpiar el estado antes de cargar nuevos datos
+      setIsLoadingInventory(true); // Mostrar el indicador de carga
 
       try {
         // Obtener las sucursales del estado seleccionado
@@ -233,6 +235,8 @@ const ProductDetailScreen: React.FC = () => {
         setInventory(results); // Actualizar el estado con los datos obtenidos
       } catch (error) {
         console.error('Error cargando sucursales con stock:', error);
+      } finally {
+        setIsLoadingInventory(false); // Ocultar el indicador de carga
       }
     };
 
@@ -384,7 +388,16 @@ const ProductDetailScreen: React.FC = () => {
                 <PoppinsText style={styles.discount}>-{discount}%</PoppinsText>
               )}
             </View>
-            <PoppinsText style={styles.sectionTitle}>
+            <PoppinsText
+              style={[
+                styles.sectionTitle,
+                {
+                  fontSize: FontSizes.s1.size,
+                  paddingTop: 12,
+                  color: Colors.primary,
+                },
+              ]}
+            >
               Selecciona la presentación
             </PoppinsText>
             <View style={styles.quantitySelector}>
@@ -421,13 +434,13 @@ const ProductDetailScreen: React.FC = () => {
             <PoppinsText
               style={[
                 styles.sectionTitle,
-                { fontSize: FontSizes.s1.size, paddingTop: 15 },
+                { fontSize: FontSizes.s1.size, color: Colors.primary },
               ]}
             >
               Disponibilidad en sucursales
             </PoppinsText>
             <PoppinsText style={styles.sectionTitle}>
-              Selecciona el estado
+              Selecciona un estado para ver disponibilidad
             </PoppinsText>
             <View style={styles.quantitySelector}>
               <Dropdown
@@ -438,115 +451,126 @@ const ProductDetailScreen: React.FC = () => {
               />
             </View>
             <View style={styles.availableContainer}>
-              {inventory && inventory.length > 0 ? (
-                inventory.map((inv) => (
-                  <View key={inv.id} style={styles.availableCard}>
-                    <View style={{ padding: 10, paddingHorizontal: 16 }}>
-                      <PoppinsText style={styles.sectionTitle}>
-                        {inv.branch.name}
-                      </PoppinsText>
-                      <PoppinsText
-                        style={{
-                          fontSize: FontSizes.b3.size,
-                          color: Colors.textLowContrast,
-                        }}
-                      >
-                        {inv.branch.address}
-                      </PoppinsText>
-                    </View>
-                    <View
-                      style={{
-                        width: '100%',
-                        alignItems: 'flex-end',
-                        paddingHorizontal: 20,
-                      }}
-                    >
-                      <View
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
-                      >
+              {selectedState ? (
+                isLoadingInventory ? (
+                  <ActivityIndicator size="large" color={Colors.primary} />
+                ) : inventory && inventory.length > 0 ? (
+                  inventory.map((inv) => (
+                    <View key={inv.id} style={styles.availableCard}>
+                      <View style={{ padding: 10, paddingHorizontal: 16 }}>
+                        <PoppinsText style={styles.sectionTitle}>
+                          {inv.branch.name}
+                        </PoppinsText>
                         <PoppinsText
                           style={{
-                            fontSize: FontSizes.c1.size,
+                            fontSize: FontSizes.b3.size,
                             color: Colors.textLowContrast,
                           }}
                         >
-                          {inv.stockQuantity} unidades{' '}
+                          {inv.branch.address}
                         </PoppinsText>
-                        <CheckCircleIcon
-                          size={15}
-                          color={Colors.semanticSuccess}
-                        />
                       </View>
                       <View
-                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                        style={{
+                          width: '100%',
+                          alignItems: 'flex-end',
+                          paddingHorizontal: 20,
+                        }}
                       >
-                        <TruckIcon size={15} color={Colors.gray_500} />
-                        <PoppinsText
-                          style={{
-                            fontSize: FontSizes.c3.size,
-                            color: Colors.gray_500,
-                            marginLeft: 5,
-                          }}
+                        <View
+                          style={{ flexDirection: 'row', alignItems: 'center' }}
                         >
-                          Envio en menos de 3h
-                        </PoppinsText>
+                          <PoppinsText
+                            style={{
+                              fontSize: FontSizes.c1.size,
+                              color: Colors.textLowContrast,
+                            }}
+                          >
+                            {inv.stockQuantity} unidades{' '}
+                          </PoppinsText>
+                          <CheckCircleIcon
+                            size={15}
+                            color={Colors.semanticSuccess}
+                          />
+                        </View>
+                        <View
+                          style={{ flexDirection: 'row', alignItems: 'center' }}
+                        >
+                          <TruckIcon size={15} color={Colors.gray_500} />
+                          <PoppinsText
+                            style={{
+                              fontSize: FontSizes.c3.size,
+                              color: Colors.gray_500,
+                              marginLeft: 5,
+                            }}
+                          >
+                            Envio en menos de 3h
+                          </PoppinsText>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                ))
-              ) : (
-                <PoppinsText
-                  style={{
-                    textAlign: 'center',
-                    color: Colors.textLowContrast,
-                    marginVertical: 10,
-                  }}
-                >
-                  No hay productos disponibles
-                </PoppinsText>
-              )}
+                  ))
+                ) : (
+                  <PoppinsText
+                    style={{
+                      textAlign: 'center',
+                      color: Colors.textLowContrast,
+                      marginVertical: 10,
+                    }}
+                  >
+                    No hay productos disponibles
+                  </PoppinsText>
+                )
+              ) : null}
             </View>
             <View style={styles.quantitySelector}>
-              {showMap ? (
-                <View style={{ flex: 1, height: 300 }}>
-                  {inventory && inventory.length > 0 ? (
-                    <BranchMap
-                      branches={inventory.map((inv) => ({
-                        id: inv.branch.id,
-                        name: inv.branch.name,
-                        address: inv.branch.address,
-                        latitude: inv.branch.latitude,
-                        longitude: inv.branch.longitude,
-                        stockQuantity: inv.stockQuantity,
-                      }))}
+              {selectedState ? (
+                showMap ? (
+                  <View style={{ flex: 1, height: 300 }}>
+                    {inventory && inventory.length > 0 ? (
+                      <BranchMap
+                        branches={inventory.map((inv) => ({
+                          id: inv.branch.id,
+                          name: inv.branch.name,
+                          address: inv.branch.address,
+                          latitude: inv.branch.latitude,
+                          longitude: inv.branch.longitude,
+                          stockQuantity: inv.stockQuantity,
+                        }))}
+                      />
+                    ) : (
+                      <PoppinsText
+                        style={{
+                          textAlign: 'center',
+                          color: Colors.textLowContrast,
+                          marginVertical: 10,
+                        }}
+                      >
+                        No hay productos disponibles
+                      </PoppinsText>
+                    )}
+                  </View>
+                ) : (
+                  <View style={{ flex: 1, marginVertical: 10 }}>
+                    <Button
+                      title="Ver Mapa"
+                      onPress={() => setShowMap(true)}
+                      variant={
+                        selectedState && inventory.length > 0
+                          ? 'primary'
+                          : 'disabled'
+                      }
                     />
-                  ) : (
-                    <PoppinsText
-                      style={{
-                        textAlign: 'center',
-                        color: Colors.textLowContrast,
-                        marginVertical: 10,
-                      }}
-                    >
-                      No hay productos disponibles
-                    </PoppinsText>
-                  )}
-                </View>
-              ) : (
-                <View style={{ flex: 1, marginVertical: 10 }}>
-                  <Button
-                    title="Ver Mapa"
-                    onPress={() => setShowMap(true)}
-                    variant={
-                      selectedState && inventory.length > 0
-                        ? 'primary'
-                        : 'disabled'
-                    }
-                  />
-                </View>
-              )}
+                  </View>
+                )
+              ) : null}
             </View>
-            <PoppinsText style={styles.sectionTitle}>
+            <PoppinsText
+              style={[
+                styles.sectionTitle,
+                { fontSize: FontSizes.s1.size, color: Colors.textMain },
+              ]}
+            >
               Productos relacionados
             </PoppinsText>
             <View style={styles.quantitySelector}>
@@ -632,7 +656,7 @@ const styles = StyleSheet.create({
   },
   quantitySelector: {
     flexDirection: 'row',
-    marginBottom: 15,
+    marginBottom: 8,
   },
   ratingStarsContainer: {
     flexDirection: 'row',
