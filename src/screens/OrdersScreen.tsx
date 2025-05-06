@@ -15,6 +15,7 @@ import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
 import OrderBadge from '../components/OrderBadge';
+import { useCart } from '../hooks/useCart';
 
 const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
@@ -24,25 +25,35 @@ const OrdersScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const { addToCart, getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
 
-  /* const handleReorder = (order: OrderResponse) => {
+  const handleReorder = async (id: string) => {
+    const orderData = await UserService.getOrder(id);
 
-    order.products.forEach((product) => {
-      const existingQuantity = getItemQuantity(product.productId);
-      if (existingQuantity > 0) {
-        updateCartQuantity(product.productId, existingQuantity + product.quantity);
-      } else {
-        addToCart({
-          id: product.productId,
-          quantity: product.quantity,
-          price: product.price,
-          name: product.name,
-          image: product.image,
-        });
-      }
+    if (orderData.success) {
+      orderData.data.details.forEach((detail) => {
+        const existingQuantity = getItemQuantity(detail.productPresentation.id);
+        if (existingQuantity > 0) {
+          updateCartQuantity(
+            detail.productPresentation.id,
+            existingQuantity + detail.quantity,
+          );
+        } else {
+          addToCart({
+            id: detail.productPresentation.id,
+            quantity: detail.quantity,
+            price: detail.subtotal,
+            name: detail.productPresentation.product.name,
+            image: detail.productPresentation.product.images[0].url,
+          });
+        }
+      });
+      router.push('/cart');
     }
-  }; */
+    setShowSuccessAlert(true);
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -92,6 +103,17 @@ const OrdersScreen = () => {
             type="info"
             title="No tiene pedidos"
             message="No tiene pedidos"
+            onClose={() => {
+              setShowInfoAlert(false);
+            }}
+            borderColor
+          />
+        )}
+        {showSuccessAlert && (
+          <Alert
+            type="success"
+            title="Éxito"
+            message="Pedido agregado al carrito"
             onClose={() => {
               setShowInfoAlert(false);
             }}
@@ -159,6 +181,7 @@ const OrdersScreen = () => {
                     title="Re ordenar"
                     size="small"
                     style={{ paddingVertical: 0 }}
+                    onPress={() => handleReorder(order.id)}
                   />
                 </View>
               </View>
@@ -178,9 +201,9 @@ const styles = StyleSheet.create({
   alertContainer: {
     position: 'absolute',
     width: 326,
-    left: '50%',
+    left: '56%',
     marginLeft: -162,
-    top: 20,
+    top: 40,
     right: 0,
     zIndex: 1000,
   },
