@@ -28,6 +28,7 @@ const OrderTrackingScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -57,57 +58,22 @@ const OrderTrackingScreen = () => {
     );
   }
 
-  /* useEffect(() => {
- 
-		function handleOrderStatus(order: OrderDetailedResponse) {
-			const status = order.status.toUpperCase();
- 
-			if (status === 'CANCELED') {
-				router.replace('/checkout/rejected');
-				return;
-			}
- 
-			if (status === 'COMPLETED') {
-				clearCart();
-				setOrderId('');
-				router.replace('/');
-				return;
-			}
- 
-			// Para PENDING, definimos qué pasos permitimos
-			const instant =
-				(deliveryMethod === 'store' && paymentMethod === 'pos') ||
-				(deliveryMethod === 'home' && paymentMethod === 'cash');
- 
-			// Siempre permitimos reviewOrder y deliveryInfo
-			const allowed = ['revieworder', 'deliveryinfo'];
-			// Si NO es instant (es decir, requiere paso de pago), añadimos paymentprocess
-			if (!instant) {
-				allowed.push('paymentprocess');
-			}
- 
-			if (!allowed.includes(lowerStep)) {
-				router.replace('/checkout/revieworder');
-			}
-		}
- 
-		const ws = new WebSocket('');
- 
-		ws.onopen = () => {
-			setIsConnected(true);
-				console.log('Connected to socket: ', isConnected);
-				ws.onmessage = (e) => {
-					handleOrderStatus(order);
-				};
-		}
- 
-		ws.onclose = () => {
-			setIsConnected(false);
-			console.log('Disconnected from socket: ', isConnected);
-		};
- 
-	  
-	},[]) */
+  const handleDeliveryStatus = () => {};
+
+  const ws = new WebSocket('');
+
+  ws.onopen = () => {
+    setIsConnected(true);
+    console.log('Connected to socket: ', isConnected);
+    ws.onmessage = () => {
+      handleDeliveryStatus();
+    };
+  };
+
+  ws.onclose = () => {
+    setIsConnected(false);
+    console.log('Disconnected from socket: ', isConnected);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -210,8 +176,12 @@ const OrderTrackingScreen = () => {
                 )}
               </PoppinsText>
             </View>
-            <View style={{ marginVertical: 20 }}>
-              <PoppinsText>Orden Confirmada</PoppinsText>
+            <View style={{ marginVertical: 15 }}>
+              <PoppinsText>
+                {order.type === 'delivery'
+                  ? 'Repartidor en camino'
+                  : 'En preparación'}
+              </PoppinsText>
               <PoppinsText
                 style={{
                   color: Colors.secondaryGray,
@@ -231,7 +201,11 @@ const OrderTrackingScreen = () => {
               </PoppinsText>
             </View>
             <View>
-              <PoppinsText>Orden Confirmada</PoppinsText>
+              <PoppinsText>
+                {order.type === 'delivery'
+                  ? 'Pedido entregado'
+                  : 'Listo para recoger'}
+              </PoppinsText>
               <PoppinsText
                 style={{
                   color: Colors.secondaryGray,
