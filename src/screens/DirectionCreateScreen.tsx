@@ -46,7 +46,7 @@ const DirectionCreateScreen = () => {
     const fetchStates = async () => {
       const states = await StateService.getStates(1, 40);
       if (states.success) {
-        setStates(states.data.results);
+        setStates(states.data?.results ?? []);
       }
     };
     fetchStates();
@@ -56,7 +56,7 @@ const DirectionCreateScreen = () => {
     const fetchCities = async () => {
       const cities = await StateService.getCities(1, 40, selectedState);
       if (cities.success) {
-        setCities(cities.data.results);
+        setCities(cities.data?.results ?? []);
       }
     };
     fetchCities();

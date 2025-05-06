@@ -1,10 +1,18 @@
+// src/components/Coupon.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Input from './Input';
 import Button from './Button';
-import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
+import { Colors, FontSizes } from '../styles/theme';
 import { CouponService } from '../services/coupon';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
+import {
+  setCouponDiscount,
+  setCouponApplied,
+  setLastAppliedCoupon,
+} from '../redux/slices/checkoutSlice';
 
 interface CouponProps {
   onApplyCoupon: (discount: number) => void;
@@ -12,53 +20,57 @@ interface CouponProps {
   isLoading?: boolean;
 }
 
-const Coupon: React.FC<CouponProps> = ({
-  onApplyCoupon,
-  onCouponApplied,
-  isLoading = false,
-}) => {
-  const [couponCode, setCouponCode] = useState('');
+const Coupon: React.FC<CouponProps> = ({ isLoading = false }) => {
+  const dispatch = useDispatch();
+  const lastAppliedCoupon = useSelector(
+    (state: RootState) => state.checkout.lastAppliedCoupon,
+  );
+
+  const [couponCode, setCouponCode] = useState(lastAppliedCoupon || '');
   const [validationMessage, setValidationMessage] = useState<string | null>(
     null,
   );
   const [loading, setLoading] = useState(false);
 
   const handleApply = async () => {
-    if (couponCode.trim().length > 0) {
-      setLoading(true);
-      setValidationMessage(null);
+    const code = couponCode.trim();
+    if (!code) return;
 
-      try {
-        // Llamar al servicio para validar el cupón
-        const response = await CouponService.validateCoupon(couponCode.trim());
+    setLoading(true);
+    setValidationMessage(null);
 
-        // Manejar la respuesta del servicio
-        if (response) {
-          const { discount, expirationDate } = response;
-          const isExpired = new Date(expirationDate) < new Date();
-
-          if (isExpired) {
-            setValidationMessage('El cupón ha expirado.');
-          } else {
-            setValidationMessage(
-              `Cupón válido. Se aplicó un descuento de ${discount}$.`,
-            );
-            onApplyCoupon(discount);
-            onCouponApplied();
-          }
-        } else {
-          setValidationMessage('Cupón inválido.');
-        }
-      } catch (error) {
-        setValidationMessage('Error al validar el cupón.');
-        console.error('Error en handleApply:', error);
-      } finally {
-        setLoading(false);
+    try {
+      const response = await CouponService.validateCoupon(code);
+      const { discount, expirationDate } = response;
+      if (new Date(expirationDate) < new Date()) {
+        setValidationMessage('El cupón ha expirado.');
+      } else {
+        setValidationMessage(
+          `Cupón válido. Se aplicó ${discount}% de descuento.`,
+        );
+        dispatch(setCouponDiscount(discount));
+        dispatch(setCouponApplied(true));
+        dispatch(setLastAppliedCoupon(code));
       }
+    } catch (err: unknown) {
+      const msg = (err instanceof Error && err.message.toLowerCase?.()) ?? '';
+      if (
+        typeof msg === 'string' &&
+        (msg.includes('not found') || msg.includes('no encontrado'))
+      ) {
+        setValidationMessage('Cupón inválido.');
+      } else {
+        setValidationMessage('Error al validar el cupón.');
+        console.error('Error en validateCoupon:', err);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const isButtonDisabled = couponCode.trim().length === 0 || loading;
+  const handleChange = (text: string) => {
+    setCouponCode(text);
+  };
 
   return (
     <View style={styles.container}>
@@ -68,26 +80,29 @@ const Coupon: React.FC<CouponProps> = ({
           <Input
             placeholder="Código de Cupón"
             value={couponCode}
-            getValue={(text) => setCouponCode(text)}
+            getValue={handleChange}
             border="none"
             backgroundColor="none"
           />
         </View>
         <Button
-          title="Aplicar"
+          title={
+            couponCode.trim() === lastAppliedCoupon ? 'Aplicado' : 'Aplicar'
+          }
           onPress={handleApply}
-          variant={isButtonDisabled ? 'disabled' : 'primary'}
+          variant={loading || isLoading ? 'disabled' : 'primary'}
           size="medium"
           loading={loading || isLoading}
           style={styles.button}
         />
       </View>
+
       {validationMessage && (
         <PoppinsText
           style={[
             styles.validationMessage,
             {
-              color: validationMessage.includes('Cupón válido')
+              color: validationMessage.includes('válido')
                 ? Colors.semanticSuccess
                 : Colors.semanticDanger,
             },

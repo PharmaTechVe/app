@@ -169,7 +169,7 @@ const ProductDetailScreen: React.FC = () => {
         );
         setPresentations(presentations);
       }
-      if (states.success) setStates(states.data.results);
+      if (states.success) setStates(states.data?.results || []);
     };
 
     obtainProduct();
@@ -411,38 +411,6 @@ const ProductDetailScreen: React.FC = () => {
             >
               Disponibilidad en sucursales
             </PoppinsText>
-            <View style={styles.quantitySelector}>
-              {showMap ? (
-                <View style={{ flex: 1, height: 300 }}>
-                  {inventory && inventory.length > 0 ? (
-                    <BranchMap
-                      branches={inventory.map((inv) => ({
-                        id: inv.branch.id,
-                        name: inv.branch.name,
-                        address: inv.branch.address,
-                        latitude: inv.branch.latitude,
-                        longitude: inv.branch.longitude,
-                        stockQuantity: inv.stockQuantity,
-                      }))}
-                    />
-                  ) : (
-                    <PoppinsText
-                      style={{
-                        textAlign: 'center',
-                        color: Colors.textLowContrast,
-                        marginVertical: 10,
-                      }}
-                    >
-                      No hay productos disponibles
-                    </PoppinsText>
-                  )}
-                </View>
-              ) : (
-                <View style={{ flex: 1 }}>
-                  <Button title="Ver Mapa" onPress={() => setShowMap(true)} />
-                </View>
-              )}
-            </View>
             <PoppinsText style={styles.sectionTitle}>
               Selecciona el estado
             </PoppinsText>
@@ -523,6 +491,46 @@ const ProductDetailScreen: React.FC = () => {
                 </PoppinsText>
               )}
             </View>
+            <View style={styles.quantitySelector}>
+              {showMap ? (
+                <View style={{ flex: 1, height: 300 }}>
+                  {inventory && inventory.length > 0 ? (
+                    <BranchMap
+                      branches={inventory.map((inv) => ({
+                        id: inv.branch.id,
+                        name: inv.branch.name,
+                        address: inv.branch.address,
+                        latitude: inv.branch.latitude,
+                        longitude: inv.branch.longitude,
+                        stockQuantity: inv.stockQuantity,
+                      }))}
+                    />
+                  ) : (
+                    <PoppinsText
+                      style={{
+                        textAlign: 'center',
+                        color: Colors.textLowContrast,
+                        marginVertical: 10,
+                      }}
+                    >
+                      No hay productos disponibles
+                    </PoppinsText>
+                  )}
+                </View>
+              ) : (
+                <View style={{ flex: 1, marginVertical: 10 }}>
+                  <Button
+                    title="Ver Mapa"
+                    onPress={() => setShowMap(true)}
+                    variant={
+                      selectedState && inventory.length > 0
+                        ? 'primary'
+                        : 'disabled'
+                    }
+                  />
+                </View>
+              )}
+            </View>
             <PoppinsText style={styles.sectionTitle}>
               Productos relacionados
             </PoppinsText>
@@ -593,7 +601,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
-    marginVertical: 15,
+    margin: 20,
   },
   description: {
     fontSize: FontSizes.b3.size,
