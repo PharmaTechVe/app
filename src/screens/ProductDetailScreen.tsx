@@ -28,7 +28,7 @@ import { ProductService } from '../services/products';
 import { TruckIcon } from 'react-native-heroicons/outline';
 import Carousel from '../components/Carousel';
 import { StateService } from '../services/state';
-import { Inventory, State } from '../types/api';
+import { State } from '../types/api';
 import { InventoryService } from '../services/inventory';
 import { useNavigation } from '@react-navigation/native';
 import BranchMap from '../components/BranchMap';
@@ -36,6 +36,7 @@ import {
   ProductImage,
   ProductPresentationDetailResponse,
   ProductPresentationResponse,
+  InventoryResponse,
 } from '@pharmatech/sdk';
 import Button from '../components/Button';
 import { BranchService } from '../services/branches';
@@ -48,7 +49,7 @@ const ProductDetailScreen: React.FC = () => {
   const navigation = useNavigation(); // Obtén la instancia de navegación
 
   const [showMap, setShowMap] = useState(false);
-  const [inventory, setInventory] = useState<Inventory[]>([]);
+  const [inventory, setInventory] = useState<InventoryResponse[]>([]);
   const [states, setStates] = useState<State[]>([]);
   const [selectedState, setSelectedState] = useState('');
   const [product, setProduct] = useState<ProductPresentationDetailResponse>();
@@ -176,53 +177,67 @@ const ProductDetailScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchInventory = async () => {
-      if (!selectedState) return;
-      if (product) {
-        const inventoryData = await InventoryService.getPresentationInventory(
-          1,
-          20,
-          product.id || '',
-        );
-        if (inventoryData.success) {
-          const newInventory = inventoryData.data.results.map((inv) => ({
-            id: inv.id,
-            branch: {
-              id: inv.branch.id,
-              name: inv.branch.name,
-              address: inv.branch.address,
-              latitude: inv.branch.latitude,
-              longitude: inv.branch.longitude,
-            },
-            stockQuantity: inv.stockQuantity,
-          }));
+    const loadBranchesWithStock = async () => {
+      if (!selectedState || !product) return;
 
-          const stateBranches = await BranchService.findAll({
+      setInventory([]); // Limpiar el estado antes de cargar nuevos datos
+
+      try {
+        // Obtener las sucursales del estado seleccionado
+        const branchesRes = await BranchService.findAll({
+          page: 1,
+          limit: 100,
+          stateId: selectedState,
+        });
+
+        const results: InventoryResponse[] = [];
+
+        for (const branch of branchesRes.results) {
+          // Obtener el inventario de la sucursal para la presentación del producto
+          const inventoryRes = await InventoryService.getBranchInventory({
+            branchId: branch.id,
             page: 1,
-            limit: 20,
-            stateId: selectedState,
+            limit: 100,
           });
 
-          const commonBranches = newInventory.filter((inv) =>
-            stateBranches.results.find((branch) => branch.id === inv.branch.id),
+          // Validar que inventoryRes.results sea un array
+          if (!Array.isArray(inventoryRes.results)) {
+            console.error(
+              'inventoryRes.results no es un array:',
+              inventoryRes.results,
+            );
+            continue;
+          }
+
+          // Validar que product esté definido
+          if (!product || !product.id) {
+            console.error(
+              'El producto no está definido o no tiene un ID:',
+              product,
+            );
+            continue;
+          }
+
+          // Buscar el inventario que coincida con la presentación del producto
+          const match = inventoryRes.results.find(
+            (inv) =>
+              inv.productPresentation &&
+              inv.productPresentation.id === product.id,
           );
 
-          setInventory((prevInventory) => {
-            const updatedInventory: Inventory[] = [];
-            commonBranches.forEach((newItem) => {
-              if (!prevInventory.some((item) => item.id === newItem.id)) {
-                updatedInventory.push(newItem as Inventory);
-              }
-            });
-            return updatedInventory;
-          });
-        } else {
-          console.error(inventoryData.error);
+          if (match && match.stockQuantity > 0) {
+            results.push(match); // Agregar directamente el objeto InventoryResponse
+          }
         }
+
+        setInventory(results); // Actualizar el estado con los datos obtenidos
+      } catch (error) {
+        console.error('Error cargando sucursales con stock:', error);
       }
     };
-    fetchInventory();
-  }, [selectedState]);
+
+    loadBranchesWithStock();
+  }, [selectedState, product]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
