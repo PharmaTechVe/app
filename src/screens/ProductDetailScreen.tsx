@@ -169,7 +169,7 @@ const ProductDetailScreen: React.FC = () => {
         );
         setPresentations(presentations);
       }
-      if (states.success) setStates(states.data.results);
+      if (states.success) setStates(states.data?.results || []);
     };
 
     obtainProduct();

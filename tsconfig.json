@@ -12,6 +12,11 @@
     "strict": true,
     "target": "esnext"
   },
-  "include": ["**/*.ts", "**/*.tsx", "src/types/**/*.d.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "src/types/**/*.d.ts",
+    "nativewind-env.d.ts"
+  ],
   "exclude": ["node_modules"]
 }
