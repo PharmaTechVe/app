@@ -153,7 +153,7 @@ const ProductDetailScreen: React.FC = () => {
       if (productImages.success) setImages(productImages.data);
       if (productPresentations.success)
         setPresentations(productPresentations.data);
-      if (states.success) setStates(states.data.results);
+      if (states.success) setStates(states.data?.results || []);
     };
 
     obtainProduct();
