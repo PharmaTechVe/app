@@ -1,7 +1,7 @@
 export const truncateString = (
   text: string,
   maxLength: number = 27,
-  optionalText: string = '',
+  optionalText: string = '...',
 ): string => {
   if (text) {
     if (text.length > maxLength) {

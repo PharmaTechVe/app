@@ -152,7 +152,7 @@ const OrdersScreen = () => {
                 >
                   <View>
                     <PoppinsText>
-                      #{order ? truncateString(order?.id, 8) : ''}
+                      #{order ? truncateString(order?.id, 8, '') : ''}
                     </PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
                       {new Date(order.createdAt).toLocaleDateString()}{' '}
