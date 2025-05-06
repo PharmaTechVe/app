@@ -60,6 +60,58 @@ const ActiveOrdersScreen = () => {
     fetchActiveOrders();
   }, []);
 
+  /* useEffect(() => {
+
+    function handleOrderStatus(order: OrderDetailedResponse) {
+      const status = order.status.toUpperCase();
+
+      if (status === 'CANCELED') {
+        router.replace('/checkout/rejected');
+        return;
+      }
+
+      if (status === 'COMPLETED') {
+        clearCart();
+        setOrderId('');
+        router.replace('/');
+        return;
+      }
+
+      // Para PENDING, definimos qué pasos permitimos
+      const instant =
+        (deliveryMethod === 'store' && paymentMethod === 'pos') ||
+        (deliveryMethod === 'home' && paymentMethod === 'cash');
+
+      // Siempre permitimos reviewOrder y deliveryInfo
+      const allowed = ['revieworder', 'deliveryinfo'];
+      // Si NO es instant (es decir, requiere paso de pago), añadimos paymentprocess
+      if (!instant) {
+        allowed.push('paymentprocess');
+      }
+
+      if (!allowed.includes(lowerStep)) {
+        router.replace('/checkout/revieworder');
+      }
+    }
+
+    const ws = new WebSocket('');
+
+    ws.onopen = () => {
+      setIsConnected(true);
+        console.log('Connected to socket: ', isConnected);
+        ws.onmessage = (e) => {
+          handleOrderStatus(order);
+        };
+    }
+
+    ws.onclose = () => {
+      setIsConnected(false);
+      console.log('Disconnected from socket: ', isConnected);
+    };
+
+    
+  },[]) */
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.alertContainer}>
@@ -146,7 +198,7 @@ const ActiveOrdersScreen = () => {
                     {STATUS_LABELS[order.status] || order.status}
                   </PoppinsText>
                   <TouchableOpacity
-                    onPress={() => router.push(`order/${order.id}`)}
+                    onPress={() => router.push(`order/tracking/${order.id}`)}
                   >
                     <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
                       Ver detalles
