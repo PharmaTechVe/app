@@ -7,6 +7,7 @@ import Alert from '../components/Alerts';
 import { OrderDetailedResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { formatDate, truncateString } from '../utils/commons';
+import * as SecureStore from 'expo-secure-store';
 import {
   CubeIcon,
   PhoneIcon,
@@ -17,6 +18,8 @@ import {
   BuildingStorefrontIcon,
   MapPinIcon,
 } from 'react-native-heroicons/solid';
+import io from 'socket.io-client';
+import { SOCKET_URL } from '../lib/socketUrl';
 
 const OrderTrackingScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,8 +49,43 @@ const OrderTrackingScreen = () => {
         setLoading(false);
       }
     };
-
     fetchOrder();
+
+    const socket = io(SOCKET_URL, {
+      transportOptions: {
+        polling: {
+          extraHeaders: {
+            authorization: `Bearer ${SecureStore.getItemAsync('auth_token')}`,
+          },
+        },
+      },
+    });
+
+    if (id) {
+      fetchOrder();
+      if (socket.connected) {
+        onConnect();
+      }
+
+      function onConnect() {
+        setIsConnected(true);
+        console.log('Connected to socket: ', isConnected);
+        socket.on('order', (order: OrderDetailedResponse) => {
+          handleDeliveryStatus(order);
+        });
+      }
+
+      function onDisconnect() {
+        setIsConnected(false);
+      }
+
+      socket.on('connect', onConnect);
+      socket.on('disconnect', onDisconnect);
+      return () => {
+        socket.off('connect', onConnect);
+        socket.off('disconnect', onDisconnect);
+      };
+    }
   }, []);
 
   if (loading) {
@@ -58,21 +96,8 @@ const OrderTrackingScreen = () => {
     );
   }
 
-  const handleDeliveryStatus = () => {};
-
-  const ws = new WebSocket('');
-
-  ws.onopen = () => {
-    setIsConnected(true);
-    console.log('Connected to socket: ', isConnected);
-    ws.onmessage = () => {
-      handleDeliveryStatus();
-    };
-  };
-
-  ws.onclose = () => {
-    setIsConnected(false);
-    console.log('Disconnected from socket: ', isConnected);
+  const handleDeliveryStatus = (e: OrderDetailedResponse) => {
+    console.log('Received message: ', e);
   };
 
   return (
