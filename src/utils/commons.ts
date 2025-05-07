@@ -10,3 +10,13 @@ export const truncateString = (
   }
   return text;
 };
+
+export const formatDate = (date: string): string => {
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: '2-digit',
+  };
+  const dateObj = new Date(date);
+  return dateObj.toLocaleDateString('es-ES', options);
+};
