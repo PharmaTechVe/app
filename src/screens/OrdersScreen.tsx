@@ -14,6 +14,8 @@ import Button from '../components/Button';
 import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
+import OrderBadge from '../components/OrderBadge';
+import { useCart } from '../hooks/useCart';
 
 const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
@@ -23,7 +25,35 @@ const OrdersScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const { addToCart, getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
+
+  const handleReorder = async (id: string) => {
+    const orderData = await UserService.getOrder(id);
+
+    if (orderData.success) {
+      orderData.data.details.forEach((detail) => {
+        const existingQuantity = getItemQuantity(detail.productPresentation.id);
+        if (existingQuantity > 0) {
+          updateCartQuantity(
+            detail.productPresentation.id,
+            existingQuantity + detail.quantity,
+          );
+        } else {
+          addToCart({
+            id: detail.productPresentation.id,
+            quantity: detail.quantity,
+            price: detail.subtotal,
+            name: detail.productPresentation.product.name,
+            image: detail.productPresentation.product.images[0].url,
+          });
+        }
+      });
+      router.push('/cart');
+    }
+    setShowSuccessAlert(true);
+  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -79,6 +109,17 @@ const OrdersScreen = () => {
             borderColor
           />
         )}
+        {showSuccessAlert && (
+          <Alert
+            type="success"
+            title="Éxito"
+            message="Pedido agregado al carrito"
+            onClose={() => {
+              setShowInfoAlert(false);
+            }}
+            borderColor
+          />
+        )}
       </View>
       <View style={styles.orderHeader}>
         <PoppinsText style={{ fontSize: FontSizes.s1.size }}>
@@ -111,7 +152,7 @@ const OrdersScreen = () => {
                 >
                   <View>
                     <PoppinsText>
-                      {order ? truncateString(order?.id, 8) : ''}
+                      #{order ? truncateString(order?.id, 8, '') : ''}
                     </PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
                       {new Date(order.createdAt).toLocaleDateString()}{' '}
@@ -128,19 +169,7 @@ const OrdersScreen = () => {
                     marginTop: 5,
                   }}
                 >
-                  <PoppinsText
-                    style={{
-                      padding: 5,
-                      backgroundColor: Colors.semanticDanger,
-                      borderRadius: 5,
-                      width: 80,
-                      textAlign: 'center',
-                      color: Colors.textWhite,
-                      fontSize: FontSizes.c1.size,
-                    }}
-                  >
-                    {order.status}
-                  </PoppinsText>
+                  <OrderBadge status={order.status} />
                   <TouchableOpacity
                     onPress={() => router.push(`order/${order.id}`)}
                   >
@@ -152,6 +181,7 @@ const OrdersScreen = () => {
                     title="Re ordenar"
                     size="small"
                     style={{ paddingVertical: 0 }}
+                    onPress={() => handleReorder(order.id)}
                   />
                 </View>
               </View>
@@ -171,9 +201,9 @@ const styles = StyleSheet.create({
   alertContainer: {
     position: 'absolute',
     width: 326,
-    left: '50%',
+    left: '56%',
     marginLeft: -162,
-    top: 20,
+    top: 40,
     right: 0,
     zIndex: 1000,
   },

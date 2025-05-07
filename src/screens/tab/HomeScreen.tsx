@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router'; // Importamos useLocalSearchParams
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCart } from '../../hooks/useCart';
 import PoppinsText from '../../components/PoppinsText';
@@ -13,7 +13,9 @@ import { decodeJWT } from '../../helper/jwtHelper';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(true);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const router = useRouter();
   const { showEmailVerification: showEmailVerificationParam } =
@@ -27,7 +29,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const initialize = async () => {
-      setLoading(true); // Asegúrate de que loading sea true al inicio
+      setLoading(true);
       const token = await SecureStore.getItemAsync('auth_token');
       if (!token) {
         router.replace('/login');
@@ -38,12 +40,13 @@ export default function HomeScreen() {
         }
       }
 
-      await obtainProducts(); // Espera a que los productos se carguen
-      setLoading(false); // Cambia loading a false solo después de que todo termine
+      await obtainProducts();
+      await obtainRecommendedProducts();
+      setLoading(false);
     };
 
     initialize();
-  }, []); // Elimina `cartItems` de las dependencias
+  }, []);
 
   useEffect(() => {
     if (showEmailVerificationParam) {
@@ -55,7 +58,7 @@ export default function HomeScreen() {
   }, [showEmailVerificationParam]);
 
   const obtainProducts = async () => {
-    setLoading(true); // Inicia el indicador de carga
+    setLoading(true);
     try {
       const productsData = await ProductService.getProducts(1, 20);
       if (productsData.success) {
@@ -74,9 +77,9 @@ export default function HomeScreen() {
             ' ' +
             p.presentation.measurementUnit,
           category: p.product.categories[0].name,
-          originalPrice: p.price,
-          discount: 10,
-          finalPrice: p.price - p.price * 0.1,
+          //originalPrice: p.price,
+          //discount: 10,
+          finalPrice: p.price,
           quantity: getItemQuantity(p.id),
           getQuantity: (quantity: number) => {
             addToCart({
@@ -105,7 +108,57 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
-      setLoading(false); // Finaliza el indicador de carga
+      setLoading(false);
+    }
+  };
+
+  const obtainRecommendedProducts = async () => {
+    setLoadingRecommendations(true);
+    try {
+      const recommendations = await ProductService.getRecommendations();
+      const carouselRecommendations = recommendations.results.map((p) => ({
+        id: p.id,
+        presentationId: p.presentation.id,
+        productId: p.product.id,
+        imageUrl: p.product.images[0].url,
+        name:
+          p.product.name +
+          ' ' +
+          p.presentation.name +
+          ' ' +
+          p.presentation.quantity +
+          ' ' +
+          p.presentation.measurementUnit,
+        category: p.product.categories[0]?.name || 'Sin categoría',
+        //originalPrice: p.price,
+        //discount: 10,
+        finalPrice: p.price,
+        quantity: getItemQuantity(p.id),
+        getQuantity: (quantity: number) => {
+          addToCart({
+            id: p.id,
+            name:
+              p.product.name +
+              ' ' +
+              p.presentation.name +
+              ' ' +
+              p.presentation.quantity +
+              ' ' +
+              p.presentation.measurementUnit,
+            price: p.price,
+            quantity,
+            image:
+              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
+          });
+          updateCartQuantity(p.id, quantity);
+        },
+      }));
+
+      setRecommendedProducts(carouselRecommendations);
+    } catch (error) {
+      console.error('Error fetching recommended products:', error);
+    } finally {
+      setLoadingRecommendations(false);
     }
   };
 
@@ -143,6 +196,23 @@ export default function HomeScreen() {
               </View>
             ) : (
               <Carousel cards={products} />
+            )}
+          </View>
+        </View>
+        <View>
+          <PoppinsText weight="medium" style={styles.title}>
+            Recomendados para ti
+          </PoppinsText>
+          <View style={styles.rowFullWidth}>
+            {loadingRecommendations ? (
+              <View style={styles.loadingContainer}>
+                <PoppinsText style={styles.loadingText}>
+                  Cargando recomendaciones...
+                </PoppinsText>
+                <ActivityIndicator size="large" color={Colors.primary} />
+              </View>
+            ) : (
+              <Carousel cards={recommendedProducts} />
             )}
           </View>
         </View>

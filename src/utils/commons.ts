@@ -1,11 +1,11 @@
 export const truncateString = (
   text: string,
   maxLength: number = 27,
-  lastSeparator: string = '...',
+  optionalText: string = '...',
 ): string => {
   if (text) {
     if (text.length > maxLength) {
-      return text.substring(0, maxLength) + lastSeparator;
+      return text.substring(0, maxLength) + optionalText;
     }
   }
   return text;

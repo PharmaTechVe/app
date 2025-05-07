@@ -144,9 +144,9 @@ export default function SearchProductScreen() {
       }
       category={item.product.categories[0]?.name}
       imageUrl={item.product.images[0]?.url}
-      originalPrice={item.price}
-      discount={10}
-      finalPrice={item.price * 0.1}
+      //originalPrice={item.price}
+      //discount={10}
+      finalPrice={item.price}
       quantity={10}
       getQuantity={() => console.log}
     />

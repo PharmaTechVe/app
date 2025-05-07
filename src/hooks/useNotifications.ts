@@ -67,7 +67,7 @@ export function NotificationsProvider(props: { children: ReactNode }) {
   useEffect(() => {
     const interval = setInterval(() => {
       void refreshNotifications();
-    }, 10_000); // ajusta intervalo según necesidad
+    }, 30_000); // ajusta intervalo según necesidad
 
     return () => clearInterval(interval);
   }, [refreshNotifications]);
