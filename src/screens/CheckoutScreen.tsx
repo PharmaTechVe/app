@@ -61,7 +61,6 @@ const CheckoutScreen = () => {
 
   const router = useRouter();
   const { cartItems } = useCart();
-  const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>('Usuario');
   const [modalVisible, setModalVisible] = useState(false);
@@ -76,6 +75,7 @@ const CheckoutScreen = () => {
   const [validationPopupVisible, setValidationPopupVisible] = useState(false);
   const [emailVerificationModalVisible, setEmailVerificationModalVisible] =
     useState(false); // Track modal visibility
+  const [orderStatus, setOrderStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -187,19 +187,19 @@ const CheckoutScreen = () => {
       try {
         if (option === 'pickup' && !isValidUUID(locationId)) {
           setErrorMessage('La sucursal seleccionada no es válida.');
-          setStatus('rejected');
+          setOrderStatus(null);
           return;
         }
 
         if (option === 'delivery' && !isValidUUID(locationId)) {
           setErrorMessage('La dirección seleccionada no es válida.');
-          setStatus('rejected');
+          setOrderStatus(null);
           return;
         }
 
         if (!option) {
           setErrorMessage('Debe seleccionar una opción de compra.');
-          setStatus('rejected');
+          setOrderStatus(null);
           return;
         }
 
@@ -215,7 +215,7 @@ const CheckoutScreen = () => {
 
         if (products.length === 0) {
           setErrorMessage('No hay productos válidos en el carrito.');
-          setStatus('rejected');
+          setOrderStatus(null);
           return;
         }
 
@@ -246,21 +246,34 @@ const CheckoutScreen = () => {
           setErrorMessage(
             'No pudimos procesar tu orden. Inténtalo nuevamente.',
           );
-          setStatus('rejected');
+
+          setOrderStatus(null);
           return;
         }
 
         // Guardar el número de orden generado
         setOrderNumber(orderResponse.id);
 
+        // Obtener el status real de la orden desde el backend
+        try {
+          const orderDetail = await OrderService.getById(orderResponse.id);
+          setOrderStatus(orderDetail.status); // <-- status real del backend
+        } catch (err) {
+          console.error(
+            'No se pud          git checkout -b fix/sprint-5-checkout-fixeso obtener el status de la orden:',
+            err,
+          );
+          setOrderStatus(orderResponse.status ?? null);
+        }
+
         console.log('Orden creada exitosamente:', orderResponse);
 
-        setStatus('approved');
         dispatch(setStep(step + 1)); // Move to the confirmation step
       } catch (error) {
         console.error('Error al procesar la orden:', error);
         setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
-        setStatus('rejected');
+
+        setOrderStatus(null);
       }
     } else if (step === stepsLabels.length) {
       // Limpiar el carrito al salir del flujo de checkout
@@ -294,8 +307,8 @@ const CheckoutScreen = () => {
     }
   };
 
-  const renderConfirmationContent = (status: 'approved' | 'rejected') => {
-    if (option === 'pickup' && status === 'approved') {
+  const renderConfirmationContent = (orderStatus: string | null) => {
+    if (option === 'pickup' && orderStatus === 'approved') {
       return (
         <>
           <PoppinsText style={styles.confirmationMessage}>
@@ -319,7 +332,7 @@ const CheckoutScreen = () => {
       );
     }
 
-    if (option === 'delivery' && status === 'approved') {
+    if (option === 'delivery' && orderStatus === 'approved') {
       return (
         <>
           <PoppinsText style={styles.confirmationMessage}>
@@ -340,7 +353,7 @@ const CheckoutScreen = () => {
       );
     }
 
-    if (status === 'rejected') {
+    if (orderStatus === 'rejected') {
       return (
         <>
           <PoppinsText style={styles.confirmationMessage}>
@@ -497,13 +510,22 @@ const CheckoutScreen = () => {
               <PoppinsText style={styles.purchaseOptionsTitle}>
                 Confirmación de Orden
               </PoppinsText>
-              <PaymentStatusMessage
-                status={status}
-                orderNumber={orderNumber ? orderNumber.split('-')[0] : 'N/A'}
-                userName={userName || 'Usuario'}
-              />
+              {orderStatus ? (
+                <PaymentStatusMessage
+                  orderNumber={orderNumber ? orderNumber.split('-')[0] : 'N/A'}
+                  userName={userName || 'Usuario'}
+                  orderStatus={
+                    orderStatus as
+                      | 'requested'
+                      | 'approved'
+                      | 'ready_for_pickup'
+                      | 'in_progress'
+                      | 'rejected'
+                  }
+                />
+              ) : null}
               <View style={styles.confirmationContainer}>
-                {renderConfirmationContent(status)}
+                {renderConfirmationContent(orderStatus)}
               </View>
             </>
           )}
