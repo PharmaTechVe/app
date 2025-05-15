@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useRouter } from 'expo-router';
@@ -14,54 +8,44 @@ import Button from '../components/Button';
 import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
-import OrderBadge from '../components/OrderBadge';
-import { useCart } from '../hooks/useCart';
 
-const OrdersScreen = () => {
-  const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
-    undefined,
-  );
-  const [loading, setLoading] = useState(true);
+const STATUS_LABELS: Record<string, string> = {
+  requested: 'Pendiente',
+  ready_for_pickup: 'A Enviar',
+  in_progress: 'En Proceso',
+  approved: 'Aprobado',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  requested: Colors.semanticDanger,
+  ready_for_pickup: Colors.semanticInfo,
+  in_progress: Colors.secondaryGray,
+  approved: Colors.secondary,
+};
+
+const ActiveOrdersScreen = () => {
+  const [activeOrdersList, setActiveOrdersList] = useState<
+    OrderResponse[] | undefined
+  >(undefined);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const { addToCart, getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
 
-  const handleReorder = async (id: string) => {
-    const orderData = await UserService.getOrder(id);
-
-    if (orderData.success) {
-      orderData.data.details.forEach((detail) => {
-        const existingQuantity = getItemQuantity(detail.productPresentation.id);
-        if (existingQuantity > 0) {
-          updateCartQuantity(
-            detail.productPresentation.id,
-            existingQuantity + detail.quantity,
-          );
-        } else {
-          addToCart({
-            id: detail.productPresentation.id,
-            quantity: detail.quantity,
-            price: detail.subtotal,
-            name: detail.productPresentation.product.name,
-            image: detail.productPresentation.product.images[0].url,
-          });
-        }
-      });
-      router.push('/cart');
-    }
-    setShowSuccessAlert(true);
-  };
-
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchActiveOrders = async () => {
       try {
         const order = await UserService.getUserOrders();
         if (order.success) {
-          if (order.data.results.length > 0) {
-            setOrdersList(order.data.results);
+          const activeOrders = order.data.results.filter(
+            (o) =>
+              o.status === 'requested' ||
+              o.status === 'approved' ||
+              o.status === 'ready_for_pickup' ||
+              o.status === 'in_progress',
+          );
+          if (activeOrders.length > 0) {
+            setActiveOrdersList(activeOrders);
           } else {
             setShowInfoAlert(true);
           }
@@ -70,21 +54,11 @@ const OrdersScreen = () => {
         console.log(error);
         setErrorMessage('Ha ocurrido un error');
         setShowErrorAlert(true);
-      } finally {
-        setLoading(false); // Finalizar carga
       }
     };
 
-    fetchOrders();
+    fetchActiveOrders();
   }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -101,19 +75,8 @@ const OrdersScreen = () => {
         {showInfoAlert && (
           <Alert
             type="info"
-            title="No tiene pedidos"
-            message="No tiene pedidos"
-            onClose={() => {
-              setShowInfoAlert(false);
-            }}
-            borderColor
-          />
-        )}
-        {showSuccessAlert && (
-          <Alert
-            type="success"
-            title="Éxito"
-            message="Pedido agregado al carrito"
+            title="No tiene pedidos activos"
+            message="No tiene pedidos activos"
             onClose={() => {
               setShowInfoAlert(false);
             }}
@@ -123,13 +86,13 @@ const OrdersScreen = () => {
       </View>
       <View style={styles.orderHeader}>
         <PoppinsText style={{ fontSize: FontSizes.s1.size }}>
-          Mis Pedidos
+          Pedidos Activos
         </PoppinsText>
       </View>
       <View style={styles.orderInfo}>
-        {ordersList &&
-          ordersList.length > 0 &&
-          ordersList.map((order, index) => (
+        {activeOrdersList &&
+          activeOrdersList.length > 0 &&
+          activeOrdersList.map((order, index) => (
             <View
               key={index}
               style={{
@@ -152,11 +115,10 @@ const OrdersScreen = () => {
                 >
                   <View>
                     <PoppinsText>
-                      #{order ? truncateString(order?.id, 8, '') : ''}
+                      {order ? truncateString(order?.id, 8) : ''}
                     </PoppinsText>
                     <PoppinsText style={{ color: Colors.textLowContrast }}>
-                      {new Date(order.createdAt).toLocaleDateString()}{' '}
-                      {/* Formatear fecha */}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </PoppinsText>
                   </View>
                   <PoppinsText>${order.totalPrice.toFixed(2)}</PoppinsText>
@@ -169,9 +131,22 @@ const OrdersScreen = () => {
                     marginTop: 5,
                   }}
                 >
-                  <OrderBadge status={order.status} />
+                  <PoppinsText
+                    style={{
+                      padding: 5,
+                      backgroundColor:
+                        STATUS_COLORS[order.status] || Colors.semanticDanger,
+                      borderRadius: 5,
+                      width: 80,
+                      color: Colors.textWhite,
+                      fontSize: FontSizes.c1.size,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {STATUS_LABELS[order.status] || order.status}
+                  </PoppinsText>
                   <TouchableOpacity
-                    onPress={() => router.push(`order/${order.id}`)}
+                    onPress={() => router.push(`order/tracking/${order.id}`)}
                   >
                     <PoppinsText style={{ fontSize: FontSizes.c1.size }}>
                       Ver detalles
@@ -181,7 +156,6 @@ const OrdersScreen = () => {
                     title="Re ordenar"
                     size="small"
                     style={{ paddingVertical: 0 }}
-                    onPress={() => handleReorder(order.id)}
                   />
                 </View>
               </View>
@@ -201,9 +175,9 @@ const styles = StyleSheet.create({
   alertContainer: {
     position: 'absolute',
     width: 326,
-    left: '56%',
+    left: '50%',
     marginLeft: -162,
-    top: 40,
+    top: 20,
     right: 0,
     zIndex: 1000,
   },
@@ -215,12 +189,6 @@ const styles = StyleSheet.create({
   orderInfo: {
     marginVertical: 5,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.bgColor,
-  },
 });
 
-export default OrdersScreen;
+export default ActiveOrdersScreen;

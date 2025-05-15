@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { BellIcon, ShoppingCartIcon } from 'react-native-heroicons/outline';
+import {
+  BellIcon,
+  ShoppingCartIcon,
+  ClipboardIcon,
+} from 'react-native-heroicons/outline';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import SearchInput from './SearchInput';
 import { Colors } from '../styles/theme';
@@ -56,6 +60,15 @@ const TopBar = () => {
         <View>
           <AvatarWithMenu />
         </View>
+
+        <TouchableOpacity
+          style={[styles.iconButton, { marginLeft: 40 }]}
+          onPress={() => {
+            router.push('/active-orders');
+          }}
+        >
+          <ClipboardIcon size={26} color={Colors.textMain} />
+        </TouchableOpacity>
 
         {/* Logo */}
         <View style={styles.logoContainer}>
@@ -164,7 +177,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 55 + 8,
   },
   iconButton: {
     paddingRight: 4,

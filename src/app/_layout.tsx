@@ -161,6 +161,7 @@ export default function RootLayout() {
             name="deliveryDetail"
             options={{ headerShown: false }}
           />
+          <Stack.Screen name="branchDetail" options={{ headerShown: false }} />
           <Stack.Screen
             name="deliveryHistoryDetail"
             options={{ headerShown: false }}
@@ -172,6 +173,13 @@ export default function RootLayout() {
               headerTransparent: true,
               headerLeft: undefined,
               headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="active-orders"
+            options={{
+              headerTitle: '',
+              headerTransparent: true,
             }}
           />
         </Stack>

@@ -36,7 +36,7 @@ const ChangeDirectionScreen = () => {
     const fetchStates = async () => {
       const states = await StateService.getStates(1, 40);
       if (states.success) {
-        setStates(states.data.results);
+        setStates(states.data?.results ?? []);
       }
     };
     fetchStates();
@@ -46,7 +46,7 @@ const ChangeDirectionScreen = () => {
     const fetchCities = async () => {
       const cities = await StateService.getCities(1, 40, selectedState);
       if (cities.success) {
-        setCities(cities.data.results);
+        setCities(cities.data?.results ?? []);
       }
     };
     fetchCities();
@@ -62,9 +62,12 @@ const ChangeDirectionScreen = () => {
 
           const city = await StateService.getCity(address.data.cityId);
           if (city.success) {
-            setSelectedCity(city.data.name);
-            const state = await StateService.getState(city.data.state.id);
-            if (state.success) setSelectedState(state.data.name);
+            setSelectedCity(city.data?.name ?? '');
+            const state = city.data
+              ? await StateService.getState(city.data.state.id)
+              : null;
+            if (state && state.success && state.data)
+              setSelectedState(state.data.name);
           }
         }
       } catch (error) {

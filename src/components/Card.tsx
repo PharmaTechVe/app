@@ -15,8 +15,8 @@ const ProductCard: React.FC<Product> = ({
   imageUrl,
   name,
   category,
-  originalPrice,
-  discount,
+  //originalPrice,
+  //discount,
   finalPrice,
   getQuantity,
 }) => {
@@ -66,18 +66,19 @@ const ProductCard: React.FC<Product> = ({
         </View>
         <View style={styles.description}>
           <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
+          {/** 
           {discount && (
             <View style={styles.priceContainer}>
               <PoppinsText style={styles.originalPrice}>
                 ${originalPrice}
               </PoppinsText>
-              <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
+              <PoppinsText style={styles.discount}>{discount}%</PoppinsText> // Comentado 
             </View>
-          )}
+          )}*/}
           <PoppinsText
             style={[
               styles.finalPrice,
-              !discount && { color: Colors.semanticInfo },
+              //!discount && { color: Colors.semanticInfo },
             ]}
           >
             ${finalPrice}

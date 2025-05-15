@@ -27,7 +27,7 @@ const CustomMarker = React.memo(({ branch }: { branch: Branch }) => (
       longitude: branch.longitude!,
     }}
     title={branch.name}
-    description={`Stock: ${branch.stockQuantity ?? 'No disponible'}`}
+    description={`Disponible: ${branch.stockQuantity ?? 'No disponible'}`}
   >
     <View style={styles.customMarker}>
       <MapPinIcon size={32} color={Colors.primary} />

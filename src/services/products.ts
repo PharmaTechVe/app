@@ -138,4 +138,19 @@ export const ProductService = {
       };
     }
   },
+
+  getRecommendations: async (): Promise<Pagination<ProductPresentation>> => {
+    try {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+
+      const recommendations = await api.product.getRecommendations(token);
+      return recommendations;
+    } catch (error) {
+      console.error('Error en ProductService.getRecommendations:', error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
 };
