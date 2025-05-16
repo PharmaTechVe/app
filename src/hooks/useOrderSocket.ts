@@ -17,11 +17,6 @@ export interface Order {
   status: OrderStatus;
 }
 
-/**
- * Hook para suscribirse a actualizaciones de estado de una orden vía Socket.IO
- * - Envía el JWT en la cabecera `authorization` para polling y websocket
- * - Captura errores de handshake
- */
 export function useOrderSocket(
   orderId: string | null,
   onOrderUpdate: (order: Order) => void,
@@ -35,19 +30,16 @@ export function useOrderSocket(
     SecureStore.getItemAsync('auth_token').then((token) => {
       if (!isMounted || !token) return;
 
-      // Construimos la cabecera como en el cliente web
       const authHeader = `Bearer ${token}`;
 
       const sock = io(SOCKET_URL, {
         transportOptions: {
           polling: {
-            extraHeaders: { authorization: authHeader },
-          },
-          websocket: {
-            extraHeaders: { authorization: authHeader },
+            extraHeaders: {
+              authorization: authHeader,
+            },
           },
         },
-        // path: '/api/socket.io', // descomenta si tu gateway usa un path personalizado
       });
       socketRef.current = sock;
 
