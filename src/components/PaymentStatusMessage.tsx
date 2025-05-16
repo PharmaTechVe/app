@@ -12,7 +12,8 @@ type OrderStatus =
   | 'approved'
   | 'ready_for_pickup'
   | 'in_progress'
-  | 'rejected';
+  | 'canceled'
+  | 'completed';
 
 interface PaymentStatusMessageProps {
   orderStatus: OrderStatus;
@@ -32,11 +33,10 @@ const statusConfig: Record<
   requested: {
     icon: ClockIcon,
     color: theme.Colors.semanticWarning,
-    title: 'Orden En Espera',
+    title: 'Orden en espera',
     message: () =>
-      `Estamos procesando tu orden. En un momento actualizaremos el estado de tu orden  Si tienes alguna duda, por favor contacta a nuestro equipo de soporte.`,
+      `Estamos procesando tu orden. En un momento actualizaremos el estado de tu orden. Si tienes alguna duda, por favor contacta a nuestro equipo de soporte.`,
   },
-
   approved: {
     icon: CheckCircleIcon,
     color: theme.Colors.semanticSuccess,
@@ -54,16 +54,23 @@ const statusConfig: Record<
   in_progress: {
     icon: ClockIcon,
     color: theme.Colors.semanticWarning,
-    title: 'Orden En Espera',
+    title: 'Orden en progreso',
     message: () =>
-      'Tu pedido está en espera. Pronto comenzaremos a procesarlo.',
+      'Tu pedido está en progreso. Pronto comenzaremos a procesarlo.',
   },
-  rejected: {
+  canceled: {
     icon: XCircleIcon,
     color: theme.Colors.semanticDanger,
     title: 'Orden rechazada',
     message: () =>
       'No pudimos procesar tu orden. Lamentamos informarte que hubo un problema al generar tu pedido.',
+  },
+  completed: {
+    icon: CheckCircleIcon,
+    color: theme.Colors.semanticSuccess,
+    title: 'Orden completada',
+    message: (_orderNumber, userName) =>
+      `¡Gracias por tu compra, ${userName}! Tu orden ha sido completada exitosamente.`,
   },
 };
 

@@ -10,7 +10,6 @@ import {
 import {
   ShoppingBagIcon,
   TruckIcon,
-  MapPinIcon,
   ChevronLeftIcon,
 } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
@@ -46,6 +45,11 @@ import {
   setCouponDiscount,
   setCouponApplied,
 } from '../redux/slices/checkoutSlice';
+import {
+  useOrderSocket,
+  OrderStatus,
+  Order as OrderSocketType,
+} from '../hooks/useOrderSocket';
 
 const CheckoutScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -76,6 +80,10 @@ const CheckoutScreen = () => {
   const [emailVerificationModalVisible, setEmailVerificationModalVisible] =
     useState(false); // Track modal visibility
   const [orderStatus, setOrderStatus] = useState<string | null>(null);
+  // Suscribe al socket usando el hook; solo se conecta cuando orderNumber no es null
+  useOrderSocket(orderNumber, (updatedOrder: OrderSocketType) => {
+    setOrderStatus(updatedOrder.status);
+  });
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -259,10 +267,7 @@ const CheckoutScreen = () => {
           const orderDetail = await OrderService.getById(orderResponse.id);
           setOrderStatus(orderDetail.status); // <-- status real del backend
         } catch (err) {
-          console.error(
-            'No se pud          git checkout -b fix/sprint-5-checkout-fixeso obtener el status de la orden:',
-            err,
-          );
+          console.error('No se pudo obtener el status de la orden:', err);
           setOrderStatus(orderResponse.status ?? null);
         }
 
@@ -299,77 +304,21 @@ const CheckoutScreen = () => {
     }
   };
 
-  const handleOpenMapModal = () => {
-    if (selectedBranch) {
-      setModalVisible(true); // Open the modal only if a branch is selected
-    } else {
-      console.error('No branch selected to display on the map.');
-    }
-  };
+  //const handleOpenMapModal = () => {
+  //if (selectedBranch) {
+  //  setModalVisible(true); // Open the modal only if a branch is selected
+  // } else {
+  //  console.error('No branch selected to display on the map.');
+  //}
+  // };
 
-  const renderConfirmationContent = (orderStatus: string | null) => {
-    if (option === 'pickup' && orderStatus === 'approved') {
-      return (
-        <>
-          <PoppinsText style={styles.confirmationMessage}>
-            Tu pedido ya está listo para que pases por él en la sucursal
-            indicada. En el mapa adjunto podrás ver la ubicación exacta para que
-            llegues sin problemas.
-          </PoppinsText>
-          <PoppinsText style={styles.sucursalText}>
-            Sucursal de retiro:{' '}
-            {selectedBranch?.name || '[Nombre de la sucursal]'}
-          </PoppinsText>
-          <Button
-            title="Ver Ubicación en el Mapa"
-            size="small"
-            style={styles.secondaryButton}
-            variant="secondary"
-            icon={<MapPinIcon width={16} height={16} color={Colors.textMain} />}
-            onPress={handleOpenMapModal} // Open the modal
-          />
-        </>
-      );
+  const renderConfirmationContent = (status: OrderStatus | null) => {
+    if (status === 'approved' && option === 'pickup') {
+      return <PoppinsText>Tu pedido está listo para recoger.</PoppinsText>;
     }
-
-    if (option === 'delivery' && orderStatus === 'approved') {
-      return (
-        <>
-          <PoppinsText style={styles.confirmationMessage}>
-            Estamos preparando tu pedido para enviarlo a la dirección indicada.
-          </PoppinsText>
-          <PoppinsText style={styles.confirmationMessage}>
-            Recibirás notificaciones cuando tu pedido esté en camino. En breve,
-            un motorizado tomará tu orden.
-          </PoppinsText>
-          <Button
-            title="Información del repartidor"
-            size="small"
-            style={styles.secondaryButton}
-            variant="secondary"
-            onPress={() => console.log('Información del repartidor')}
-          />
-        </>
-      );
+    if (status === 'approved' && option === 'delivery') {
+      return <PoppinsText>Tu pedido está en camino.</PoppinsText>;
     }
-
-    if (orderStatus === 'rejected') {
-      return (
-        <>
-          <PoppinsText style={styles.confirmationMessage}>
-            Lamentamos informarte que hubo un problema al generar tu pedido.
-          </PoppinsText>
-          <Button
-            title="Volver a Intentar"
-            size="medium"
-            style={styles.primaryButton}
-            variant="primary"
-            onPress={() => console.log('Volver a Intentar')}
-          />
-        </>
-      );
-    }
-
     return null;
   };
 
@@ -461,6 +410,15 @@ const CheckoutScreen = () => {
                 onSelect={(val) => dispatch(setLocationId(val))}
                 setSelectedBranch={setSelectedBranch}
               />
+              {/*               <Button
+                title="Ver Ubicación en el Mapa"
+                size="small"
+                style={styles.secondaryButton}
+                variant="secondary"
+                icon={<MapPinIcon width={16} height={16} color={Colors.textMain} />}
+                onPress={handleOpenMapModal}
+              /> */}
+
               <View style={styles.paymentMethods}>
                 <PaymentMethods
                   selectedOption={option}
@@ -514,18 +472,11 @@ const CheckoutScreen = () => {
                 <PaymentStatusMessage
                   orderNumber={orderNumber ? orderNumber.split('-')[0] : 'N/A'}
                   userName={userName || 'Usuario'}
-                  orderStatus={
-                    orderStatus as
-                      | 'requested'
-                      | 'approved'
-                      | 'ready_for_pickup'
-                      | 'in_progress'
-                      | 'rejected'
-                  }
+                  orderStatus={orderStatus as OrderStatus}
                 />
               ) : null}
               <View style={styles.confirmationContainer}>
-                {renderConfirmationContent(orderStatus)}
+                {renderConfirmationContent(orderStatus as OrderStatus | null)}
               </View>
             </>
           )}
@@ -551,10 +502,7 @@ const CheckoutScreen = () => {
                   </View>
                 </>
               )}
-              <View style={styles.totalRow}>
-                {/* <PoppinsText style={styles.descuentoLabel}>IVA:</PoppinsText>
-<PoppinsText style={styles.descuentoAmount}>+${iva.toFixed(2)}</PoppinsText> */}
-              </View>
+              <View style={styles.totalRow}></View>
               <View style={styles.totalRow}>
                 <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
                 <PoppinsText style={styles.totalAmount}>
