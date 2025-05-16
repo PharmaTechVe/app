@@ -96,8 +96,9 @@ const ProfileScreen = () => {
 
       if (image !== null) {
         const imageResponse = await ImageService.uploadImage(image);
-        if (imageResponse)
-          updatedProfile.profilePicture = imageResponse.secure_url;
+        if (imageResponse) {
+          updatedProfile.profilePicture = imageResponse.secure_url; // Ahora accede correctamente a secure_url
+        }
       } else {
         updatedProfile.profilePicture = 'https://via.placeholder.com/150';
       }

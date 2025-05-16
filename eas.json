@@ -12,6 +12,19 @@
         "CLOUDINARY_API_SECRET": "3vJYAPm15WGBCEnKAbCogGYdoM4"
       }
     },
+    "development": {
+      "developmentClient": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "PHARMATECH_DEV_MODE": "true",
+        "GOOGLE_MAPS_API_KEY": "AIzaSyCNSodLhsdKkK_7ZslqQpw9RzH3uhvWS_Q",
+        "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "pharmatech",
+        "CLOUDINARY_API_KEY": "281941874694529",
+        "CLOUDINARY_API_SECRET": "3vJYAPm15WGBCEnKAbCogGYdoM4"
+      }
+    },
     "production": {
       "env": {
         "PHARMATECH_DEV_MODE": "false",

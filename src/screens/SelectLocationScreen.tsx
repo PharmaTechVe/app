@@ -10,6 +10,8 @@ import PoppinsText from '../components/PoppinsText';
 import { Config } from '../config';
 
 const SelectLocationScreen = () => {
+  console.log('Clave de API utilizada:', Config.googleMapsApiKey);
+
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
