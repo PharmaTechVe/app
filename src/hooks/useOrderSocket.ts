@@ -20,27 +20,28 @@ export interface Order {
 export function useOrderSocket(
   orderId: string | null,
   onOrderUpdate: (order: Order) => void,
-) {
+): Socket | null {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
     let isMounted = true;
 
-    SecureStore.getItemAsync('auth_token').then((token) => {
+    const setupSocket = async () => {
+      const token = await SecureStore.getItemAsync('auth_token');
       if (!isMounted || !token) return;
 
       const authHeader = `Bearer ${token}`;
 
       const sock = io(SOCKET_URL, {
+        // Permitimos HTTP polling para que extraHeaders funcione
         transportOptions: {
           polling: {
-            extraHeaders: {
-              authorization: authHeader,
-            },
+            extraHeaders: { Authorization: authHeader },
           },
         },
       });
+
       socketRef.current = sock;
 
       sock.on('connect', () => console.log('[WS] Conectado con ID:', sock.id));
@@ -51,17 +52,26 @@ export function useOrderSocket(
         console.log('[WS] Error en handshake:', err.message),
       );
 
+      // Debug: ver todos los eventos que llegan
+      sock.onAny((event, ...args) =>
+        console.log('[WS] evento recibido:', event, args),
+      );
+
       sock.on('order', (updatedOrder: Order) => {
         if (updatedOrder.id === orderId) {
           console.log('[WS] Estado actualizado:', updatedOrder.status);
           onOrderUpdate(updatedOrder);
         }
       });
-    });
+    };
+
+    setupSocket();
 
     return () => {
       isMounted = false;
+      socketRef.current?.offAny();
       socketRef.current?.disconnect();
+      socketRef.current = null;
     };
   }, [orderId, onOrderUpdate]);
 
