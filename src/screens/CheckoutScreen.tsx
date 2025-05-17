@@ -32,7 +32,7 @@ import BranchMapModal from '../components/BranchMapModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
 import { useFocusEffect } from '@react-navigation/native';
-import Popup from '../components/Popup'; // Import the Popup component
+import Popup from '../components/Popup';
 import EmailVerificationModal from './tab/EmailVerificationModal';
 import { RootState, AppDispatch } from '../redux/store';
 import {
@@ -259,17 +259,9 @@ const CheckoutScreen = () => {
           return;
         }
 
-        // Guardar el número de orden generado
+        // Guardar el número de orden generado y el status inicial
         setOrderNumber(orderResponse.id);
-
-        // Obtener el status real de la orden desde el backend
-        try {
-          const orderDetail = await OrderService.getById(orderResponse.id);
-          setOrderStatus(orderDetail.status); // <-- status real del backend
-        } catch (err) {
-          console.error('No se pudo obtener el status de la orden:', err);
-          setOrderStatus(orderResponse.status ?? null);
-        }
+        setOrderStatus(orderResponse.status);
 
         console.log('Orden creada exitosamente:', orderResponse);
 

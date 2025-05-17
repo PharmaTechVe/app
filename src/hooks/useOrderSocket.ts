@@ -18,7 +18,7 @@ export interface Order {
 
 export function useOrderSocket(
   orderId: string | null,
-  onOrderUpdate: (order: Order) => void,
+  onOrderUpdated: (order: Order) => void,
 ): Socket | null {
   const socketRef = useRef<Socket | null>(null);
 
@@ -42,25 +42,51 @@ export function useOrderSocket(
 
       socketRef.current = sock;
 
-      sock.on('connect', () => console.log('[WS] Conectado con ID:', sock.id));
+      sock.on('connect', () => {
+        console.log('[WS] Conectado con ID:', sock.id);
+        // Unirse al room de la orden
+        sock.emit('joinOrder', orderId);
+        // Solicitar el objeto completo de la orden
+        sock.emit('getOrder', orderId);
+      });
+
       sock.on('disconnect', (reason) =>
         console.log('[WS] Desconectado:', reason),
       );
+
       sock.on('connect_error', (err) =>
         console.log('[WS] Error en handshake:', err.message),
       );
 
-      // Debug: ver todos los eventos que llegan
+      // Depuración de todos los eventos entrantes
       sock.onAny((event, ...args) =>
         console.log('[WS] evento recibido:', event, args),
       );
 
-      sock.on('order', (orderUpdated: Order) => {
-        if (orderUpdated.id === orderId) {
-          console.log('[WS] Estado actualizado:', orderUpdated.status);
-          onOrderUpdate(orderUpdated);
+      // Evento inicial con el objeto completo de la orden
+      sock.on('order', (Order: Order) => {
+        if (Order.id === orderId) {
+          console.log('[WS] Orden inicial recibida:', Order);
+          onOrderUpdated(Order);
         }
       });
+
+      // Evento ligero para actualizaciones de status
+      sock.on(
+        'orderUpdated',
+        (orderUpdated: { orderId: string; status: OrderStatus }) => {
+          if (orderUpdated.orderId === orderId) {
+            console.log('[WS] Status actualizado:', orderUpdated.status);
+            onOrderUpdated({
+              id: orderUpdated.orderId,
+              status: orderUpdated.status,
+            });
+          }
+        },
+      );
+
+      // Iniciar la conexión una vez registrados todos los listeners
+      sock.connect();
     };
 
     setupSocket();
@@ -71,7 +97,7 @@ export function useOrderSocket(
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
-  }, [orderId, onOrderUpdate]);
+  }, [orderId, onOrderUpdated]);
 
   return socketRef.current;
 }
