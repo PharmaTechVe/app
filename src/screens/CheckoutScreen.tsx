@@ -238,6 +238,7 @@ const CheckoutScreen = () => {
           userAddressId:
             option === 'delivery' ? locationId || undefined : undefined,
           products,
+          paymentMethod: payment, // <-- Agregado para cumplir con el SDK
         };
 
         // Log del payload que se enviará al backend
