@@ -27,7 +27,13 @@ import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import { useRouter } from 'expo-router';
 import { OrderService } from '../services/order';
 import { UserService } from '../services/user';
-import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
+import {
+  OrderType,
+  CreateOrder as SdkCreateOrder,
+  CreateOrderDetail,
+  PaymentMethod,
+} from '@pharmatech/sdk';
+
 import BranchMapModal from '../components/BranchMapModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
@@ -232,13 +238,14 @@ const CheckoutScreen = () => {
         console.log('Productos seleccionados para la orden:', products);
 
         // Construir el payload de la orden
-        const orderPayload: CreateOrder = {
+        const orderPayload: SdkCreateOrder = {
           type: option === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
+          paymentMethod:
+            payment === 'efectivo' ? PaymentMethod.CASH : PaymentMethod.CARD,
           branchId: option === 'pickup' ? locationId || undefined : undefined,
           userAddressId:
             option === 'delivery' ? locationId || undefined : undefined,
           products,
-          paymentMethod: payment, // <-- Agregado para cumplir con el SDK
         };
 
         // Log del payload que se enviará al backend
