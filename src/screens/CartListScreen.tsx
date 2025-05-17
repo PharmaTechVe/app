@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
     padding: 16,
+    paddingTop: -16,
   },
   header: {
     fontSize: FontSizes.h5.size,

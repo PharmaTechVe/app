@@ -216,6 +216,7 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
+        <View style={styles.height} />
       </ScrollView>
       <EmailVerificationModal
         visible={showEmailVerification}
@@ -230,6 +231,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
     paddingLeft: 5,
+  },
+  height: {
+    height: 64,
   },
   loadingContainer: {
     flex: 1,

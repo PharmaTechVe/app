@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 100,
+    paddingTop: 32,
     paddingHorizontal: 20,
   },
   alertContainer: {

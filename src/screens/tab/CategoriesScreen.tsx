@@ -80,6 +80,7 @@ export default function CategoriesScreen() {
         showsVerticalScrollIndicator={true}
         alwaysBounceVertical={true}
       />
+      <View style={styles.height} />
     </View>
   );
 }
@@ -88,6 +89,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.bgColor,
     flex: 1,
+  },
+  height: {
+    height: 64,
   },
   alertContainer: {
     position: 'absolute',

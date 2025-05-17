@@ -139,6 +139,7 @@ const DeliveryHistoryScreen: React.FC = () => {
             />
           ))
         )}
+        <View style={styles.height} />
       </ScrollView>
     </View>
   );
@@ -171,6 +172,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     padding: 16,
     marginHorizontal: 4,
+  },
+  height: {
+    height: 64,
   },
   title: {
     fontSize: FontSizes.h5.size,

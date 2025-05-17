@@ -7,6 +7,7 @@ export default function OffersScreen() {
   return (
     <View style={styles.container}>
       <PoppinsText>Pantalla Ofertas</PoppinsText>
+      <View style={styles.height} />
     </View>
   );
 }
@@ -17,5 +18,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.bgColor,
+  },
+  height: {
+    height: 64,
   },
 });

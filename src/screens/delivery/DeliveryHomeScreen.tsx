@@ -205,6 +205,7 @@ export default function DeliveryHomeScreen() {
             />
           ))
         )}
+        <View style={styles.height} />
       </ScrollView>
 
       {/* Popup de confirmación para descartar orden */}
@@ -232,6 +233,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     padding: 16,
     marginHorizontal: 4,
+  },
+  height: {
+    height: 64,
   },
   title: {
     fontSize: FontSizes.h5.size,
