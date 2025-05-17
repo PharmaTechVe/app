@@ -1,5 +1,5 @@
 // src/hooks/useOrderSocket.ts
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import io, { Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import { SOCKET_URL } from '../lib/socketUrl';
@@ -23,16 +23,26 @@ export function useOrderSocket(
 ): Socket | null {
   const socketRef = useRef<Socket | null>(null);
 
+  // Memoize the handler to avoid re-subscribing on every render
+  const handleOrderUpdate = useCallback(
+    (updatedOrder: Order) => {
+      if (updatedOrder.id === orderId) {
+        console.log('[WS] Estado actualizado:', updatedOrder.status);
+        onOrderUpdate(updatedOrder);
+      }
+    },
+    [onOrderUpdate, orderId],
+  );
+
   useEffect(() => {
     if (!orderId) return;
     let isMounted = true;
 
-    const setupSocket = async () => {
+    (async () => {
       const token = await SecureStore.getItemAsync('auth_token');
       if (!isMounted || !token) return;
 
       const authHeader = `Bearer ${token}`;
-
       const sock = io(SOCKET_URL, {
         transportOptions: {
           polling: {
@@ -56,23 +66,23 @@ export function useOrderSocket(
         console.log('[WS] evento recibido:', event, args),
       );
 
-      sock.on('order', (updatedOrder: Order) => {
-        if (updatedOrder.id === orderId) {
-          console.log('[WS] Estado actualizado:', updatedOrder.status);
-          onOrderUpdate(updatedOrder);
-        }
-      });
-    };
-
-    setupSocket();
+      sock.on('order', handleOrderUpdate);
+    })();
 
     return () => {
       isMounted = false;
-      socketRef.current?.offAny();
-      socketRef.current?.disconnect();
+      const sock = socketRef.current;
+      if (sock) {
+        sock.off('connect');
+        sock.off('disconnect');
+        sock.off('connect_error');
+        sock.offAny();
+        sock.off('order', handleOrderUpdate);
+        sock.disconnect();
+      }
       socketRef.current = null;
     };
-  }, [orderId, onOrderUpdate]);
+  }, [orderId, handleOrderUpdate]);
 
   return socketRef.current;
 }
