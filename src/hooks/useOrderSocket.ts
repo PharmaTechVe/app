@@ -34,7 +34,6 @@ export function useOrderSocket(
       const authHeader = `Bearer ${token}`;
 
       const sock = io(SOCKET_URL, {
-        // Permitimos HTTP polling para que extraHeaders funcione
         transportOptions: {
           polling: {
             extraHeaders: { Authorization: authHeader },
