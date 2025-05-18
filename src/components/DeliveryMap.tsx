@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, ActivityIndicator } from 'react-native';
 import * as Location from 'expo-location';
 import { Config } from '../config';
+import { Colors } from '../styles/theme';
 
 interface DeliveryMapProps {
   deliveryState: number;
@@ -25,6 +26,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   const [customerRouteCoordinates, setCustomerRouteCoordinates] = useState<
     { latitude: number; longitude: number }[]
   >([]);
+  const [isLoading, setIsLoading] = useState(true); // Estado de carga
 
   // Solicitar permisos y obtener la ubicación del delivery
   useEffect(() => {
@@ -48,15 +50,6 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
-
-        // Obtener la ruta desde la ubicación del delivery hasta la sucursal
-        fetchRoute(
-          location.coords.latitude,
-          location.coords.longitude,
-          branchLocation.latitude,
-          branchLocation.longitude,
-          setRouteCoordinates,
-        );
       } catch (error) {
         console.error('Error al obtener la ubicación del delivery:', error);
         Alert.alert(
@@ -96,11 +89,30 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     }
   };
 
+  // Obtener la ruta hacia la sucursal
+  useEffect(() => {
+    if (
+      deliveryLocation &&
+      branchLocation.latitude !== 0 &&
+      branchLocation.longitude !== 0
+    ) {
+      fetchRoute(
+        deliveryLocation.latitude,
+        deliveryLocation.longitude,
+        branchLocation.latitude,
+        branchLocation.longitude,
+        setRouteCoordinates,
+      );
+    }
+  }, [deliveryLocation, branchLocation]);
+
   // Obtener la ruta hacia el cliente cuando el estado sea el correspondiente
   useEffect(() => {
     if (
-      deliveryState >= 3 && // Estado "Ir a destino de entrega" o posterior
-      deliveryLocation
+      deliveryState >= 3 &&
+      deliveryLocation &&
+      customerLocation.latitude !== 0 &&
+      customerLocation.longitude !== 0
     ) {
       fetchRoute(
         deliveryLocation.latitude,
@@ -113,7 +125,20 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
       // Limpiar la ruta hacia la sucursal
       setRouteCoordinates([]);
     }
-  }, [deliveryState, deliveryLocation]);
+  }, [deliveryState, deliveryLocation, customerLocation]);
+
+  // Verificar si todos los datos necesarios están disponibles
+  useEffect(() => {
+    if (
+      deliveryLocation &&
+      branchLocation.latitude !== 0 &&
+      branchLocation.longitude !== 0 &&
+      customerLocation.latitude !== 0 &&
+      customerLocation.longitude !== 0
+    ) {
+      setIsLoading(false); // Finalizar la carga cuando todos los datos estén disponibles
+    }
+  }, [deliveryLocation, branchLocation, customerLocation]);
 
   // Decodificar la polyline de Google Maps
   const decodePolyline = (encoded: string) => {
@@ -154,13 +179,22 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     return points;
   };
 
+  if (isLoading) {
+    // Mostrar un indicador de carga mientras se obtienen los datos
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: branchLocation.latitude,
-          longitude: branchLocation.longitude,
+          latitude: branchLocation.latitude || 0,
+          longitude: branchLocation.longitude || 0,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }}
@@ -175,18 +209,23 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
         )}
 
         {/* Mostrar la ubicación de la sucursal */}
-        <Marker
-          coordinate={branchLocation}
-          title="Sucursal de origen"
-          pinColor="blue"
-        />
+        {branchLocation.latitude !== 0 && branchLocation.longitude !== 0 && (
+          <Marker
+            coordinate={branchLocation}
+            title="Sucursal de origen"
+            pinColor="blue"
+          />
+        )}
 
         {/* Mostrar la ubicación del cliente */}
-        <Marker
-          coordinate={customerLocation}
-          title="Ubicación del cliente"
-          pinColor="green"
-        />
+        {customerLocation.latitude !== 0 &&
+          customerLocation.longitude !== 0 && (
+            <Marker
+              coordinate={customerLocation}
+              title="Ubicación del cliente"
+              pinColor="green"
+            />
+          )}
 
         {/* Mostrar la ruta hacia la sucursal */}
         {routeCoordinates.length > 0 && (
@@ -197,7 +236,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
           />
         )}
 
-        {/* Mostrar la ruta hacia el cliente solo si el estado es el correspondiente */}
+        {/* Mostrar la ruta hacia el cliente */}
         {deliveryState >= 3 && customerRouteCoordinates.length > 0 && (
           <Polyline
             coordinates={customerRouteCoordinates}
@@ -219,6 +258,11 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  loadingContainer: {
+    height: 300,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -41,23 +41,91 @@ const DeliveryDetailScreen: React.FC = () => {
   const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
     undefined,
   );
+  const [isOrderDetailsLoading, setIsOrderDetailsLoading] = useState(true);
+  const [isFetchingOrder, setIsFetchingOrder] = useState(false); // Nuevo estado de carga para fetchOrder
+  const [branchNames, setBranchNames] = useState<
+    Record<string, { name: string; latitude: number; longitude: number }>
+  >({});
+  const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
+  const router = useRouter();
+
   useEffect(() => {
-    const fetchOrder = async () => {
+    const fetchOrderDetails = async () => {
       try {
         if (!orderDetails) {
-          console.error(
-            'No se encontraron detalles de la orden de tipo delivery.',
-          );
+          const details = await DeliveryService.getOrderDetails(id as string);
+          dispatch(setOrderDetails({ id: id as string, details }));
+        }
+      } catch (error) {
+        console.error('Error al obtener los detalles del pedido:', error);
+      } finally {
+        setIsOrderDetailsLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [id, orderDetails, dispatch]);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const branches = await BranchService.findAll({ page: 1, limit: 100 });
+        const branchMap = branches.results.reduce(
+          (
+            acc: Record<
+              string,
+              { name: string; latitude: number; longitude: number }
+            >,
+            branch,
+          ) => {
+            acc[branch.id] = {
+              name: branch.name,
+              latitude: branch.latitude,
+              longitude: branch.longitude,
+            };
+            return acc;
+          },
+          {},
+        );
+
+        setBranchNames(branchMap);
+      } catch (error) {
+        console.error('Error al obtener las sucursales:', error);
+      } finally {
+        setIsFetchingOrder(false);
+      }
+    };
+
+    if (orderDetails) {
+      fetchBranches();
+    }
+  }, [orderDetails]);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      setIsFetchingOrder(true); // Iniciar el indicador de carga
+      let timerId: NodeJS.Timeout | null = null; // Identificador del temporizador
+
+      try {
+        if (!orderDetails) {
+          // Agregar un temporizador de 2 segundos antes de mostrar el error
+          timerId = setTimeout(() => {
+            if (!orderDetails) {
+              console.error(
+                'No se encontraron detalles de la orden de tipo delivery.',
+              );
+            }
+          }, 2000);
           return;
         }
 
-        const orderId = orderDetails.orderId; // Extraer el ID de la orden
+        const orderId = orderDetails.orderId;
         console.log('ID de la orden:', orderId);
 
-        const order = await UserService.getOrder(orderId); // Usar el ID de la orden
+        const order = await UserService.getOrder(orderId);
 
         if (order.success) {
-          console.log('Datos del pedido:', order.data); // Log para verificar los datos
+          console.log('Datos del pedido:', order.data);
           setOrder(order.data);
         } else {
           console.error('Error al obtener el pedido:', order.error);
@@ -65,7 +133,10 @@ const DeliveryDetailScreen: React.FC = () => {
       } catch (error) {
         console.error('Error en fetchOrder:', error);
       } finally {
-        setLoading(false);
+        setIsFetchingOrder(false); // Finalizar el indicador de carga
+        if (timerId) {
+          clearTimeout(timerId); // Cancelar el temporizador si los datos están disponibles
+        }
       }
     };
 
@@ -75,13 +146,6 @@ const DeliveryDetailScreen: React.FC = () => {
   const deliveryState = useSelector(
     (state: RootState) => state.delivery.deliveryState[id as string] || 0,
   );
-
-  const [branchNames, setBranchNames] = useState<
-    Record<string, { name: string; latitude: number; longitude: number }>
-  >({});
-  const [loading, setLoading] = useState(true);
-  const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
-  const router = useRouter();
 
   // Estados para las alertas
   const [showAlert, setShowAlert] = useState(false);
@@ -114,45 +178,6 @@ const DeliveryDetailScreen: React.FC = () => {
     latitude: orderDetails?.address?.latitude || 0,
     longitude: orderDetails?.address?.longitude || 0,
   };
-
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      if (!orderDetails) {
-        const details = await DeliveryService.getOrderDetails(id as string);
-        dispatch(setOrderDetails({ id: id as string, details }));
-      }
-
-      try {
-        // Obtener todas las sucursales y mapear sus nombres y coordenadas
-        const branches = await BranchService.findAll({ page: 1, limit: 100 });
-        const branchMap = branches.results.reduce(
-          (
-            acc: Record<
-              string,
-              { name: string; latitude: number; longitude: number }
-            >,
-            branch,
-          ) => {
-            acc[branch.id] = {
-              name: branch.name,
-              latitude: branch.latitude,
-              longitude: branch.longitude,
-            };
-            return acc;
-          },
-          {},
-        );
-
-        setBranchNames(branchMap);
-      } catch (error) {
-        console.error('Error al obtener los detalles del pedido:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [id, orderDetails, dispatch]);
 
   const handleNextState = async () => {
     try {
@@ -242,11 +267,13 @@ const DeliveryDetailScreen: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (isOrderDetailsLoading || isFetchingOrder) {
+    // Mostrar un indicador de carga mientras se obtienen los detalles del pedido o la orden
     return <ActivityIndicator size="large" color={Colors.primary} />;
   }
 
   if (!orderDetails) {
+    // Mostrar un mensaje de error si no se encuentran los detalles del pedido
     return (
       <View style={styles.errorContainer}>
         <PoppinsText style={styles.errorText}>
