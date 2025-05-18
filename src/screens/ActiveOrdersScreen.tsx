@@ -4,7 +4,6 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useRouter } from 'expo-router';
 import Alert from '../components/Alerts';
-import Button from '../components/Button';
 import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
@@ -152,11 +151,6 @@ const ActiveOrdersScreen = () => {
                       Ver detalles
                     </PoppinsText>
                   </TouchableOpacity>
-                  <Button
-                    title="Re ordenar"
-                    size="small"
-                    style={{ paddingVertical: 0 }}
-                  />
                 </View>
               </View>
             </View>

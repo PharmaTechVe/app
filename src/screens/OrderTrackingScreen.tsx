@@ -18,7 +18,7 @@ import {
   BuildingStorefrontIcon,
   MapPinIcon,
 } from 'react-native-heroicons/solid';
-import io from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../lib/socketUrl';
 
 const OrderTrackingScreen = () => {
@@ -31,7 +31,9 @@ const OrderTrackingScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
   const [isConnected, setIsConnected] = useState(false);
+  const [transport, setTransport] = useState('N/A');
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -51,39 +53,50 @@ const OrderTrackingScreen = () => {
     };
     fetchOrder();
 
-    const socket = io(SOCKET_URL, {
-      transportOptions: {
-        polling: {
-          extraHeaders: {
-            authorization: `Bearer ${SecureStore.getItemAsync('auth_token')}`,
-          },
-        },
-      },
-    });
-
     if (id) {
       fetchOrder();
-      if (socket.connected) {
-        onConnect();
-      }
+
+      const socket = io(SOCKET_URL, {
+        transportOptions: {
+          polling: {
+            extraHeaders: {
+              authorization: `Bearer ${SecureStore.getItemAsync('auth_token')}`,
+            },
+          },
+        },
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+      });
 
       function onConnect() {
         setIsConnected(true);
+        console.log('[WS] Conectado con ID:', socket.id);
         console.log('Connected to socket: ', isConnected);
-        socket.on('order', (order: OrderDetailedResponse) => {
-          handleDeliveryStatus(order);
+        setTransport(socket.io.engine.transport.name);
+
+        socket.on('order', (order) => {
+          console.log(order);
         });
       }
 
       function onDisconnect() {
         setIsConnected(false);
+        console.log(transport);
+        setTransport('N/A');
       }
+
+      socket.on('connect_error', (err) =>
+        console.log('[WS] Error en handshake:', err.message),
+      );
 
       socket.on('connect', onConnect);
       socket.on('disconnect', onDisconnect);
       return () => {
-        socket.off('connect', onConnect);
-        socket.off('disconnect', onDisconnect);
+        //socket.off('connect', onConnect);
+        //socket.off('disconnect', onDisconnect);
       };
     }
   }, []);
@@ -95,10 +108,6 @@ const OrderTrackingScreen = () => {
       </View>
     );
   }
-
-  const handleDeliveryStatus = (e: OrderDetailedResponse) => {
-    console.log('Received message: ', e);
-  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -318,7 +327,7 @@ const OrderTrackingScreen = () => {
                         Teléfono de Contacto:
                       </PoppinsText>
                       <PoppinsText>
-                        +{order?.orderDeliveries[0].employee?.phoneNumber}
+                        {'+' + order?.orderDeliveries[0].employee?.phoneNumber}
                       </PoppinsText>
                     </View>
                   </View>
