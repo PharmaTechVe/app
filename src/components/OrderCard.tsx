@@ -59,7 +59,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </PoppinsText>
 
       {/* Details */}
-      <View style={styles.details}>
+      <View>
         <View style={styles.detailRow}>
           <MapPinIcon size={20} color={Colors.primary} />
           <PoppinsText style={styles.detailText}>{address}</PoppinsText>
@@ -73,7 +73,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
         <View style={styles.detailRow}>
           <ClockIcon size={20} color={Colors.primary} />
           <PoppinsText style={styles.detailText}>
-            Hora de entrega: {estimatedTime}
+            Tiempo estimado: {estimatedTime}
           </PoppinsText>
         </View>
       </View>
@@ -135,18 +135,18 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     marginBottom: 8,
   },
-  details: {
-    marginBottom: 4,
-  },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   detailText: {
     fontSize: FontSizes.b3.size,
     color: Colors.textMain,
     marginLeft: 8,
+    flexWrap: 'wrap',
+    maxWidth: '90%',
+    textAlign: 'left',
   },
   button: {
     marginBottom: 8,

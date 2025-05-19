@@ -17,17 +17,63 @@ import { DeliveryService } from '../../services/delivery';
 import { BranchService } from '../../services/branches';
 import {
   OrderDeliveryDetailedResponse,
-  BranchResponse,
   OrderDeliveryStatus,
 } from '@pharmatech/sdk';
 import { useAlert } from '../../components/AlertProvider'; // Importar el hook useAlert
+import * as Location from 'expo-location'; // Importar Location para obtener la ubicación actual
+import { Config } from '../../config'; // Importar la configuración de la API de Google Maps
+
+// Definir el tipo para un leg de la API de Google Maps Directions
+interface GoogleMapsLeg {
+  duration: {
+    value: number; // Duración en segundos
+  };
+}
+
+const calculateTravelTime = async (
+  origin: { latitude: number; longitude: number },
+  destination: { latitude: number; longitude: number },
+): Promise<number> => {
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=${Config.googleMapsApiKey}`,
+    );
+    const data = await response.json();
+
+    if (data.routes && data.routes.length > 0) {
+      // Extraer el tiempo estimado en segundos
+      const durationInSeconds = data.routes[0].legs.reduce(
+        (total: number, leg: GoogleMapsLeg) => total + leg.duration.value,
+        0,
+      );
+
+      // Convertir a minutos
+      return Math.ceil(durationInSeconds / 60);
+    } else {
+      console.error('No se pudo calcular el tiempo estimado.');
+      return 0;
+    }
+  } catch (error) {
+    console.error('Error al calcular el tiempo estimado:', error);
+    return 0;
+  }
+};
+
+// Extender el tipo OrderDeliveryDetailedResponse
+type ExtendedOrderDeliveryDetailedResponse = OrderDeliveryDetailedResponse & {
+  formattedEstimatedTime: string; // Nueva propiedad para el tiempo formateado
+};
 
 export default function DeliveryHomeScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
 
-  const [orders, setOrders] = useState<OrderDeliveryDetailedResponse[]>([]);
-  const [branchNames, setBranchNames] = useState<Record<string, string>>({});
+  const [orders, setOrders] = useState<ExtendedOrderDeliveryDetailedResponse[]>(
+    [],
+  );
+  const [branchNames, setBranchNames] = useState<
+    Record<string, { name: string; latitude: number; longitude: number }>
+  >({});
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] =
@@ -44,30 +90,85 @@ export default function DeliveryHomeScreen() {
       const payload = JSON.parse(atob(jwt.split('.')[1]));
       const employeeId = payload.sub;
 
+      // Obtener las órdenes asignadas
       const response = await DeliveryService.getAssignedOrders(employeeId);
 
-      const detailedOrders = await Promise.all(
-        response.results.map(async (order) => {
-          const details = await DeliveryService.getOrderDetails(order.id);
-          return details;
-        }),
-      );
-
-      const branchIds = [
-        ...new Set(detailedOrders.map((order) => order.branchId)),
-      ];
+      // Obtener las sucursales
       const branches = await BranchService.findAll({ page: 1, limit: 100 });
       const branchMap = branches.results.reduce(
-        (acc: Record<string, string>, branch: BranchResponse) => {
-          if (branchIds.includes(branch.id)) {
-            acc[branch.id] = branch.name;
-          }
+        (
+          acc: Record<
+            string,
+            { name: string; latitude: number; longitude: number }
+          >,
+          branch,
+        ) => {
+          acc[branch.id] = {
+            name: branch.name,
+            latitude: branch.latitude,
+            longitude: branch.longitude,
+          };
           return acc;
         },
         {},
       );
-
       setBranchNames(branchMap);
+
+      // Procesar las órdenes con cálculo de tiempo estimado
+      const detailedOrders: ExtendedOrderDeliveryDetailedResponse[] =
+        await Promise.all(
+          response.results.map(async (order) => {
+            const details = await DeliveryService.getOrderDetails(order.id);
+
+            // Obtener la ubicación actual del repartidor
+            const location = await Location.getCurrentPositionAsync({});
+            const deliveryLocation = {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            };
+
+            // Obtener la ubicación de la sucursal
+            const branchLocation = {
+              latitude: branchMap[details.branchId]?.latitude || 0,
+              longitude: branchMap[details.branchId]?.longitude || 0,
+            };
+
+            // Obtener la ubicación del cliente
+            const customerLocation = {
+              latitude: details.address.latitude,
+              longitude: details.address.longitude,
+            };
+
+            // Calcular tiempos de viaje
+            const timeToBranch = await calculateTravelTime(
+              deliveryLocation,
+              branchLocation,
+            );
+            const timeToCustomer = await calculateTravelTime(
+              branchLocation,
+              customerLocation,
+            );
+
+            // Tiempo total estimado en minutos
+            const totalEstimatedTime = timeToBranch + timeToCustomer;
+
+            // Formatear el tiempo estimado
+            const formattedEstimatedTime =
+              totalEstimatedTime < 60
+                ? `${totalEstimatedTime} minutos`
+                : `${Math.floor(totalEstimatedTime / 60)} horas ${
+                    totalEstimatedTime % 60
+                  } minutos`;
+
+            // Retornar la orden con el tiempo estimado formateado
+            return {
+              ...details,
+              estimatedTime: new Date(), // Mantener el tipo original como Date
+              formattedEstimatedTime, // Asignar el tiempo formateado
+            };
+          }),
+        );
+
       setOrders(detailedOrders);
     } catch (error) {
       console.error('Error al obtener las órdenes asignadas:', error);
@@ -127,14 +228,6 @@ export default function DeliveryHomeScreen() {
     setSelectedOrder(null);
   };
 
-  const formatTime = (isoDate: string | Date): string => {
-    const date = typeof isoDate === 'string' ? new Date(isoDate) : isoDate;
-    return date.toLocaleTimeString('es-VE', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   const calculateElapsedTime = (createdAt: string): string => {
     const now = new Date();
     const createdDate = new Date(createdAt);
@@ -186,8 +279,10 @@ export default function DeliveryHomeScreen() {
               orderCode={order.orderId.split('-')[0]} // Mostrar solo los primeros 8 caracteres
               orderType="pedido"
               address={order.address?.adress || 'Dirección no disponible'}
-              branch={branchNames[order.branchId] || 'Sucursal no disponible'}
-              estimatedTime={formatTime(order.estimatedTime)} // Pasar directamente la cadena ISO
+              branch={
+                branchNames[order.branchId]?.name || 'Sucursal no disponible'
+              }
+              estimatedTime={order.formattedEstimatedTime} // Mostrar el tiempo estimado
               elapsedTime={calculateElapsedTime(order.createdAt)}
               deliveryStatus={
                 order.deliveryStatus as
