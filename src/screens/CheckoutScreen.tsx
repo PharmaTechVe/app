@@ -27,7 +27,6 @@ import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import { useRouter } from 'expo-router';
 import { OrderService } from '../services/order';
 import { UserService } from '../services/user';
-import { OrderType, CreateOrder, CreateOrderDetail } from '../types/api.d';
 import BranchMapModal from '../components/BranchMapModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
@@ -50,18 +49,17 @@ import {
   OrderStatus,
   Order as OrderSocketType,
 } from '../hooks/useOrderSocket';
+import {
+  OrderType,
+  CreateOrder,
+  CreateOrderDetail,
+  PaymentMethod,
+} from '@pharmatech/sdk';
 
 const CheckoutScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    step,
-    option,
-    payment,
-    locationId,
-    paymentInfoValid,
-    couponDiscount,
-    couponApplied,
-  } = useSelector((state: RootState) => state.checkout);
+  const { step, option, payment, locationId, couponDiscount, couponApplied } =
+    useSelector((state: RootState) => state.checkout);
 
   const router = useRouter();
   const { cartItems } = useCart();
@@ -165,16 +163,12 @@ const CheckoutScreen = () => {
   const handleContinue = async () => {
     const missingFields: string[] = [];
 
-    if (step < stepsLabels.length - 1) {
-      // Validation for steps before the confirmation step
-      if (step === 1) {
-        if (!option) missingFields.push('Seleccionar una opción de compra.');
-        if (!locationId)
-          missingFields.push('Seleccionar una opción de locación.');
-        if (!payment) missingFields.push('Seleccionar un método de pago.');
-      } else if (step === 2 && !isSimplifiedSteps && !paymentInfoValid) {
-        missingFields.push('Completar la información de pago.');
-      }
+    // Validación para el paso 1
+    if (step === 1) {
+      if (!option) missingFields.push('Seleccionar una opción de compra.');
+      if (!locationId)
+        missingFields.push('Seleccionar una opción de locación.');
+      if (!payment) missingFields.push('Seleccionar un método de pago.');
 
       if (missingFields.length > 0) {
         setPopupMessages(missingFields);
@@ -182,98 +176,89 @@ const CheckoutScreen = () => {
         return;
       }
 
-      dispatch(setStep(step + 1));
-    } else if (step === stepsLabels.length - 1) {
-      // Ensure payment form is valid before creating the order
-      if (!isSimplifiedSteps && !paymentInfoValid) {
-        setPopupMessages(['Completar la información de pago correctamente.']);
-        setPopupVisible(true);
+      // Validar los productos del carrito
+      const products: CreateOrderDetail[] = cartItems
+        .filter((item) => item.quantity > 0)
+        .map((item) => ({
+          productPresentationId: item.id,
+          quantity: item.quantity,
+        }));
+
+      if (products.length === 0) {
+        setErrorMessage('No hay productos válidos en el carrito.');
+        setOrderStatus(null);
         return;
       }
 
-      // Create the order on the penultimate step
+      // Validar locationId según opción
+      if (option === 'pickup' && !isValidUUID(locationId)) {
+        setErrorMessage('La sucursal seleccionada no es válida.');
+        setOrderStatus(null);
+        return;
+      }
+      if (option === 'delivery' && !isValidUUID(locationId)) {
+        setErrorMessage('La dirección seleccionada no es válida.');
+        setOrderStatus(null);
+        return;
+      }
+
+      setErrorMessage(null);
+
+      let sdkPaymentMethod: PaymentMethod;
+      switch (payment) {
+        case 'efectivo':
+          sdkPaymentMethod = PaymentMethod.CASH;
+          break;
+        case 'punto_de_venta':
+          sdkPaymentMethod = PaymentMethod.CARD;
+          break;
+        case 'transferencia':
+          sdkPaymentMethod = PaymentMethod.BANK_TRANSFER;
+          break;
+        case 'pago_movil':
+          sdkPaymentMethod = PaymentMethod.MOBILE_PAYMENT;
+          break;
+        default:
+          sdkPaymentMethod = PaymentMethod.CASH;
+      }
+
+      // Construir el payload de la orden
+      const orderPayload: CreateOrder = {
+        type: option === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
+        branchId: option === 'pickup' ? locationId || undefined : undefined,
+        userAddressId:
+          option === 'delivery' ? locationId || undefined : undefined,
+        products,
+        paymentMethod: sdkPaymentMethod,
+      };
+
       try {
-        if (option === 'pickup' && !isValidUUID(locationId)) {
-          setErrorMessage('La sucursal seleccionada no es válida.');
-          setOrderStatus(null);
-          return;
-        }
-
-        if (option === 'delivery' && !isValidUUID(locationId)) {
-          setErrorMessage('La dirección seleccionada no es válida.');
-          setOrderStatus(null);
-          return;
-        }
-
-        if (!option) {
-          setErrorMessage('Debe seleccionar una opción de compra.');
-          setOrderStatus(null);
-          return;
-        }
-
-        setErrorMessage(null);
-
-        // Validar los productos del carrito
-        const products: CreateOrderDetail[] = cartItems
-          .filter((item) => item.quantity > 0)
-          .map((item) => ({
-            productPresentationId: item.id,
-            quantity: item.quantity, // Solo incluir los campos esperados
-          }));
-
-        if (products.length === 0) {
-          setErrorMessage('No hay productos válidos en el carrito.');
-          setOrderStatus(null);
-          return;
-        }
-
-        // Log del carrito y los productos seleccionados
-        console.log('Productos en el carrito:', cartItems);
-        console.log('Productos seleccionados para la orden:', products);
-
-        // Construir el payload de la orden
-        const orderPayload: CreateOrder = {
-          type: option === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
-          branchId: option === 'pickup' ? locationId || undefined : undefined,
-          userAddressId:
-            option === 'delivery' ? locationId || undefined : undefined,
-          products,
-        };
-
-        // Log del payload que se enviará al backend
-        console.log('Payload enviado al backend:', orderPayload);
-
         // Enviar la orden al backend
         const orderResponse = await OrderService.create(orderPayload);
 
-        // Log de la respuesta del backend
-        console.log('Respuesta del backend:', orderResponse);
-
-        // Validar la respuesta
         if (!orderResponse?.id) {
           setErrorMessage(
             'No pudimos procesar tu orden. Inténtalo nuevamente.',
           );
-
           setOrderStatus(null);
           return;
         }
 
-        // Guardar el número de orden generado y el status inicial
         setOrderNumber(orderResponse.id);
         setOrderStatus(orderResponse.status);
 
-        console.log('Orden creada exitosamente:', orderResponse);
-
-        dispatch(setStep(step + 1)); // Move to the confirmation step
+        // Ir siempre a la confirmación de orden, sin importar el tipo de orden
+        dispatch(setStep(stepsLabels.length));
       } catch (error) {
         console.error('Error al procesar la orden:', error);
         setErrorMessage('Ocurrió un error inesperado. Inténtalo nuevamente.');
-
         setOrderStatus(null);
       }
-    } else if (step === stepsLabels.length) {
-      // Limpiar el carrito al salir del flujo de checkout
+      return;
+    }
+
+    // Paso de confirmación (último paso)
+    if (step === stepsLabels.length) {
       dispatch(clearCart());
       dispatch(resetCheckout());
       router.dismissAll();
@@ -504,8 +489,8 @@ const CheckoutScreen = () => {
             </View>
             <Button
               title={
-                step === 2 && !isSimplifiedSteps
-                  ? 'Confirmar Pago'
+                step === 1
+                  ? 'Realizar Pago'
                   : step < stepsLabels.length
                     ? 'Continuar'
                     : 'Volver al Home'
