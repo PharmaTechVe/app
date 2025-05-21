@@ -44,28 +44,27 @@ const OfferCard: React.FC<OfferCardProps> = ({
       }
     >
       <View style={styles.card}>
-        <View style={styles.tagContainer}>
-          <PoppinsText style={styles.tag}>{category}</PoppinsText>
-        </View>
-
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: imageUrl }} style={styles.image} />
-          <View style={styles.cardButtonContainer}>
-            <CardButton
-              getValue={(qty) => {
-                getQuantity?.(qty);
-                updateCartQuantity(id, qty);
-              }}
-              initialValue={getItemQuantity(id)}
-            />
+        <View style={styles.imageTagWrapper}>
+          <View style={styles.tagRow}>
+            <PoppinsText style={styles.tag}>{category}</PoppinsText>
+          </View>
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: imageUrl }} style={styles.image} />
+            <View style={styles.cardButtonContainer}>
+              <CardButton
+                getValue={(qty) => {
+                  getQuantity?.(qty);
+                  updateCartQuantity(id, qty);
+                }}
+                initialValue={getItemQuantity(id)}
+              />
+            </View>
           </View>
         </View>
-
         <View style={styles.description}>
           <PoppinsText style={styles.name}>
             {truncateString(name, 25)}
           </PoppinsText>
-
           <View style={styles.priceContainer}>
             <PoppinsText style={styles.originalPrice}>
               ${originalPrice.toFixed(2)}
@@ -91,13 +90,21 @@ const styles = StyleSheet.create({
     borderColor: Colors.gray_100,
     borderRadius: 15,
     padding: 10,
+    paddingBottom: 5,
+    marginBottom: 16,
     maxWidth: 140,
     minWidth: 140,
-    minHeight: 340,
+    minHeight: 315,
+    maxHeight: 315,
   },
-  tagContainer: {
+  imageTagWrapper: {
+    width: '100%',
+    height: 135,
+    marginBottom: 30,
+  },
+  tagRow: {
+    width: '100%',
     flexDirection: 'row-reverse',
-    marginBottom: 8,
   },
   tag: {
     backgroundColor: Colors.semanticInfo,
@@ -105,11 +112,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     color: Colors.textWhite,
     fontSize: FontSizes.c3.size,
+    maxWidth: '100%',
   },
   imageContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    marginBottom: 12,
+    minHeight: 118,
+    maxHeight: 118,
+    maxWidth: 114,
+    borderRadius: 15,
+    marginVertical: 8,
   },
   image: {
     width: 114,
@@ -117,29 +127,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   cardButtonContainer: {
-    position: 'absolute',
-    bottom: -15,
-    right: 8,
-    zIndex: 2,
+    position: 'relative',
+    top: -30,
+    left: 58,
+    maxWidth: '65%',
+    alignItems: 'flex-end',
+    zIndex: 999,
   },
   description: {
     marginHorizontal: 2,
+    justifyContent: 'center',
   },
   name: {
     fontSize: FontSizes.s2.size,
     marginBottom: 6,
-    minHeight: 50,
+    minHeight: 70,
+    maxHeight: 70,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
   },
   originalPrice: {
     fontSize: FontSizes.b1.size,
     color: Colors.disableText,
     textDecorationLine: 'line-through',
-    marginRight: 6,
+    marginRight: 14,
   },
   discountBadge: {
     fontSize: FontSizes.c1.size,
@@ -150,8 +163,8 @@ const styles = StyleSheet.create({
   },
   finalPrice: {
     fontSize: FontSizes.s1.size,
-    fontWeight: 'bold',
-    color: Colors.gray_500,
+    fontWeight: 'medium',
+    color: Colors.textMain,
   },
 });
 
