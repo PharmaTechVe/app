@@ -14,6 +14,12 @@ import { ProductService } from '../../services/products';
 import type { Promo } from '@pharmatech/sdk';
 
 export default function OffersScreen() {
+  type PresentationWithPromo = typeof ProductService.getProducts extends (
+    ...args: unknown[]
+  ) => Promise<{ data: { results: Array<unknown> } }>
+    ? { promo?: Promo }
+    : { promo?: Promo };
+
   const [offers, setOffers] = useState<
     Array<{
       id: string;
@@ -35,20 +41,18 @@ export default function OffersScreen() {
     setLoading(true);
     const res = await ProductService.getProducts(1, 50);
     if (res.success) {
-      // Solo productos con promo
       const promoItems = res.data.results.filter((item) =>
         Boolean(
           item.promo?.discount ??
-            // @ts-expect-error - promo puede estar en item o en item.presentation
-            item.presentation.promo?.discount,
+            (item.presentation as PresentationWithPromo)?.promo?.discount,
         ),
       );
-      // Mapear la info igual que en HomeScreen
+
       const mappedPromoItems = promoItems.map((p) => {
-        // @ts-expect-error: promo puede estar en p o en p.presentation
-        const promo: Promo | undefined = p.promo ?? p.presentation.promo;
+        const promo: Promo | undefined =
+          p.promo ?? (p.presentation as PresentationWithPromo)?.promo;
         const discount: Promo['discount'] = promo?.discount ?? 0;
-        // No calcular el finalPrice aquí
+
         return {
           id: p.id,
           presentationId: p.presentation.id,

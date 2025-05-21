@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
@@ -73,17 +73,15 @@ const ProductCard: React.FC<Product> = ({
           {discount && (
             <View style={styles.priceContainer}>
               <PoppinsText style={styles.originalPrice}>
-                <Text>${originalPrice}</Text>
+                ${originalPrice}
               </PoppinsText>
-              <PoppinsText style={styles.discount}>
-                <Text>{discount}%</Text>
-              </PoppinsText>
+              <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
             </View>
           )}
           <PoppinsText
             style={[styles.finalPrice, !discount && { color: Colors.textMain }]}
           >
-            <Text>${computedFinalPrice}</Text>
+            ${computedFinalPrice}
           </PoppinsText>
         </View>
       </View>
