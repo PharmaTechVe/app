@@ -17,7 +17,7 @@ export const PaymentInformationService = {
       const response = await api.paymentInformation.findAll(paymentMethod);
 
       // La respuesta ahora es directamente un array de PaymentInfoResponse
-      return [response];
+      return response;
     } catch (error) {
       console.error('Error en PaymentInformationService.findAll:', error);
       throw new Error(extractErrorMessage(error));
