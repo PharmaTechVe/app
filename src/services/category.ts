@@ -22,4 +22,18 @@ export const CategoryService = {
       };
     }
   },
+
+  getById: async (id: string): Promise<CategoryResponse> => {
+    if (!id || typeof id !== 'string') {
+      throw new Error('El ID proporcionado no es válido.');
+    }
+
+    try {
+      const response = await api.category.getById(id);
+      return response;
+    } catch (error) {
+      console.error('Error en CategoryService.getById:', error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
 };

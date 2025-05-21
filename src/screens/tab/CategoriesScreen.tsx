@@ -14,6 +14,7 @@ import Alert from '../../components/Alerts';
 import { CategoryService } from '../../services/category';
 import { CategoryResponse } from '@pharmatech/sdk';
 import CategoryDefaultImg from '../../assets/images/defaults/category.png';
+import { router } from 'expo-router';
 
 export default function CategoriesScreen() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -40,7 +41,9 @@ export default function CategoriesScreen() {
   const renderItem: ListRenderItem<CategoryResponse> = ({ item }) => (
     <TouchableOpacity
       style={styles.gridItem}
-      onPress={() => console.log('Category selected:', item)}
+      onPress={() => {
+        router.push(`/categoryDetail/${item.id}`);
+      }}
     >
       <Image source={CategoryDefaultImg} />
       <PoppinsText style={styles.categoryText}>{item.name}</PoppinsText>
