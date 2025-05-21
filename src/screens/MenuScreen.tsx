@@ -28,7 +28,7 @@ export default function MenuScreen() {
   const items = [
     {
       id: '1',
-      title: 'Perfil',
+      title: 'Mi Perfil',
       icon: <UserIcon color={Colors.iconMainPrimary} />,
       onPress: () => router.push('/profile'),
     },
