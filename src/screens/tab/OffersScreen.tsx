@@ -14,12 +14,6 @@ import { ProductService } from '../../services/products';
 import type { Promo } from '@pharmatech/sdk';
 
 export default function OffersScreen() {
-  type PresentationWithPromo = typeof ProductService.getProducts extends (
-    ...args: unknown[]
-  ) => Promise<{ data: { results: Array<unknown> } }>
-    ? { promo?: Promo }
-    : { promo?: Promo };
-
   const [offers, setOffers] = useState<
     Array<{
       id: string;
@@ -37,20 +31,22 @@ export default function OffersScreen() {
   >([]);
   const [loading, setLoading] = useState(false);
 
+  function hasPromo(item: {
+    [key: string]: unknown;
+  }): item is { promo?: Promo } {
+    return 'promo' in item && typeof item.promo !== 'undefined';
+  }
+
   const loadOffers = async () => {
     setLoading(true);
     const res = await ProductService.getProducts(1, 50);
     if (res.success) {
-      const promoItems = res.data.results.filter((item) =>
-        Boolean(
-          item.promo?.discount ??
-            (item.presentation as PresentationWithPromo)?.promo?.discount,
-        ),
+      const promoItems = res.data.results.filter(
+        (item) => hasPromo(item) && Boolean(item.promo?.discount),
       );
 
       const mappedPromoItems = promoItems.map((p) => {
-        const promo: Promo | undefined =
-          p.promo ?? (p.presentation as PresentationWithPromo)?.promo;
+        const promo: Promo | undefined = hasPromo(p) ? p.promo : undefined;
         const discount: Promo['discount'] = promo?.discount ?? 0;
 
         return {
