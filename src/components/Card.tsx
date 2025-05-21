@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, Text } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
@@ -15,13 +15,17 @@ const ProductCard: React.FC<Product> = ({
   imageUrl,
   name,
   category,
-  //originalPrice,
-  //discount,
+  originalPrice,
+  discount,
   finalPrice,
   getQuantity,
 }) => {
   const { getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
+  const computedFinalPrice = discount
+    ? (finalPrice * (100 - discount)) / 100
+    : finalPrice;
+
   return (
     <TouchableOpacity
       onPress={() =>
@@ -66,22 +70,20 @@ const ProductCard: React.FC<Product> = ({
         </View>
         <View style={styles.description}>
           <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
-          {/** 
           {discount && (
             <View style={styles.priceContainer}>
               <PoppinsText style={styles.originalPrice}>
-                ${originalPrice}
+                <Text>${originalPrice}</Text>
               </PoppinsText>
-              <PoppinsText style={styles.discount}>{discount}%</PoppinsText> // Comentado 
+              <PoppinsText style={styles.discount}>
+                <Text>{discount}%</Text>
+              </PoppinsText>
             </View>
-          )}*/}
+          )}
           <PoppinsText
-            style={[
-              styles.finalPrice,
-              //!discount && { color: Colors.semanticInfo },
-            ]}
+            style={[styles.finalPrice, !discount && { color: Colors.textMain }]}
           >
-            ${finalPrice}
+            <Text>${computedFinalPrice}</Text>
           </PoppinsText>
         </View>
       </View>

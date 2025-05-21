@@ -9,28 +9,69 @@ import {
 } from 'react-native';
 import PoppinsText from '../../components/PoppinsText';
 import { Colors, FontSizes } from '../../styles/theme';
-import OfferCard from '../../components/OfferCardProps';
+import Card from '../../components/Card';
 import { ProductService } from '../../services/products';
-import { ProductPresentation } from '../../types/api.d';
+import type { Promo } from '@pharmatech/sdk';
 
 export default function OffersScreen() {
-  const [offers, setOffers] = useState<ProductPresentation[]>([]);
+  const [offers, setOffers] = useState<
+    Array<{
+      id: string;
+      presentationId: string;
+      productId: string;
+      imageUrl: string;
+      name: string;
+      category: string;
+      originalPrice: number;
+      discount: number;
+      finalPrice: number;
+      quantity: number;
+      getQuantity: (quantity: number) => void;
+    }>
+  >([]);
   const [loading, setLoading] = useState(false);
 
   const loadOffers = async () => {
     setLoading(true);
     const res = await ProductService.getProducts(1, 50);
     if (res.success) {
+      // Solo productos con promo
       const promoItems = res.data.results.filter((item) =>
-        // puede venir en item.promo o dentro de item.presentation.promo
         Boolean(
-          // @ts-expect-error - promo puede estar en item o en item.presentation
           item.promo?.discount ??
             // @ts-expect-error - promo puede estar en item o en item.presentation
             item.presentation.promo?.discount,
         ),
       );
-      setOffers(promoItems);
+      // Mapear la info igual que en HomeScreen
+      const mappedPromoItems = promoItems.map((p) => {
+        // @ts-expect-error: promo puede estar en p o en p.presentation
+        const promo: Promo | undefined = p.promo ?? p.presentation.promo;
+        const discount: Promo['discount'] = promo?.discount ?? 0;
+        // No calcular el finalPrice aquí
+        return {
+          id: p.id,
+          presentationId: p.presentation.id,
+          productId: p.product.id,
+          imageUrl:
+            p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
+          name:
+            p.product.name +
+            ' ' +
+            p.presentation.name +
+            ' ' +
+            p.presentation.quantity +
+            ' ' +
+            p.presentation.measurementUnit,
+          category: p.product.categories?.[0]?.name || 'Sin categoría',
+          originalPrice: p.price,
+          discount,
+          finalPrice: p.price,
+          quantity: 0,
+          getQuantity: () => 0,
+        };
+      });
+      setOffers(mappedPromoItems);
     } else {
       console.error('Error al cargar productos:', res.error);
     }
@@ -49,24 +90,34 @@ export default function OffersScreen() {
     );
   }
 
-  const renderOffer = ({ item }: ListRenderItemInfo<ProductPresentation>) => {
-    // @ts-expect-error: asumimos que existe promo en alguna de estas rutas
-    const promo = item.promo ?? item.presentation.promo;
-    const discount = promo?.discount ?? 0;
-    const finalPrice = item.price * (1 - discount / 100);
-
+  const renderOffer = ({
+    item,
+  }: ListRenderItemInfo<{
+    id: string;
+    presentationId: string;
+    productId: string;
+    imageUrl: string;
+    name: string;
+    category: string;
+    originalPrice: number;
+    discount: number;
+    finalPrice: number;
+    quantity: number;
+    getQuantity: (quantity: number) => void;
+  }>) => {
     return (
-      <OfferCard
+      <Card
         id={item.id}
-        presentationId={item.id}
-        productId={item.product.id}
-        imageUrl={item.product.images[0]?.url}
-        name={item.product.genericName ?? item.product.name}
-        category={item.product.categories?.[0]?.name ?? ''}
-        originalPrice={item.price}
-        discount={discount}
-        finalPrice={finalPrice}
-        getQuantity={() => {}}
+        presentationId={item.presentationId}
+        productId={item.productId}
+        imageUrl={item.imageUrl}
+        name={item.name}
+        category={item.category}
+        originalPrice={item.originalPrice}
+        discount={item.discount}
+        finalPrice={item.finalPrice}
+        quantity={item.quantity}
+        getQuantity={item.getQuantity}
       />
     );
   };
