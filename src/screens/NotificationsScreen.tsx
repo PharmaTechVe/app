@@ -4,9 +4,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Image,
   ActivityIndicator,
-  ImageSourcePropType,
   TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -24,14 +22,15 @@ import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
 import { NotificationService } from '../services/notifications';
 import { getUserIdFromSecureStore } from '../helper/jwtHelper';
+import { SvgProps } from 'react-native-svg';
 
-import completedImg from '../assets/images/notifications/f.jpg';
-import inProgressImg from '../assets/images/notifications/r.jpg';
-import approvedImg from '../assets/images/notifications/image.jpg';
-import canceledImg from '../assets/images/notifications/w.jpg';
-import readyForPickupImg from '../assets/images/notifications/e.jpg';
-import deliveryImg from '../assets/images/notifications/m.jpg';
-import defaultIcon from '../assets/images/favicon.png';
+// Importa tus SVG como componentes React
+import CompletedSvg from '../assets/images/notifications/f.svg';
+import InProgressSvg from '../assets/images/notifications/r.svg';
+import ApprovedSvg from '../assets/images/notifications/image.svg';
+import CanceledSvg from '../assets/images/notifications/w.svg';
+import ReadyForPickupSvg from '../assets/images/notifications/e.svg';
+import DeliverySvg from '../assets/images/notifications/m.svg';
 
 type NotificationItem = {
   id: string;
@@ -43,16 +42,27 @@ type NotificationItem = {
   status: string;
 };
 
-const notificationIcons: Record<string, ImageSourcePropType> = {
-  completed: completedImg as ImageSourcePropType,
-  in_progress: inProgressImg as ImageSourcePropType,
-  approved: approvedImg as ImageSourcePropType,
-  canceled: canceledImg as ImageSourcePropType,
-  ready_for_pickup: readyForPickupImg as ImageSourcePropType,
-  delivery: deliveryImg as ImageSourcePropType,
+type NotificationResponse = {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  order?: {
+    id: string;
+    status: string;
+  };
 };
 
-const defaultIconSource = defaultIcon as ImageSourcePropType;
+// Mapeo de status → componente SVG
+const notificationIcons: Record<string, React.FC<SvgProps>> = {
+  completed: CompletedSvg,
+  in_progress: InProgressSvg,
+  approved: ApprovedSvg,
+  canceled: CanceledSvg,
+  ready_for_pickup: ReadyForPickupSvg,
+  delivery: DeliverySvg,
+};
 
 export default function NotificationsScreen() {
   const navigation = useNavigation();
@@ -81,16 +91,16 @@ export default function NotificationsScreen() {
           throw new Error(errorMsg);
         }
 
-        const items = res.data.map((nt: Record<string, unknown>) => {
-          const order = (nt.order || {}) as Record<string, unknown>;
+        const items = res.data.map((nt: NotificationResponse) => {
+          const order = nt.order || { id: '', status: '' };
           return {
-            id: nt.id as string,
-            title: nt.title as string,
-            message: (nt.message as string).trim(),
-            createdAt: nt.createdAt as string,
+            id: nt.id,
+            title: nt.title,
+            message: nt.message.trim(),
+            createdAt: nt.createdAt,
             isRead: !!nt.isRead,
-            orderId: order.id as string,
-            status: order.status as string,
+            orderId: order.id,
+            status: order.status,
           };
         });
 
@@ -108,7 +118,7 @@ export default function NotificationsScreen() {
     fetchNotifications();
   }, []);
 
-  // Marca todas como leídas al enfocar o desenfocar la pantalla
+  // Marca todas como leídas al entrar o salir de la pantalla
   useFocusEffect(
     useCallback(() => {
       const markAllRead = async () => {
@@ -116,16 +126,12 @@ export default function NotificationsScreen() {
           const token = await getUserIdFromSecureStore();
           if (!token) return;
 
-          // Filtrar solo las no leídas
           const toMark = notificationsList.filter((n) => !n.isRead);
           if (toMark.length === 0) return;
 
-          // Llamar al servicio en paralelo
           await Promise.all(
             toMark.map((n) => NotificationService.markAsRead(n.orderId, token)),
           );
-
-          // Actualizar estado local
           setNotificationsList((prev) =>
             prev.map((n) => ({ ...n, isRead: true })),
           );
@@ -136,9 +142,7 @@ export default function NotificationsScreen() {
           );
         }
       };
-
       markAllRead();
-      // no necesitamos cleanup
     }, [notificationsList]),
   );
 
@@ -154,8 +158,25 @@ export default function NotificationsScreen() {
     return format(date, 'yyyy-MM-dd', { locale: es });
   };
 
-  const getNotificationIcon = (status: string): ImageSourcePropType => {
-    return notificationIcons[status] || defaultIconSource;
+  const renderNotification = (nt: NotificationItem) => {
+    const Icon = notificationIcons[nt.status];
+    return (
+      <View
+        key={nt.id}
+        style={[styles.item, !nt.isRead && styles.unreadBackground]}
+      >
+        <Icon width={32} height={32} />
+        <View style={styles.textContainer}>
+          <View style={styles.itemHeader}>
+            <PoppinsText weight="semibold">{nt.title}</PoppinsText>
+            <PoppinsText style={styles.date}>
+              {formatRelativeDate(nt.createdAt)}
+            </PoppinsText>
+          </View>
+          <PoppinsText style={styles.message}>{nt.message}</PoppinsText>
+        </View>
+      </View>
+    );
   };
 
   return (
@@ -204,26 +225,7 @@ export default function NotificationsScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.listContainer}>
-          {notificationsList.map((nt) => (
-            <View
-              key={nt.id}
-              style={[styles.item, !nt.isRead && styles.unreadBackground]}
-            >
-              <Image
-                source={getNotificationIcon(nt.status)}
-                style={styles.icon}
-              />
-              <View style={styles.textContainer}>
-                <View style={styles.itemHeader}>
-                  <PoppinsText weight="semibold">{nt.title}</PoppinsText>
-                  <PoppinsText style={styles.date}>
-                    {formatRelativeDate(nt.createdAt)}
-                  </PoppinsText>
-                </View>
-                <PoppinsText style={styles.message}>{nt.message}</PoppinsText>
-              </View>
-            </View>
-          ))}
+          {notificationsList.map(renderNotification)}
         </ScrollView>
       )}
     </View>
@@ -287,15 +289,9 @@ const styles = StyleSheet.create({
   unreadBackground: {
     backgroundColor: '#FFFFFF',
   },
-  icon: {
-    width: 32,
-    height: 32,
-    marginRight: 12,
-    marginTop: 4,
-    borderRadius: 16,
-  },
   textContainer: {
     flex: 1,
+    marginLeft: 12,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -309,7 +305,6 @@ const styles = StyleSheet.create({
   message: {
     color: Colors.textLowContrast,
     fontSize: FontSizes.c1.size,
-    marginRight: 80,
     flexWrap: 'wrap',
   },
 });
