@@ -164,7 +164,14 @@ const DirectionScreen = () => {
 
       <Button
         title="Agregar nueva dirección"
-        onPress={() => router.push('/selectLocation')}
+        onPress={() =>
+          router.push({
+            pathname: '/selectLocation',
+            params: {
+              fromCheckout: 'false', // Convertimos a cadena
+            },
+          })
+        }
       />
 
       {/* Popup de confirmación */}

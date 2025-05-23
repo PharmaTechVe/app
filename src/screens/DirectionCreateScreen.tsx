@@ -151,7 +151,7 @@ const DirectionCreateScreen = () => {
           label="Estado"
           placeholder="Seleccione Estado"
           options={states.map((state) => state.name)}
-          borderColor={Colors.gray_100}
+          borderColor={selectedState ? Colors.gray_100 : Colors.semanticDanger}
           onSelect={(option) => {
             const sState = states.find((state) => state.name === option);
             if (sState) setSelectedState(sState.id);
@@ -161,21 +161,21 @@ const DirectionCreateScreen = () => {
           label="Ciudad"
           placeholder="Seleccione Ciudad"
           options={cities.map((city) => city.name)}
-          borderColor={Colors.gray_100}
+          borderColor={selectedCity ? Colors.gray_100 : Colors.semanticDanger}
           onSelect={(option) => {
             const sCity = cities.find((city) => city.name === option);
             if (sCity) setSelectedCity(sCity.id);
           }}
         />
         <Input
-          label="Dirección: (Ubicación actual)"
+          label="Dirección (Ubicación actual):"
           value={address?.adress}
           getValue={(value) => setAddress({ ...address, adress: value })}
           errorText="El campo no puede estar vacío"
           backgroundColor={Colors.textWhite}
         />
         <Input
-          label="Información adicional:"
+          label="Información adicional (opcional):"
           value={address?.additionalInformation ?? undefined}
           getValue={(value) =>
             setAddress({ ...address, additionalInformation: value })
@@ -183,7 +183,7 @@ const DirectionCreateScreen = () => {
           backgroundColor={Colors.textWhite}
         />
         <Input
-          label="Punto de referencia:"
+          label="Punto de referencia (opcional):"
           value={address?.referencePoint ?? undefined}
           getValue={(value) =>
             setAddress({ ...address, referencePoint: value })

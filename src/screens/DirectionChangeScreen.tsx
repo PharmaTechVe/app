@@ -59,7 +59,6 @@ const ChangeDirectionScreen = () => {
 
         if (address.success) {
           setAddress(address.data);
-
           const city = await StateService.getCity(address.data.cityId);
           if (city.success) {
             setSelectedCity(city.data?.name ?? '');
@@ -109,7 +108,8 @@ const ChangeDirectionScreen = () => {
       setLoading(false);
     } catch (error) {
       console.error('Error al actualizar la dirección:', error);
-      alert('Ocurrió un error al intentar actualizar la dirección');
+      setErrorMessage(String(error));
+      setShowErrorAlert(true);
     }
   };
 

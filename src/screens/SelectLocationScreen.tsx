@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps'; // Importa el tipo Region
 import * as Location from 'expo-location';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import Button from '../components/Button';
 import { MapPinIcon } from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
@@ -20,6 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 const SelectLocationScreen = () => {
   console.log('Clave de API utilizada:', Config.googleMapsApiKey);
 
+  const { fromCheckout } = useLocalSearchParams();
   const navigation = useNavigation();
 
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -127,7 +128,7 @@ const SelectLocationScreen = () => {
         params: {
           latitude: selectedLocation.latitude.toString(),
           longitude: selectedLocation.longitude.toString(),
-          fromCheckout: 'true', // Convertimos a cadena
+          fromCheckout: fromCheckout === 'true' ? 'true' : 'false', // Convertimos a cadena
         },
       });
     } else {

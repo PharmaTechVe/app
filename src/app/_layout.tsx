@@ -148,6 +148,10 @@ export default function RootLayout() {
           />
           <Stack.Screen name="branchDetail" options={{ headerShown: false }} />
           <Stack.Screen
+            name="categoryDetail"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
             name="deliveryHistoryDetail"
             options={{ headerShown: false }}
           />
