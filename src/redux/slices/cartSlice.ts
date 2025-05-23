@@ -6,6 +6,7 @@ export type CartItem = {
   price: number;
   quantity: number;
   image: string;
+  discount?: number;
 };
 
 type CartState = {
@@ -40,6 +41,7 @@ const cartSlice = createSlice({
       );
       if (existingItem) {
         existingItem.quantity = action.payload.quantity;
+        existingItem.discount = action.payload.discount;
       } else {
         state.items.push(action.payload);
       }

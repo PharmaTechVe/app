@@ -20,7 +20,7 @@ const ProductCard: React.FC<Product> = ({
   finalPrice,
   getQuantity,
 }) => {
-  const { getItemQuantity, updateCartQuantity } = useCart();
+  const { getItemQuantity, addToCart } = useCart();
   const router = useRouter();
   const computedFinalPrice = discount
     ? (finalPrice * (100 - discount)) / 100
@@ -61,7 +61,15 @@ const ProductCard: React.FC<Product> = ({
               <CardButton
                 getValue={(quantity) => {
                   if (getQuantity) getQuantity(quantity);
-                  updateCartQuantity(id, quantity);
+                  // Asegura que price siempre sea number
+                  addToCart({
+                    id,
+                    name,
+                    price: originalPrice ?? 0,
+                    quantity,
+                    image: imageUrl,
+                    discount: discount ?? 0,
+                  });
                 }}
                 initialValue={getItemQuantity(id)}
               />

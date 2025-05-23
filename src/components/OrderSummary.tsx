@@ -14,26 +14,29 @@ const OrderSummary = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  // const totalDiscount = cartItems.reduce(
-  //   (sum, item) => sum + item.price * (item.quantity * 0.1), // Comentado
-  //   0,
-  // );
+  const totalDiscount = cartItems.reduce(
+    (sum, item) =>
+      sum + item.price * item.quantity * ((item.discount ?? 0) / 100),
+    0,
+  );
+  const total = subtotal - totalDiscount;
 
   const renderItem = ({ item }: { item: CartItem }) => {
-    // const discount = 10; // Comentado
-    // const discountedPrice = item.price * (1 - discount / 100); // Comentado
-    // const totalDiscountedPrice = discountedPrice * item.quantity; // Comentado
+    const discount = item.discount ?? 0;
+    const discountedPrice = item.price * (1 - discount / 100);
+    const totalDiscountedPrice = discountedPrice * item.quantity;
     const totalOriginalPrice = item.price * item.quantity;
 
     return (
       <View style={styles.card}>
         <View style={styles.imageContainer}>
-          {/** 
-          <View style={styles.discountBadge}>
-            <PoppinsText style={styles.discountBadgeText}>
-              -10%
-            </PoppinsText>
-          </View>*/}
+          {discount > 0 && (
+            <View style={styles.discountBadge}>
+              <PoppinsText style={styles.discountBadgeText}>
+                -{discount}%
+              </PoppinsText>
+            </View>
+          )}
           <Image
             source={{ uri: item.image }}
             style={styles.productImage}
@@ -44,15 +47,14 @@ const OrderSummary = () => {
           <View style={styles.row}>
             <PoppinsText style={styles.productName}>{item.name}</PoppinsText>
             <PoppinsText style={styles.productTotalPrice}>
-              ${totalOriginalPrice.toFixed(2)}
+              ${totalDiscountedPrice.toFixed(2)}
             </PoppinsText>
           </View>
-          {/**
           <PoppinsText style={styles.productOriginalPrice}>
             ${totalOriginalPrice.toFixed(2)}
-          </PoppinsText> */}
+          </PoppinsText>
           <PoppinsText style={styles.productPrice}>
-            (${item.price} c/u)
+            (${discountedPrice.toFixed(2)} c/u)
           </PoppinsText>
           <PoppinsText style={styles.productQuantity}>
             Cantidad: {item.quantity}
@@ -107,7 +109,15 @@ const OrderSummary = () => {
             </View>
             <View style={styles.row}>
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
-              <PoppinsText style={styles.discountText}>-$0.00</PoppinsText>
+              <PoppinsText style={styles.discountText}>
+                -${totalDiscount.toFixed(2)}
+              </PoppinsText>
+            </View>
+            <View style={styles.row}>
+              <PoppinsText style={styles.subtotalText}>Total</PoppinsText>
+              <PoppinsText style={styles.subtotalText}>
+                ${total.toFixed(2)}
+              </PoppinsText>
             </View>
           </View>
         </>
