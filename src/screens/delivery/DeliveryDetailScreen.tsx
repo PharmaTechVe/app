@@ -5,6 +5,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -12,6 +14,7 @@ import {
   BuildingStorefrontIcon,
   MapPinIcon,
   PhoneIcon,
+  XMarkIcon,
 } from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
 import PoppinsText from '../../components/PoppinsText';
@@ -48,6 +51,43 @@ const DeliveryDetailScreen: React.FC = () => {
   >({});
   const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
   const router = useRouter();
+  const [isMapModalVisible, setIsMapModalVisible] = useState(false);
+
+  const branchLocation = {
+    latitude: branchNames[orderDetails?.branchId ?? '']?.latitude || 0,
+    longitude: branchNames[orderDetails?.branchId ?? '']?.longitude || 0,
+  };
+
+  const customerLocation = {
+    latitude: orderDetails?.address?.latitude || 0,
+    longitude: orderDetails?.address?.longitude || 0,
+  };
+
+  const deliveryState = useSelector(
+    (state: RootState) => state.delivery.deliveryState[id as string] || 0,
+  );
+
+  // Estados para las alertas
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'info'>(
+    'info',
+  );
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const deliveryStates = [
+    'Buscando pedido en sucursal de origen',
+    'Haciendo entrega del pedido',
+  ];
+
+  const buttonStates = [
+    'Comenzar entrega',
+    'Llegué a la sucursal',
+    'Ya tengo los productos del pedido',
+    'Ir a destino de entrega',
+    'Ya hice la entrega',
+  ];
+
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -143,41 +183,21 @@ const DeliveryDetailScreen: React.FC = () => {
     fetchOrder();
   }, [orderDetails]);
 
-  const deliveryState = useSelector(
-    (state: RootState) => state.delivery.deliveryState[id as string] || 0,
-  );
+  // Mostrar un indicador de carga mientras se obtienen los detalles del pedido o la orden
+  if (isOrderDetailsLoading || isFetchingOrder) {
+    return <ActivityIndicator size="large" color={Colors.primary} />;
+  }
 
-  // Estados para las alertas
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertType, setAlertType] = useState<'success' | 'error' | 'info'>(
-    'info',
-  );
-  const [alertMessage, setAlertMessage] = useState('');
-
-  const deliveryStates = [
-    'Buscando pedido en sucursal de origen',
-    'Haciendo entrega del pedido',
-  ];
-
-  const buttonStates = [
-    'Comenzar entrega',
-    'Llegué a la sucursal',
-    'Ya tengo los productos del pedido',
-    'Ir a destino de entrega',
-    'Ya hice la entrega',
-  ];
-
-  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
-
-  const branchLocation = {
-    latitude: branchNames[orderDetails?.branchId ?? '']?.latitude || 0,
-    longitude: branchNames[orderDetails?.branchId ?? '']?.longitude || 0,
-  };
-
-  const customerLocation = {
-    latitude: orderDetails?.address?.latitude || 0,
-    longitude: orderDetails?.address?.longitude || 0,
-  };
+  if (!orderDetails) {
+    // Mostrar un mensaje de error si no se encuentran los detalles del pedido
+    return (
+      <View style={styles.errorContainer}>
+        <PoppinsText style={styles.errorText}>
+          No se encontraron datos del pedido.
+        </PoppinsText>
+      </View>
+    );
+  }
 
   const handleNextState = async () => {
     try {
@@ -266,22 +286,6 @@ const DeliveryDetailScreen: React.FC = () => {
       setShowConfirmationPopup(false); // Cerrar el popup
     }
   };
-
-  if (isOrderDetailsLoading || isFetchingOrder) {
-    // Mostrar un indicador de carga mientras se obtienen los detalles del pedido o la orden
-    return <ActivityIndicator size="large" color={Colors.primary} />;
-  }
-
-  if (!orderDetails) {
-    // Mostrar un mensaje de error si no se encuentran los detalles del pedido
-    return (
-      <View style={styles.errorContainer}>
-        <PoppinsText style={styles.errorText}>
-          No se encontraron datos del pedido.
-        </PoppinsText>
-      </View>
-    );
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -407,6 +411,15 @@ const DeliveryDetailScreen: React.FC = () => {
           deliveryState={deliveryState}
           branchLocation={branchLocation}
           customerLocation={customerLocation}
+          style={{ height: 300, marginBottom: 16 }}
+        />
+
+        <Button
+          title={'Ver mapa ampliado'}
+          variant="primary"
+          size="medium"
+          onPress={() => setIsMapModalVisible(true)}
+          style={styles.expandButton}
         />
 
         {/* Pedido (contenido comentado) */}
@@ -485,6 +498,40 @@ const DeliveryDetailScreen: React.FC = () => {
         }}
         onClose={() => setShowConfirmationPopup(false)}
       />
+
+      {/* Modal para el mapa ampliado */}
+      <Modal
+        visible={isMapModalVisible}
+        animationType="slide"
+        transparent={true} // Hacer el modal transparente para superponer el contenido
+        onRequestClose={() => setIsMapModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Botón de cierre */}
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setIsMapModalVisible(false)}
+          >
+            <XMarkIcon size={24} color={Colors.textMain} />
+          </TouchableOpacity>
+
+          {/* Mapa ampliado */}
+          <DeliveryMap
+            deliveryState={deliveryState}
+            branchLocation={branchLocation}
+            customerLocation={customerLocation}
+          />
+
+          {/* Botón flotante sobre el modal */}
+          <Button
+            title={buttonStates[deliveryState]}
+            variant="primary"
+            size="medium"
+            onPress={handleNextState}
+            style={[styles.floatingButton, styles.modalFloatingButton]}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -673,6 +720,35 @@ const styles = StyleSheet.create({
     marginLeft: -163,
     top: 20,
     zIndex: 1000,
+  },
+  expandButton: {
+    marginBottom: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.bgColor,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: Colors.textWhite,
+    padding: 8,
+    borderRadius: 16,
+  },
+  fullScreenMapContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalFloatingButton: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    zIndex: 10,
   },
 });
 

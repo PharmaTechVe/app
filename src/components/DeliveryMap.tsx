@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import { StyleSheet, View, Alert, ActivityIndicator } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Alert,
+  ActivityIndicator,
+  ViewStyle,
+} from 'react-native';
 import * as Location from 'expo-location';
 import { Config } from '../config';
 import { Colors } from '../styles/theme';
@@ -9,12 +15,14 @@ interface DeliveryMapProps {
   deliveryState: number;
   branchLocation: { latitude: number; longitude: number };
   customerLocation: { latitude: number; longitude: number };
+  style?: ViewStyle; // Permitir estilos personalizados
 }
 
 const DeliveryMap: React.FC<DeliveryMapProps> = ({
   deliveryState,
   branchLocation,
   customerLocation,
+  style, // Recibir el estilo como prop
 }) => {
   const [deliveryLocation, setDeliveryLocation] = useState<{
     latitude: number;
@@ -182,16 +190,16 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   if (isLoading) {
     // Mostrar un indicador de carga mientras se obtienen los datos
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, style]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <MapView
-        style={styles.map}
+        style={StyleSheet.absoluteFillObject} // Asegura que el mapa ocupe todo el contenedor
         initialRegion={{
           latitude: branchLocation.latitude || 0,
           longitude: branchLocation.longitude || 0,
@@ -251,16 +259,10 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    height: 300,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  map: {
-    flex: 1,
+    flex: 1, // Permitir que el mapa ocupe todo el espacio disponible
   },
   loadingContainer: {
-    height: 300,
+    flex: 1, // Asegura que el indicador de carga ocupe todo el espacio disponible
     justifyContent: 'center',
     alignItems: 'center',
   },

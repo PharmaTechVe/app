@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   MapPinIcon,
-  ClockIcon,
+  CalendarDaysIcon,
   BuildingStorefrontIcon,
 } from 'react-native-heroicons/outline';
 import { CheckCircleIcon } from 'react-native-heroicons/solid';
@@ -84,9 +84,9 @@ const HistoryOrderCard: React.FC<HistoryOrderCardProps> = ({
           </PoppinsText>
         </View>
         <View style={styles.detailRow}>
-          <ClockIcon size={20} color={Colors.primary} />
+          <CalendarDaysIcon size={20} color={Colors.primary} />
           <PoppinsText style={styles.detailText}>
-            Tiempo de entrega: {estimatedTime}
+            Fecha de entrega: {estimatedTime}
           </PoppinsText>
         </View>
       </View>
@@ -151,6 +151,9 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b3.size,
     color: Colors.textMain,
     marginLeft: 8,
+    flexWrap: 'wrap', // Permite que el texto se ajuste en varias líneas
+    maxWidth: '90%', // Limita el ancho del texto al 90% del contenedor
+    textAlign: 'left',
   },
   button: {
     marginBottom: 8,
