@@ -52,6 +52,15 @@ const InProgressOrderScreen = () => {
         }
         const orderData = await sdk.order.getById(orderNumber as string, jwt);
         setOrder(orderData);
+
+        // Si el método de pago es CARD o CASH, ir directo al step 3
+        if (
+          orderData &&
+          orderData.paymentMethod &&
+          ['CARD', 'CASH'].includes(orderData.paymentMethod.toUpperCase())
+        ) {
+          setStep(3);
+        }
       } catch (error) {
         console.error('Error fetching order:', error);
       }
@@ -87,53 +96,57 @@ const InProgressOrderScreen = () => {
             </PoppinsText>
           </>
         )}
-        {step === 2 && order && (
-          <>
-            <PoppinsText style={styles.purchaseOptionsTitle}>
-              Visualización de datos
-            </PoppinsText>
-            <View style={styles.paymentInfoFormContainer}>
-              <PaymentInfoForm
-                paymentMethod={
-                  order.paymentMethod
-                    ? (order.paymentMethod.toUpperCase() as
-                        | 'CARD'
-                        | 'CASH'
-                        | 'BANK_TRANSFER'
-                        | 'MOBILE_PAYMENT'
-                        | null)
-                    : null
-                }
-                total={order.totalPrice ? String(order.totalPrice) : ''}
-                onValidationChange={() => {}}
-                onBankChange={() => {}}
-                onReferenceChange={() => {}}
-                onDocumentNumberChange={() => {}}
-                onPhoneChange={() => {}}
-              />
-            </View>
-            <View style={styles.whiteBackgroundContainer}>
-              <OrderSummary />
-              <View style={styles.totalContainer}>
-                <View style={styles.totalRow}>
-                  <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
-                  <PoppinsText style={styles.totalAmount}>
-                    ${order.totalPrice ? order.totalPrice : ''}
-                  </PoppinsText>
-                </View>
-              </View>
-              <View style={styles.buttonContainer}>
-                <Button
-                  title="Confirmar Orden"
-                  size="medium"
-                  style={styles.nextButton}
-                  variant="primary"
-                  onPress={() => setStep(3)}
+        {/* Ocultar step 2 si el método de pago es CARD o CASH */}
+        {step === 2 &&
+          order &&
+          order.paymentMethod &&
+          !['CARD', 'CASH'].includes(order.paymentMethod.toUpperCase()) && (
+            <>
+              <PoppinsText style={styles.purchaseOptionsTitle}>
+                Visualización de datos
+              </PoppinsText>
+              <View style={styles.paymentInfoFormContainer}>
+                <PaymentInfoForm
+                  paymentMethod={
+                    order.paymentMethod
+                      ? (order.paymentMethod.toUpperCase() as
+                          | 'CARD'
+                          | 'CASH'
+                          | 'BANK_TRANSFER'
+                          | 'MOBILE_PAYMENT'
+                          | null)
+                      : null
+                  }
+                  total={order.totalPrice ? String(order.totalPrice) : ''}
+                  onValidationChange={() => {}}
+                  onBankChange={() => {}}
+                  onReferenceChange={() => {}}
+                  onDocumentNumberChange={() => {}}
+                  onPhoneChange={() => {}}
                 />
               </View>
-            </View>
-          </>
-        )}
+              <View style={styles.whiteBackgroundContainer}>
+                <OrderSummary />
+                <View style={styles.totalContainer}>
+                  <View style={styles.totalRow}>
+                    <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
+                    <PoppinsText style={styles.totalAmount}>
+                      ${order.totalPrice ? order.totalPrice : ''}
+                    </PoppinsText>
+                  </View>
+                </View>
+                <View style={styles.buttonContainer}>
+                  <Button
+                    title="Confirmar Orden"
+                    size="medium"
+                    style={styles.nextButton}
+                    variant="primary"
+                    onPress={() => setStep(3)}
+                  />
+                </View>
+              </View>
+            </>
+          )}
         {step === 3 && order && (
           <>
             <PoppinsText style={styles.purchaseOptionsTitle}>
