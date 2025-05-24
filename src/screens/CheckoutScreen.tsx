@@ -39,10 +39,7 @@ import {
   setCouponDiscount,
   setCouponApplied,
 } from '../redux/slices/checkoutSlice';
-import {} from // useOrderSocket, // commented: unused
-// OrderStatus, // commented: unused
-// Order as OrderSocketType, // commented: unused
-'../hooks/useOrderSocket';
+
 import {
   OrderType,
   CreateOrder,

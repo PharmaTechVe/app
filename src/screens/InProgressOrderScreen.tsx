@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import PaymentInfoForm from '../components/PaymentInfoForm';
@@ -16,6 +16,8 @@ import {
   PharmaTech,
 } from '@pharmatech/sdk';
 import * as SecureStore from 'expo-secure-store';
+import io, { Socket } from 'socket.io-client';
+import { SOCKET_URL } from '../lib/socketUrl';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -26,9 +28,11 @@ const stepsLabels = [
 const InProgressOrderScreen = () => {
   const { orderNumber } = useLocalSearchParams();
 
-  const [step, setStep] = useState(2); // Inicializa en 2 por defecto
+  // Siempre inicia en step 3
+  const [step, setStep] = useState(3);
   const [userName, setUserName] = useState<string | null>('Usuario');
   const [order, setOrder] = useState<OrderDetailedResponse | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -53,19 +57,102 @@ const InProgressOrderScreen = () => {
         const orderData = await sdk.order.getById(orderNumber as string, jwt);
         setOrder(orderData);
 
-        // Si el método de pago es CARD o CASH, ir directo al step 3
+        // Solo cambia a step 2 si status es 'approved' y paymentMethod es BANK_TRANSFER o MOBILE_PAYMENT
         if (
           orderData &&
+          orderData.status &&
+          orderData.status.toLowerCase() === 'approved' &&
           orderData.paymentMethod &&
-          ['CARD', 'CASH'].includes(orderData.paymentMethod.toUpperCase())
+          ['BANK_TRANSFER', 'MOBILE_PAYMENT'].includes(
+            orderData.paymentMethod.toUpperCase(),
+          )
         ) {
-          setStep(3);
+          setStep(2);
+          return; // Salir para evitar setStep(3) abajo
         }
+        setStep(3);
       } catch (error) {
         console.error('Error fetching order:', error);
       }
     };
     fetchOrder();
+  }, [orderNumber]);
+  console.log('Order Number:', order);
+
+  useEffect(() => {
+    if (!orderNumber) return;
+    let isMounted = true;
+
+    const setupSocket = async () => {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!isMounted || !token) return;
+
+      const authHeader = `Bearer ${token}`;
+
+      const sock = io(SOCKET_URL, {
+        transportOptions: {
+          polling: {
+            extraHeaders: { Authorization: authHeader },
+          },
+        },
+      });
+
+      socketRef.current = sock;
+
+      sock.on('connect', () => {
+        // Unirse al room de la orden y solicitar el objeto completo
+        sock.emit('joinOrder', orderNumber);
+        sock.emit('getOrder', orderNumber);
+      });
+
+      sock.on('disconnect', (reason) =>
+        console.log('[WS] Desconectado:', reason),
+      );
+
+      sock.on('connect_error', (err) =>
+        console.log('[WS] Error en handshake:', err.message),
+      );
+
+      // Debug de todos los eventos
+      sock.onAny((event, ...args) =>
+        console.log('[WS] evento recibido:', event, args),
+      );
+
+      // Evento inicial con el objeto completo de la orden
+      sock.on('order', (Order: OrderDetailedResponse) => {
+        if (Order.id === orderNumber) {
+          setOrder((prev) => ({ ...prev, ...Order }));
+        }
+      });
+
+      // Evento ligero para actualizaciones de status
+      sock.on(
+        'orderUpdated',
+        (orderUpdated: { orderId: string; status: OrderStatus }) => {
+          if (orderUpdated.orderId === orderNumber) {
+            setOrder((prev) =>
+              prev
+                ? { ...prev, status: orderUpdated.status }
+                : ({
+                    id: orderUpdated.orderId,
+                    status: orderUpdated.status,
+                  } as OrderDetailedResponse),
+            );
+          }
+        },
+      );
+
+      sock.connect();
+    };
+
+    setupSocket();
+
+    return () => {
+      isMounted = false;
+      socketRef.current?.offAny();
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
   }, [orderNumber]);
 
   return (
@@ -159,17 +246,6 @@ const InProgressOrderScreen = () => {
             />
             <View style={{ flex: 1, justifyContent: 'flex-end' }}>
               <View style={styles.whiteBackgroundContainer}>
-                <View style={styles.confirmationContainer}>
-                  {/* Show additional confirmation message based on status and type */}
-                  {order.status === 'approved' && order.type === 'pickup' && (
-                    <PoppinsText>
-                      Tu pedido está listo para recoger.
-                    </PoppinsText>
-                  )}
-                  {order.status === 'approved' && order.type === 'delivery' && (
-                    <PoppinsText>Tu pedido está en camino.</PoppinsText>
-                  )}
-                </View>
                 <OrderSummary />
                 <View style={styles.totalContainer}>
                   <View style={styles.totalRow}>
