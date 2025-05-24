@@ -49,7 +49,12 @@ import {
   OrderStatus,
   Order as OrderSocketType,
 } from '../hooks/useOrderSocket';
-import { OrderType, CreateOrder, CreateOrderDetail } from '@pharmatech/sdk';
+import {
+  OrderType,
+  CreateOrder,
+  CreateOrderDetail,
+  PaymentMethod,
+} from '@pharmatech/sdk';
 
 const CheckoutScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -199,14 +204,38 @@ const CheckoutScreen = () => {
 
       setErrorMessage(null);
 
-      // Construir el payload de la orden
+      let sdkPaymentMethod: PaymentMethod;
+      switch (payment) {
+        case 'efectivo':
+          sdkPaymentMethod = PaymentMethod.CASH;
+          break;
+        case 'punto_de_venta':
+          sdkPaymentMethod = PaymentMethod.CARD;
+          break;
+        case 'transferencia':
+          sdkPaymentMethod = PaymentMethod.BANK_TRANSFER;
+          break;
+        case 'pago_movil':
+          sdkPaymentMethod = PaymentMethod.MOBILE_PAYMENT;
+          break;
+        default:
+          sdkPaymentMethod = PaymentMethod.CASH;
+      }
+
+      // Construir el payload de la orden usando el método seleccionado
       const orderPayload: CreateOrder = {
         type: option === 'pickup' ? OrderType.PICKUP : OrderType.DELIVERY,
         branchId: option === 'pickup' ? locationId || undefined : undefined,
         userAddressId:
           option === 'delivery' ? locationId || undefined : undefined,
         products,
-        // paymentMethod: sdkPaymentMethod,
+        paymentMethod: sdkPaymentMethod,
+        ...(couponApplied && {
+          couponCode:
+            typeof couponDiscount === 'number' && couponDiscount > 0
+              ? 'COUPON'
+              : undefined,
+        }),
       };
 
       try {
