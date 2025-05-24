@@ -10,7 +10,12 @@ import { UserService } from '../services/user';
 import Steps from '../components/Steps';
 import Button from '../components/Button';
 import { truncateString } from '../utils/commons';
-import { OrderStatus } from '../hooks/useOrderSocket';
+import {
+  OrderStatus,
+  OrderDetailedResponse,
+  PharmaTech,
+} from '@pharmatech/sdk';
+import * as SecureStore from 'expo-secure-store';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -19,20 +24,11 @@ const stepsLabels = [
 ];
 
 const InProgressOrderScreen = () => {
-  const {
-    paymentMethod,
-    orderStatus,
-    orderNumber,
-    orderType,
-    totalPrice,
-    userName: initialUserName,
-    step: initialStep,
-  } = useLocalSearchParams();
+  const { orderNumber } = useLocalSearchParams();
 
-  const [step, setStep] = useState(initialStep ? Number(initialStep) : 1);
-  const [userName, setUserName] = useState<string | null>(
-    (initialUserName as string) || 'Usuario',
-  );
+  const [step, setStep] = useState(2); // Inicializa en 2 por defecto
+  const [userName, setUserName] = useState<string | null>('Usuario');
+  const [order, setOrder] = useState<OrderDetailedResponse | null>(null);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -44,29 +40,39 @@ const InProgressOrderScreen = () => {
     fetchUserName();
   }, []);
 
-  // Normaliza el método de pago recibido
-  function normalizePaymentMethod(
-    method: unknown,
-  ): 'CARD' | 'CASH' | 'BANK_TRANSFER' | 'MOBILE_PAYMENT' | null {
-    if (!method) return null;
-    const value = Array.isArray(method) ? method[0] : method;
-    switch ((value as string)?.toUpperCase?.()) {
-      case 'CARD':
-        return 'CARD';
-      case 'CASH':
-        return 'CASH';
-      case 'BANK_TRANSFER':
-        return 'BANK_TRANSFER';
-      case 'MOBILE_PAYMENT':
-        return 'MOBILE_PAYMENT';
-      default:
-        return null;
-    }
-  }
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!orderNumber) return;
+      try {
+        const sdk = PharmaTech.getInstance();
+        const jwt = await SecureStore.getItemAsync('auth_token');
+        if (!jwt) {
+          console.error('No JWT found in SecureStore');
+          return;
+        }
+        const orderData = await sdk.order.getById(orderNumber as string, jwt);
+        setOrder(orderData);
+      } catch (error) {
+        console.error('Error fetching order:', error);
+      }
+    };
+    fetchOrder();
+  }, [orderNumber]);
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={
+        step === 3
+          ? { flexGrow: 1, justifyContent: 'flex-end' }
+          : styles.scrollContainer
+      }
+    >
+      <View
+        style={[
+          styles.container,
+          step === 3 && { flex: 1, justifyContent: 'flex-end' },
+        ]}
+      >
         <View style={styles.steps}>
           <Steps
             totalSteps={stepsLabels.length}
@@ -81,29 +87,38 @@ const InProgressOrderScreen = () => {
             </PoppinsText>
           </>
         )}
-        {step === 2 && (
+        {step === 2 && order && (
           <>
             <PoppinsText style={styles.purchaseOptionsTitle}>
               Visualización de datos
             </PoppinsText>
+            <View style={styles.paymentInfoFormContainer}>
+              <PaymentInfoForm
+                paymentMethod={
+                  order.paymentMethod
+                    ? (order.paymentMethod.toUpperCase() as
+                        | 'CARD'
+                        | 'CASH'
+                        | 'BANK_TRANSFER'
+                        | 'MOBILE_PAYMENT'
+                        | null)
+                    : null
+                }
+                total={order.totalPrice ? String(order.totalPrice) : ''}
+                onValidationChange={() => {}}
+                onBankChange={() => {}}
+                onReferenceChange={() => {}}
+                onDocumentNumberChange={() => {}}
+                onPhoneChange={() => {}}
+              />
+            </View>
             <View style={styles.whiteBackgroundContainer}>
-              <View style={styles.paymentInfoFormContainer}>
-                <PaymentInfoForm
-                  paymentMethod={normalizePaymentMethod(paymentMethod)}
-                  total={totalPrice ? String(totalPrice) : ''}
-                  onValidationChange={() => {}}
-                  onBankChange={() => {}}
-                  onReferenceChange={() => {}}
-                  onDocumentNumberChange={() => {}}
-                  onPhoneChange={() => {}}
-                />
-              </View>
               <OrderSummary />
               <View style={styles.totalContainer}>
                 <View style={styles.totalRow}>
                   <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
                   <PoppinsText style={styles.totalAmount}>
-                    ${totalPrice ? totalPrice : ''}
+                    ${order.totalPrice ? order.totalPrice : ''}
                   </PoppinsText>
                 </View>
               </View>
@@ -119,33 +134,37 @@ const InProgressOrderScreen = () => {
             </View>
           </>
         )}
-        {step === 3 && (
+        {step === 3 && order && (
           <>
             <PoppinsText style={styles.purchaseOptionsTitle}>
               Confirmacion de la orden
             </PoppinsText>
             <PaymentStatusMessage
-              orderStatus={orderStatus as OrderStatus}
-              orderNumber={truncateString(orderNumber as string, 8, '')}
+              orderStatus={order.status as OrderStatus}
+              orderNumber={truncateString(order.id as string, 8, '')}
               userName={userName || ''}
             />
-            <View style={styles.whiteBackgroundContainer}>
-              <View style={styles.confirmationContainer}>
-                {/* Show additional confirmation message based on status and type */}
-                {orderStatus === 'approved' && orderType === 'pickup' && (
-                  <PoppinsText>Tu pedido está listo para recoger.</PoppinsText>
-                )}
-                {orderStatus === 'approved' && orderType === 'delivery' && (
-                  <PoppinsText>Tu pedido está en camino.</PoppinsText>
-                )}
-              </View>
-              <OrderSummary />
-              <View style={styles.totalContainer}>
-                <View style={styles.totalRow}>
-                  <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
-                  <PoppinsText style={styles.totalAmount}>
-                    ${totalPrice ? totalPrice : ''}
-                  </PoppinsText>
+            <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+              <View style={styles.whiteBackgroundContainer}>
+                <View style={styles.confirmationContainer}>
+                  {/* Show additional confirmation message based on status and type */}
+                  {order.status === 'approved' && order.type === 'pickup' && (
+                    <PoppinsText>
+                      Tu pedido está listo para recoger.
+                    </PoppinsText>
+                  )}
+                  {order.status === 'approved' && order.type === 'delivery' && (
+                    <PoppinsText>Tu pedido está en camino.</PoppinsText>
+                  )}
+                </View>
+                <OrderSummary />
+                <View style={styles.totalContainer}>
+                  <View style={styles.totalRow}>
+                    <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
+                    <PoppinsText style={styles.totalAmount}>
+                      ${order.totalPrice ? order.totalPrice : ''}
+                    </PoppinsText>
+                  </View>
                 </View>
               </View>
             </View>
@@ -166,7 +185,6 @@ const styles = StyleSheet.create({
   },
   steps: {
     marginTop: 30,
-    marginBottom: 20,
     padding: 20,
   },
   stepLabel: {
@@ -176,10 +194,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   purchaseOptionsTitle: {
-    paddingVertical: 16,
     fontSize: FontSizes.h5.size,
     color: Colors.textMain,
-    marginBottom: 30,
     alignSelf: 'flex-start',
     padding: 20,
   },

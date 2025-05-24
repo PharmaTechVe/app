@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -24,7 +24,6 @@ import LocationSelector from '../components/LocationSelector';
 import Coupon from '../components/Coupon';
 import { useRouter } from 'expo-router';
 import { OrderService } from '../services/order';
-import { UserService } from '../services/user';
 import BranchMapModal from '../components/BranchMapModal';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
@@ -59,7 +58,7 @@ const CheckoutScreen = () => {
   const router = useRouter();
   const { cartItems } = useCart();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>('Usuario');
+  //const [userName, setUserName] = useState<string | null>('Usuario');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<{
     name: string;
@@ -74,26 +73,6 @@ const CheckoutScreen = () => {
     useState(false); // Track modal visibility
   // const [orderStatus, setOrderStatus] = useState<string | null>(null); // commented: unused
   // Suscribe al socket usando el hook; solo se conecta cuando orderNumber no es null
-
-  useEffect(() => {
-    const fetchUserName = async () => {
-      const response = await UserService.getProfile();
-      if (response.success && response.data) {
-        const { firstName, isValidated } = response.data;
-        setUserName(firstName);
-        if (!isValidated) {
-          setValidationPopupVisible(true);
-        }
-      } else if (!response.success) {
-        console.error(
-          'Error al obtener el nombre del usuario:',
-          response.error,
-        );
-      }
-    };
-
-    fetchUserName();
-  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -221,13 +200,7 @@ const CheckoutScreen = () => {
         router.push({
           pathname: '/in-progress-order',
           params: {
-            paymentMethod: orderPayload.paymentMethod,
-            orderStatus: orderResponse.status,
             orderNumber: orderResponse.id,
-            orderType: orderPayload.type,
-            totalPrice: orderResponse.totalPrice,
-            userName,
-            step: 2, // <-- Indica que ya se cumplió "Opciones de Compra"
           },
         });
       } catch (error) {
