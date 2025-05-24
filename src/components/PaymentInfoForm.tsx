@@ -7,12 +7,7 @@ import Dropdown from './Dropdown';
 import { PharmaTech } from '@pharmatech/sdk';
 
 interface Props {
-  paymentMethod:
-    | 'punto_de_venta'
-    | 'efectivo'
-    | 'transferencia'
-    | 'pago_movil'
-    | null;
+  paymentMethod: 'CARD' | 'CASH' | 'BANK_TRANSFER' | 'MOBILE_PAYMENT' | null;
   total: string;
   onValidationChange: (isValid: boolean) => void;
   onBankChange: (value: string) => void;
@@ -90,14 +85,14 @@ const PaymentInfoForm: React.FC<Props> = ({
   useEffect(() => {
     const isValid =
       paymentMethod !== null &&
-      (paymentMethod === 'pago_movil' || paymentMethod === 'transferencia')
+      (paymentMethod === 'MOBILE_PAYMENT' || paymentMethod === 'BANK_TRANSFER')
         ? bank.trim() !== '' &&
           /^\d{4,}$/.test(reference) &&
           reference.trim() !== '' &&
-          !/^0+$/.test(reference) && // no solo ceros
+          !/^0+$/.test(reference) &&
           /^\d{7,8}$/.test(documentNumber) &&
-          !/^0+$/.test(documentNumber) && // no solo ceros
-          !/^0/.test(documentNumber) && // no inicia en 0
+          !/^0+$/.test(documentNumber) &&
+          !/^0/.test(documentNumber) &&
           /^\d{11}$/.test(phone)
         : true;
 
@@ -132,8 +127,8 @@ const PaymentInfoForm: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      {(paymentMethod === 'pago_movil' ||
-        paymentMethod === 'transferencia') && (
+      {(paymentMethod === 'MOBILE_PAYMENT' ||
+        paymentMethod === 'BANK_TRANSFER') && (
         <>
           <PoppinsText style={styles.label}>
             Realiza el pago en la siguiente cuenta de Pharmatech
@@ -158,7 +153,7 @@ const PaymentInfoForm: React.FC<Props> = ({
 
           <View style={styles.row}>
             <View style={[styles.inputWrapper, styles.largeInput]}>
-              {paymentMethod === 'pago_movil' ? (
+              {paymentMethod === 'MOBILE_PAYMENT' ? (
                 <Input
                   label="Teléfono"
                   value="0414-1234567"
@@ -250,6 +245,7 @@ const PaymentInfoForm: React.FC<Props> = ({
           />
         </>
       )}
+      {/* Si se requiere mostrar algo para CASH o CARD, agregar aquí */}
     </View>
   );
 };

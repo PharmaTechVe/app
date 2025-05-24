@@ -180,6 +180,15 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
+            name="in-progress-order"
+            options={{
+              headerTitle: '',
+              headerTransparent: true,
+              headerLeft: undefined,
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
             name="active-orders"
             options={{
               headerTitle: '',
