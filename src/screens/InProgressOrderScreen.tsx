@@ -18,6 +18,7 @@ import {
 import * as SecureStore from 'expo-secure-store';
 import io, { Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../lib/socketUrl';
+import Popup from '../components/Popup';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -32,6 +33,8 @@ const InProgressOrderScreen = () => {
   const [step, setStep] = useState(3);
   const [userName, setUserName] = useState<string | null>('Usuario');
   const [order, setOrder] = useState<OrderDetailedResponse | null>(null);
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
+  const [paymentFormValid, setPaymentFormValid] = useState(false);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -156,111 +159,133 @@ const InProgressOrderScreen = () => {
   }, [orderNumber]);
 
   return (
-    <ScrollView
-      contentContainerStyle={
-        step === 3
-          ? { flexGrow: 1, justifyContent: 'flex-end' }
-          : styles.scrollContainer
-      }
-    >
-      <View
-        style={[
-          styles.container,
-          step === 3 && { flex: 1, justifyContent: 'flex-end' },
-        ]}
+    <>
+      <ScrollView
+        contentContainerStyle={
+          step === 3
+            ? { flexGrow: 1, justifyContent: 'flex-end' }
+            : styles.scrollContainer
+        }
       >
-        <View style={styles.steps}>
-          <Steps
-            totalSteps={stepsLabels.length}
-            currentStep={step}
-            labels={stepsLabels}
-          />
-        </View>
-        {step === 1 && (
-          <>
-            <PoppinsText style={styles.purchaseOptionsTitle}>
-              Opciones de Compra
-            </PoppinsText>
-          </>
-        )}
-        {/* Ocultar step 2 si el método de pago es CARD o CASH */}
-        {step === 2 &&
-          order &&
-          order.paymentMethod &&
-          !['CARD', 'CASH'].includes(order.paymentMethod.toUpperCase()) && (
+        <View
+          style={[
+            styles.container,
+            step === 3 && { flex: 1, justifyContent: 'flex-end' },
+          ]}
+        >
+          <View style={styles.steps}>
+            <Steps
+              totalSteps={stepsLabels.length}
+              currentStep={step}
+              labels={stepsLabels}
+            />
+          </View>
+          {step === 1 && (
             <>
               <PoppinsText style={styles.purchaseOptionsTitle}>
-                Visualización de datos
+                Opciones de Compra
               </PoppinsText>
-              <View style={styles.paymentInfoFormContainer}>
-                <PaymentInfoForm
-                  paymentMethod={
-                    order.paymentMethod
-                      ? (order.paymentMethod.toUpperCase() as
-                          | 'CARD'
-                          | 'CASH'
-                          | 'BANK_TRANSFER'
-                          | 'MOBILE_PAYMENT'
-                          | null)
-                      : null
-                  }
-                  total={order.totalPrice ? String(order.totalPrice) : ''}
-                  onValidationChange={() => {}}
-                  onBankChange={() => {}}
-                  onReferenceChange={() => {}}
-                  onDocumentNumberChange={() => {}}
-                  onPhoneChange={() => {}}
-                />
-              </View>
-              <View style={styles.whiteBackgroundContainer}>
-                <OrderSummary />
-                <View style={styles.totalContainer}>
-                  <View style={styles.totalRow}>
-                    <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
-                    <PoppinsText style={styles.totalAmount}>
-                      ${order.totalPrice ? order.totalPrice : ''}
-                    </PoppinsText>
+            </>
+          )}
+          {/* Ocultar step 2 si el método de pago es CARD o CASH */}
+          {step === 2 &&
+            order &&
+            order.paymentMethod &&
+            !['CARD', 'CASH'].includes(order.paymentMethod.toUpperCase()) && (
+              <>
+                <PoppinsText style={styles.purchaseOptionsTitle}>
+                  Visualización de datos
+                </PoppinsText>
+                <View style={styles.paymentInfoFormContainer}>
+                  <PaymentInfoForm
+                    paymentMethod={
+                      order.paymentMethod
+                        ? (order.paymentMethod.toUpperCase() as
+                            | 'CARD'
+                            | 'CASH'
+                            | 'BANK_TRANSFER'
+                            | 'MOBILE_PAYMENT'
+                            | null)
+                        : null
+                    }
+                    total={order.totalPrice ? String(order.totalPrice) : ''}
+                    onValidationChange={setPaymentFormValid}
+                    onBankChange={() => {}}
+                    onReferenceChange={() => {}}
+                    onDocumentNumberChange={() => {}}
+                    onPhoneChange={() => {}}
+                  />
+                </View>
+                <View style={styles.whiteBackgroundContainer}>
+                  <OrderSummary />
+                  <View style={styles.totalContainer}>
+                    <View style={styles.totalRow}>
+                      <PoppinsText style={styles.totalLabel}>
+                        Total:
+                      </PoppinsText>
+                      <PoppinsText style={styles.totalAmount}>
+                        ${order.totalPrice ? order.totalPrice : ''}
+                      </PoppinsText>
+                    </View>
+                  </View>
+                  <View style={styles.buttonContainer}>
+                    <Button
+                      title="Confirmar Orden"
+                      size="medium"
+                      style={styles.nextButton}
+                      variant="primary"
+                      onPress={() => {
+                        if (!paymentFormValid) {
+                          setShowValidationPopup(true);
+                          return;
+                        }
+                        setStep(3);
+                      }}
+                    />
                   </View>
                 </View>
-                <View style={styles.buttonContainer}>
-                  <Button
-                    title="Confirmar Orden"
-                    size="medium"
-                    style={styles.nextButton}
-                    variant="primary"
-                    onPress={() => setStep(3)}
-                  />
+              </>
+            )}
+          {step === 3 && order && (
+            <>
+              <PoppinsText style={styles.purchaseOptionsTitle}>
+                Confirmacion de la orden
+              </PoppinsText>
+              <PaymentStatusMessage
+                orderStatus={order.status as OrderStatus}
+                orderNumber={truncateString(order.id as string, 8, '')}
+                userName={userName || ''}
+              />
+              <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+                <View style={styles.whiteBackgroundContainer}>
+                  <OrderSummary />
+                  <View style={styles.totalContainer}>
+                    <View style={styles.totalRow}>
+                      <PoppinsText style={styles.totalLabel}>
+                        Total:
+                      </PoppinsText>
+                      <PoppinsText style={styles.totalAmount}>
+                        ${order.totalPrice ? order.totalPrice : ''}
+                      </PoppinsText>
+                    </View>
+                  </View>
                 </View>
               </View>
             </>
           )}
-        {step === 3 && order && (
-          <>
-            <PoppinsText style={styles.purchaseOptionsTitle}>
-              Confirmacion de la orden
-            </PoppinsText>
-            <PaymentStatusMessage
-              orderStatus={order.status as OrderStatus}
-              orderNumber={truncateString(order.id as string, 8, '')}
-              userName={userName || ''}
-            />
-            <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-              <View style={styles.whiteBackgroundContainer}>
-                <OrderSummary />
-                <View style={styles.totalContainer}>
-                  <View style={styles.totalRow}>
-                    <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
-                    <PoppinsText style={styles.totalAmount}>
-                      ${order.totalPrice ? order.totalPrice : ''}
-                    </PoppinsText>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </>
-        )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+      <Popup
+        visible={showValidationPopup}
+        headerText="Campos requeridos"
+        bodyText="Por favor completa y valida todos los campos requeridos antes de continuar."
+        primaryButton={{
+          text: 'Aceptar',
+          onPress: () => setShowValidationPopup(false),
+        }}
+        onClose={() => setShowValidationPopup(false)}
+      />
+    </>
   );
 };
 
