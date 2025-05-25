@@ -32,8 +32,14 @@ import { RootState } from '../../redux/store';
 import {
   setOrderDetails,
   setDeliveryState,
+  updateDeliveryStatus,
 } from '../../redux/slices/deliverySlice';
 import Popup from '../../components/Popup';
+import {
+  initializeSocket,
+  disconnectSocket,
+} from '../../lib/deliverySocket/deliverySocket';
+import { Socket } from 'socket.io-client';
 
 const DeliveryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -160,12 +166,10 @@ const DeliveryDetailScreen: React.FC = () => {
         }
 
         const orderId = orderDetails.orderId;
-        console.log('ID de la orden:', orderId);
 
         const order = await UserService.getOrder(orderId);
 
         if (order.success) {
-          console.log('Datos del pedido:', order.data);
           setOrder(order.data);
         } else {
           console.error('Error al obtener el pedido:', order.error);
@@ -182,6 +186,66 @@ const DeliveryDetailScreen: React.FC = () => {
 
     fetchOrder();
   }, [orderDetails]);
+
+  // Configuración del WebSocket para recibir actualizaciones en tiempo real
+  useEffect(() => {
+    let socket: Socket;
+
+    const setupSocket = async () => {
+      try {
+        socket = await initializeSocket();
+        console.log('Conectando al WebSocket...');
+        socket.connect();
+
+        socket.on('connect', () => {
+          console.log('WebSocket conectado en DeliveryDetailScreen');
+        });
+
+        socket.on('connect_error', (error) => {
+          console.error(
+            'Error de conexión al WebSocket en DeliveryDetailScreen:',
+            error,
+          );
+        });
+
+        socket.on('deliveryUpdated', (data: { id: string; status: string }) => {
+          console.log('Evento recibido: deliveryUpdated', data);
+          if (data.id === id) {
+            dispatch(
+              updateDeliveryStatus({
+                id: data.id,
+                status: data.status as OrderDeliveryStatus,
+              }),
+            );
+          }
+        });
+
+        socket.on('disconnect', (reason) => {
+          console.warn(
+            'WebSocket desconectado en DeliveryDetailScreen. Razón:',
+            reason,
+          );
+        });
+      } catch (error) {
+        console.error(
+          'Error configurando el WebSocket en DeliveryDetailScreen:',
+          error,
+        );
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        console.log(
+          'Limpiando listeners y desconectando WebSocket en DeliveryDetailScreen',
+        );
+        socket.off('deliveryUpdated');
+        disconnectSocket();
+      }
+    };
+  }, [id, dispatch]);
 
   // Mostrar un indicador de carga mientras se obtienen los detalles del pedido o la orden
   if (isOrderDetailsLoading || isFetchingOrder) {
@@ -207,29 +271,35 @@ const DeliveryDetailScreen: React.FC = () => {
         return;
       }
 
+      let nextStatus: OrderDeliveryStatus | null = null;
+
       // Lógica para otros estados
       switch (buttonStates[deliveryState]) {
         case 'Comenzar entrega':
-          await DeliveryService.updateOrderStatus(
-            orderDetails!.id,
-            OrderDeliveryStatus.WAITING_CONFIRMATION,
-          );
+          nextStatus = OrderDeliveryStatus.WAITING_CONFIRMATION;
+          await DeliveryService.updateOrderStatus(orderDetails!.id, nextStatus);
           break;
         case 'Ya tengo los productos del pedido':
-          await DeliveryService.updateOrderStatus(
-            orderDetails!.id,
-            OrderDeliveryStatus.PICKED_UP,
-          );
+          nextStatus = OrderDeliveryStatus.PICKED_UP;
+          await DeliveryService.updateOrderStatus(orderDetails!.id, nextStatus);
           break;
         case 'Ir a destino de entrega':
-          await DeliveryService.updateOrderStatus(
-            orderDetails!.id,
-            OrderDeliveryStatus.IN_ROUTE,
-          );
+          nextStatus = OrderDeliveryStatus.IN_ROUTE;
+          await DeliveryService.updateOrderStatus(orderDetails!.id, nextStatus);
           setDeliveryStateBadge(1); // Cambiar a "Haciendo entrega del pedido"
           break;
       }
 
+      if (nextStatus) {
+        // Emitir el evento al WebSocket
+        const socket = await initializeSocket();
+        socket.emit('deliveryUpdated', {
+          id: orderDetails!.id,
+          status: nextStatus,
+        });
+      }
+
+      // Mostrar alerta de éxito
       setAlertType('info');
       setAlertMessage('Se actualizó el estado del pedido.');
       setShowAlert(true);
@@ -238,12 +308,14 @@ const DeliveryDetailScreen: React.FC = () => {
         setShowAlert(false);
       }, 2500);
 
+      // Actualizar el estado local
       dispatch(
         setDeliveryState({ id: id as string, state: deliveryState + 1 }),
       );
     } catch (error) {
       console.error('Error al actualizar el estado del delivery:', error);
 
+      // Mostrar alerta de error
       setAlertType('error');
       setAlertMessage('Hubo un problema al actualizar el estado del pedido.');
       setShowAlert(true);
@@ -436,8 +508,7 @@ const DeliveryDetailScreen: React.FC = () => {
             productos
           </PoppinsText>
         </View>
-        {order?.details?.map((detail, index) => {
-          console.log(`Producto ${index + 1}:`, detail); // Log para depuración
+        {order?.details?.map((detail) => {
           return (
             <View
               key={detail.productPresentation.id}

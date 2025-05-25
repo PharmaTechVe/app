@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native'; // Importar useFocusEffect
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -22,6 +22,11 @@ import {
 import { useAlert } from '../../components/AlertProvider'; // Importar el hook useAlert
 import * as Location from 'expo-location'; // Importar Location para obtener la ubicación actual
 import { Config } from '../../config'; // Importar la configuración de la API de Google Maps
+import {
+  initializeSocket,
+  disconnectSocket,
+} from '../../lib/deliverySocket/deliverySocket'; // Importar funciones de socket
+import { Socket } from 'socket.io-client'; // Importar el tipo Socket
 
 // Definir el tipo para un leg de la API de Google Maps Directions
 interface GoogleMapsLeg {
@@ -189,6 +194,41 @@ export default function DeliveryHomeScreen() {
       fetchAssignedOrders(); // Refrescar las órdenes asignadas
     }, []),
   );
+
+  useEffect(() => {
+    let socket: Socket;
+
+    const setupSocket = async () => {
+      try {
+        socket = await initializeSocket();
+        socket.connect();
+
+        socket.on('deliveryUpdated', (data: { id: string; status: string }) => {
+          setOrders((prevOrders) =>
+            prevOrders.map((order) =>
+              order.id === data.id
+                ? {
+                    ...order,
+                    deliveryStatus: data.status as OrderDeliveryStatus,
+                  }
+                : order,
+            ),
+          );
+        });
+      } catch (error) {
+        console.error('Error configurando el WebSocket:', error);
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        socket.off('deliveryUpdated');
+        disconnectSocket();
+      }
+    };
+  }, []);
 
   const handleTakeOrder = (order: OrderDeliveryDetailedResponse) => {
     const query = encodeURIComponent(JSON.stringify(order));

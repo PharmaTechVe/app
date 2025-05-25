@@ -1,5 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { OrderDeliveryDetailedResponse } from '@pharmatech/sdk';
+import {
+  OrderDeliveryDetailedResponse,
+  OrderDeliveryStatus,
+} from '@pharmatech/sdk';
 
 interface DeliveryState {
   orders: Record<string, OrderDeliveryDetailedResponse>; // Almacenar múltiples órdenes por ID
@@ -30,6 +33,15 @@ const deliverySlice = createSlice({
     ) {
       state.deliveryState[action.payload.id] = action.payload.state;
     },
+    updateDeliveryStatus(
+      state,
+      action: PayloadAction<{ id: string; status: OrderDeliveryStatus }>,
+    ) {
+      if (state.orders[action.payload.id]) {
+        state.orders[action.payload.id].deliveryStatus = action.payload
+          .status as OrderDeliveryStatus;
+      }
+    },
     resetOrderState(state, action: PayloadAction<string>) {
       delete state.orders[action.payload];
       delete state.deliveryState[action.payload];
@@ -37,6 +49,10 @@ const deliverySlice = createSlice({
   },
 });
 
-export const { setOrderDetails, setDeliveryState, resetOrderState } =
-  deliverySlice.actions;
+export const {
+  setOrderDetails,
+  setDeliveryState,
+  updateDeliveryStatus,
+  resetOrderState,
+} = deliverySlice.actions;
 export default deliverySlice.reducer;
