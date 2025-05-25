@@ -19,6 +19,7 @@ import * as SecureStore from 'expo-secure-store';
 import io, { Socket } from 'socket.io-client';
 import { SOCKET_URL } from '../lib/socketUrl';
 import Popup from '../components/Popup';
+import { OrderService } from '../services/order';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -80,18 +81,18 @@ const InProgressOrderScreen = () => {
     };
     fetchOrder();
   }, [orderNumber]);
-  console.log('Order Number:', order);
 
   useEffect(() => {
     if (!orderNumber) return;
     let isMounted = true;
 
-    const setupSocket = async () => {
+    (async () => {
       const token = await SecureStore.getItemAsync('auth_token');
       if (!isMounted || !token) return;
 
       const authHeader = `Bearer ${token}`;
 
+      // Usamos directamente HTTPS como base URL
       const sock = io(SOCKET_URL, {
         transportOptions: {
           polling: {
@@ -102,57 +103,48 @@ const InProgressOrderScreen = () => {
 
       socketRef.current = sock;
 
+      // Listeners
       sock.on('connect', () => {
-        // Unirse al room de la orden y solicitar el objeto completo
+        console.log('[WS] conectado');
+        // Unirse al canal correspondiente
         sock.emit('joinOrder', orderNumber);
+        // Opcional: pedir estado inicial
         sock.emit('getOrder', orderNumber);
       });
-
       sock.on('disconnect', (reason) =>
-        console.log('[WS] Desconectado:', reason),
+        console.log('[WS] desconectado:', reason),
       );
-
       sock.on('connect_error', (err) =>
-        console.log('[WS] Error en handshake:', err.message),
+        console.log('[WS] error handshake:', err.message),
       );
 
-      // Debug de todos los eventos
-      sock.onAny((event, ...args) =>
-        console.log('[WS] evento recibido:', event, args),
-      );
-
-      // Evento inicial con el objeto completo de la orden
-      sock.on('order', (Order: OrderDetailedResponse) => {
-        if (Order.id === orderNumber) {
-          setOrder((prev) => ({ ...prev, ...Order }));
-        }
+      // Cuando el backend emite el objeto completo
+      sock.on('order', (data: OrderDetailedResponse) => {
+        if (!isMounted || data.id !== orderNumber) return;
+        setOrder(data);
       });
 
-      // Evento ligero para actualizaciones de status
+      // Cuando el backend emite sólo actualización de estado
       sock.on(
         'orderUpdated',
-        (orderUpdated: { orderId: string; status: OrderStatus }) => {
-          if (orderUpdated.orderId === orderNumber) {
-            setOrder((prev) =>
-              prev
-                ? { ...prev, status: orderUpdated.status }
-                : ({
-                    id: orderUpdated.orderId,
-                    status: orderUpdated.status,
-                  } as OrderDetailedResponse),
-            );
+        async (payload: { orderId: string; status: OrderStatus }) => {
+          if (!isMounted || payload.orderId !== orderNumber) return;
+          try {
+            const updated = await OrderService.getById(payload.orderId);
+            setOrder(updated);
+          } catch (e) {
+            console.error('Error refrescando orden:', e);
           }
         },
       );
 
+      // Ahora sí, arrancamos la conexión
       sock.connect();
-    };
-
-    setupSocket();
+    })();
 
     return () => {
       isMounted = false;
-      socketRef.current?.offAny();
+      socketRef.current?.off();
       socketRef.current?.disconnect();
       socketRef.current = null;
     };
