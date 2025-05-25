@@ -288,7 +288,7 @@ const OrderTrackingScreen = () => {
                     <View style={{ marginRight: 10 }}>
                       <MapPinIcon color={Colors.primary} />
                     </View>
-                    <View>
+                    <View style={{ padding: 1 }}>
                       <PoppinsText style={{ marginBottom: 10 }}>
                         Dirección de Entrega:
                       </PoppinsText>
