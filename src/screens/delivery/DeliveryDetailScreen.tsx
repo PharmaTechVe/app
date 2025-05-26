@@ -40,6 +40,7 @@ import {
   disconnectSocket,
 } from '../../lib/deliverySocket/deliverySocket';
 import { Socket } from 'socket.io-client';
+import * as Location from 'expo-location';
 
 const DeliveryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -94,6 +95,10 @@ const DeliveryDetailScreen: React.FC = () => {
   ];
 
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
+  const [deliveryLocation, setDeliveryLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -246,6 +251,62 @@ const DeliveryDetailScreen: React.FC = () => {
       }
     };
   }, [id, dispatch]);
+
+  // ...existing code...
+
+  useEffect(() => {
+    let socket: Socket;
+    let locationSubscription: Location.LocationSubscription | null = null;
+
+    const startTracking = async () => {
+      try {
+        socket = await initializeSocket();
+        socket.connect();
+
+        // Permisos de ubicación
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Permiso de ubicación denegado');
+          return;
+        }
+
+        // Suscribirse a cambios de ubicación
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000, // cada 5 segundos
+            distanceInterval: 10, // o cada 10 metros
+          },
+          (location) => {
+            const { latitude, longitude } = location.coords;
+            setDeliveryLocation({ latitude, longitude });
+
+            // Emitir coordenadas por WebSocket
+            if (orderDetails?.id) {
+              socket.emit('updateCoordinates', {
+                orderId: orderDetails.id,
+                latitude,
+                longitude,
+              });
+            }
+          },
+        );
+      } catch (error) {
+        console.error('Error en el tracking de ubicación:', error);
+      }
+    };
+
+    startTracking();
+
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+      if (socket) {
+        disconnectSocket();
+      }
+    };
+  }, [orderDetails?.id]);
 
   // Mostrar un indicador de carga mientras se obtienen los detalles del pedido o la orden
   if (isOrderDetailsLoading || isFetchingOrder) {
@@ -483,6 +544,7 @@ const DeliveryDetailScreen: React.FC = () => {
           deliveryState={deliveryState}
           branchLocation={branchLocation}
           customerLocation={customerLocation}
+          deliveryLocation={deliveryLocation}
           style={{ height: 300, marginBottom: 16 }}
         />
 
@@ -591,6 +653,7 @@ const DeliveryDetailScreen: React.FC = () => {
             deliveryState={deliveryState}
             branchLocation={branchLocation}
             customerLocation={customerLocation}
+            deliveryLocation={deliveryLocation}
           />
 
           {/* Botón flotante sobre el modal */}

@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import {
-  StyleSheet,
-  View,
-  Alert,
-  ActivityIndicator,
-  ViewStyle,
-} from 'react-native';
-import * as Location from 'expo-location';
+import { StyleSheet, View, ActivityIndicator, ViewStyle } from 'react-native';
 import { Config } from '../config';
 import { Colors } from '../styles/theme';
 
@@ -15,19 +8,17 @@ interface DeliveryMapProps {
   deliveryState: number;
   branchLocation: { latitude: number; longitude: number };
   customerLocation: { latitude: number; longitude: number };
-  style?: ViewStyle; // Permitir estilos personalizados
+  deliveryLocation: { latitude: number; longitude: number } | null; // NUEVO
+  style?: ViewStyle;
 }
 
 const DeliveryMap: React.FC<DeliveryMapProps> = ({
   deliveryState,
   branchLocation,
   customerLocation,
-  style, // Recibir el estilo como prop
+  deliveryLocation,
+  style,
 }) => {
-  const [deliveryLocation, setDeliveryLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const [routeCoordinates, setRouteCoordinates] = useState<
     { latitude: number; longitude: number }[]
   >([]);
@@ -35,40 +26,6 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     { latitude: number; longitude: number }[]
   >([]);
   const [isLoading, setIsLoading] = useState(true); // Estado de carga
-
-  // Solicitar permisos y obtener la ubicación del delivery
-  useEffect(() => {
-    const getDeliveryLocation = async () => {
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          const { status: newStatus } =
-            await Location.requestForegroundPermissionsAsync();
-          if (newStatus !== 'granted') {
-            Alert.alert(
-              'Permiso denegado',
-              'No se pudo obtener la ubicación del delivery.',
-            );
-            return;
-          }
-        }
-
-        const location = await Location.getCurrentPositionAsync({});
-        setDeliveryLocation({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
-      } catch (error) {
-        console.error('Error al obtener la ubicación del delivery:', error);
-        Alert.alert(
-          'Error',
-          'Hubo un problema al obtener la ubicación del delivery.',
-        );
-      }
-    };
-
-    getDeliveryLocation();
-  }, []);
 
   // Obtener la ruta desde Google Maps Directions API
   const fetchRoute = async (
