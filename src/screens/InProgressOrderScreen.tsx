@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import PaymentInfoForm from '../components/PaymentInfoForm';
@@ -21,6 +21,57 @@ import { SOCKET_URL } from '../lib/socketUrl';
 import Popup from '../components/Popup';
 import { OrderService } from '../services/order';
 
+// --- SOCKET MANAGEMENT ---
+let socket: Socket | null = null;
+
+export const initializeSocket = async (): Promise<Socket> => {
+  if (socket) return socket;
+
+  const token = await SecureStore.getItemAsync('auth_token');
+  if (!token) {
+    console.error('Token de autenticación no encontrado');
+    throw new Error('Token de autenticación no encontrado');
+  }
+
+  console.log('Inicializando WebSocket con URL:', SOCKET_URL);
+  console.log('Enviando token JWT:', token);
+
+  socket = io(SOCKET_URL, {
+    autoConnect: false,
+    transports: ['polling'],
+    transportOptions: {
+      polling: {
+        extraHeaders: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    },
+  });
+
+  socket.on('connect', () => {
+    console.log('WebSocket conectado exitosamente');
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Error de conexión al WebSocket:', error);
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.warn('WebSocket desconectado. Razón:', reason);
+  });
+
+  return socket;
+};
+
+export const disconnectSocket = () => {
+  if (socket) {
+    console.log('Desconectando WebSocket');
+    socket.disconnect();
+    socket = null;
+  }
+};
+// --- END SOCKET MANAGEMENT ---
+
 const stepsLabels = [
   'Opciones de Compra',
   'Visualización de datos',
@@ -36,7 +87,6 @@ const InProgressOrderScreen = () => {
   const [order, setOrder] = useState<OrderDetailedResponse | null>(null);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [paymentFormValid, setPaymentFormValid] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -85,68 +135,50 @@ const InProgressOrderScreen = () => {
   useEffect(() => {
     if (!orderNumber) return;
     let isMounted = true;
+    let localSocket: Socket | null = null;
 
     (async () => {
-      const token = await SecureStore.getItemAsync('auth_token');
-      if (!isMounted || !token) return;
+      try {
+        localSocket = await initializeSocket();
 
-      const authHeader = `Bearer ${token}`;
+        localSocket.on('connect', () => {
+          console.log('[WS] conectado');
+          localSocket?.emit('joinOrder', orderNumber);
+          localSocket?.emit('getOrder', orderNumber);
+        });
 
-      // Usamos directamente HTTPS como base URL
-      const sock = io(SOCKET_URL, {
-        transportOptions: {
-          polling: {
-            extraHeaders: { Authorization: authHeader },
+        localSocket.on('order', (data: OrderDetailedResponse) => {
+          if (!isMounted || data.id !== orderNumber) return;
+          setOrder(data);
+        });
+
+        // Escuchar el evento orderUpdated para actualizar el estado de la orden
+        localSocket.on(
+          'orderUpdated',
+          async (payload: { orderId: string; status: OrderStatus }) => {
+            if (!isMounted || payload.orderId !== orderNumber) return;
+            try {
+              const onOrderUpdated = await OrderService.getById(payload.status);
+              setOrder(onOrderUpdated);
+            } catch (e) {
+              console.error('Error refrescando orden:', e);
+            }
           },
-        },
-      });
+        );
 
-      socketRef.current = sock;
-
-      // Listeners
-      sock.on('connect', () => {
-        console.log('[WS] conectado');
-        // Unirse al canal correspondiente
-        sock.emit('joinOrder', orderNumber);
-        // Opcional: pedir estado inicial
-        sock.emit('getOrder', orderNumber);
-      });
-      sock.on('disconnect', (reason) =>
-        console.log('[WS] desconectado:', reason),
-      );
-      sock.on('connect_error', (err) =>
-        console.log('[WS] error handshake:', err.message),
-      );
-
-      // Cuando el backend emite el objeto completo
-      sock.on('order', (data: OrderDetailedResponse) => {
-        if (!isMounted || data.id !== orderNumber) return;
-        setOrder(data);
-      });
-
-      // Cuando el backend emite sólo actualización de estado
-      sock.on(
-        'orderUpdated',
-        async (payload: { orderId: string; status: OrderStatus }) => {
-          if (!isMounted || payload.orderId !== orderNumber) return;
-          try {
-            const updated = await OrderService.getById(payload.orderId);
-            setOrder(updated);
-          } catch (e) {
-            console.error('Error refrescando orden:', e);
-          }
-        },
-      );
-
-      // Ahora sí, arrancamos la conexión
-      sock.connect();
+        localSocket.connect();
+      } catch (err) {
+        console.error('Error inicializando socket:', err);
+      }
     })();
 
     return () => {
       isMounted = false;
-      socketRef.current?.off();
-      socketRef.current?.disconnect();
-      socketRef.current = null;
+      if (localSocket) {
+        localSocket.off('order');
+        localSocket.off('orderUpdated');
+      }
+      disconnectSocket();
     };
   }, [orderNumber]);
 
