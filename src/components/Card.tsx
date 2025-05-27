@@ -7,6 +7,7 @@ import { truncateString } from '../utils/commons';
 import { useCart } from '../hooks/useCart';
 import { Product } from '../types/Product';
 import { useRouter } from 'expo-router';
+import { formatPrice } from '../utils/formatPrice';
 
 const ProductCard: React.FC<Product> = ({
   id,
@@ -81,7 +82,7 @@ const ProductCard: React.FC<Product> = ({
           {discount && (
             <View style={styles.priceContainer}>
               <PoppinsText style={styles.originalPrice}>
-                ${originalPrice}
+                ${formatPrice(originalPrice ?? 0)}
               </PoppinsText>
               <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
             </View>
@@ -89,7 +90,7 @@ const ProductCard: React.FC<Product> = ({
           <PoppinsText
             style={[styles.finalPrice, !discount && { color: Colors.textMain }]}
           >
-            ${computedFinalPrice}
+            ${formatPrice(computedFinalPrice)}
           </PoppinsText>
         </View>
       </View>

@@ -14,6 +14,7 @@ import type { CartItem } from '../redux/slices/cartSlice';
 import Button from '../components/Button';
 import { TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
+import { formatPrice } from '../utils/formatPrice';
 
 const CartListScreen = () => {
   const router = useRouter();
@@ -61,17 +62,17 @@ const CartListScreen = () => {
             <PoppinsText style={styles.productName}>{item.name}</PoppinsText>
             <View style={{ alignItems: 'flex-end' }}>
               <PoppinsText style={styles.productTotalPrice}>
-                ${totalDiscountedPrice.toFixed(2)}
+                ${formatPrice(totalDiscountedPrice)}
               </PoppinsText>
               {discount > 0 && (
                 <PoppinsText style={styles.productOriginalPrice}>
-                  ${totalOriginalPrice.toFixed(2)}
+                  ${formatPrice(totalOriginalPrice)}
                 </PoppinsText>
               )}
             </View>
           </View>
           <PoppinsText style={styles.productPrice}>
-            (${discountedPrice.toFixed(2)} c/u)
+            (${formatPrice(discountedPrice)} c/u)
           </PoppinsText>
           <View style={styles.quantityContainer}>
             <CardButton
@@ -134,19 +135,19 @@ const CartListScreen = () => {
             <View style={styles.row}>
               <PoppinsText style={styles.subtotalText}>Subtotal</PoppinsText>
               <PoppinsText style={styles.subtotalText}>
-                ${subtotal.toFixed(2)}
+                ${formatPrice(subtotal)}
               </PoppinsText>
             </View>
             <View style={styles.row}>
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
               <PoppinsText style={styles.discountText}>
-                -${totalDiscount.toFixed(2)}
+                -${formatPrice(totalDiscount)}
               </PoppinsText>
             </View>
             <View style={styles.row}>
               <PoppinsText style={styles.totalText}>Total</PoppinsText>
               <PoppinsText style={styles.totalText}>
-                ${total.toFixed(2)}
+                ${formatPrice(total)}
               </PoppinsText>
             </View>
             <Button

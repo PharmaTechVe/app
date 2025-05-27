@@ -40,6 +40,7 @@ import {
 } from '@pharmatech/sdk';
 import Button from '../components/Button';
 import { BranchService } from '../services/branches';
+import { formatPrice } from '../utils/formatPrice';
 
 const ProductDetailScreen: React.FC = () => {
   const { id, productId } = useLocalSearchParams<{
@@ -401,7 +402,7 @@ const ProductDetailScreen: React.FC = () => {
                 getDiscount() > 0 ? (
                   <>
                     <PoppinsText style={styles.price}>
-                      ${getFinalPrice()}
+                      ${formatPrice(getFinalPrice())}
                     </PoppinsText>
                     <PoppinsText style={styles.discountBadge}>
                       -{getDiscount()}%
@@ -409,7 +410,7 @@ const ProductDetailScreen: React.FC = () => {
                   </>
                 ) : (
                   <PoppinsText style={styles.price}>
-                    ${getOriginalPrice()}
+                    ${formatPrice(getOriginalPrice())}
                   </PoppinsText>
                 )
               ) : (
