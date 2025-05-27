@@ -26,4 +26,18 @@ export const OrderService = {
       throw new Error(extractErrorMessage(error));
     }
   },
+
+  getById: async (orderId: string) => {
+    try {
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('Token de autenticación no encontrado');
+      }
+      const orderDetail = await api.order.getById(orderId, token);
+      return orderDetail;
+    } catch (error) {
+      console.error('Error en OrderService.getById:', error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
 };

@@ -24,6 +24,7 @@ export const PaymentConfirmationService = {
         'phoneNumber',
         'bank',
         'reference',
+        'orderId',
       ];
       for (const field of requiredFields) {
         if (!paymentConfirmation[field]) {
