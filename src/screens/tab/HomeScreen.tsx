@@ -21,7 +21,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { showEmailVerification: showEmailVerificationParam } =
     useLocalSearchParams();
-  const { cartItems, addToCart, updateCartQuantity, setCartUserId } = useCart();
+  const { cartItems, updateCartQuantity, setCartUserId } = useCart();
 
   const getItemQuantity = (productId: string) => {
     const cartItem = cartItems.find((item) => item.id === productId.toString());
@@ -90,22 +90,6 @@ export default function HomeScreen() {
             finalPrice: p.price,
             quantity: getItemQuantity(p.id),
             getQuantity: (quantity: number) => {
-              addToCart({
-                id: p.id,
-                name:
-                  p.product.name +
-                  ' ' +
-                  p.presentation.name +
-                  ' ' +
-                  p.presentation.quantity +
-                  ' ' +
-                  p.presentation.measurementUnit,
-                price: p.price,
-                quantity,
-                image:
-                  p.product.images?.[0]?.url ||
-                  'https://via.placeholder.com/150',
-              });
               updateCartQuantity(p.id, quantity);
             },
           };
@@ -152,21 +136,6 @@ export default function HomeScreen() {
           finalPrice: p.price,
           quantity: getItemQuantity(p.id),
           getQuantity: (quantity: number) => {
-            addToCart({
-              id: p.id,
-              name:
-                p.product.name +
-                ' ' +
-                p.presentation.name +
-                ' ' +
-                p.presentation.quantity +
-                ' ' +
-                p.presentation.measurementUnit,
-              price: p.price,
-              quantity,
-              image:
-                p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
-            });
             updateCartQuantity(p.id, quantity);
           },
         };

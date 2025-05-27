@@ -1,4 +1,3 @@
-// src/screens/tab/OffersScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -145,7 +144,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bgColor,
-    paddingLeft: 5,
+    paddingHorizontal: 5,
   },
   title: {
     fontSize: FontSizes.s1.size,
@@ -153,12 +152,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   list: {
-    paddingHorizontal: 10,
     paddingBottom: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   columnWrapper: {
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
   },
   loaderContainer: {
     flex: 1,

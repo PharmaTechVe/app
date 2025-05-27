@@ -32,6 +32,7 @@ const CartListScreen = () => {
   const total = subtotal - totalDiscount; // Subtotal with discount
 
   const renderItem = ({ item }: { item: CartItem }) => {
+    console.log('[CartListScreen] Renderizando item:', item); // <-- LOG
     // Usar el descuento del item, si existe, si no 0
     const discount = item.discount ?? 0;
     const discountedPrice = item.price * (1 - discount / 100);
@@ -62,9 +63,11 @@ const CartListScreen = () => {
               <PoppinsText style={styles.productTotalPrice}>
                 ${totalDiscountedPrice.toFixed(2)}
               </PoppinsText>
-              <PoppinsText style={styles.productOriginalPrice}>
-                ${totalOriginalPrice.toFixed(2)}
-              </PoppinsText>
+              {discount > 0 && (
+                <PoppinsText style={styles.productOriginalPrice}>
+                  ${totalOriginalPrice.toFixed(2)}
+                </PoppinsText>
+              )}
             </View>
           </View>
           <PoppinsText style={styles.productPrice}>
@@ -72,9 +75,13 @@ const CartListScreen = () => {
           </PoppinsText>
           <View style={styles.quantityContainer}>
             <CardButton
-              getValue={(quantity) => updateCartQuantity(item.id, quantity)}
+              getValue={(quantity) =>
+                updateCartQuantity(item.id, quantity, item.discount ?? 0)
+              }
               initialValue={item.quantity > 0 ? item.quantity : 0}
-              syncQuantity={(quantity) => updateCartQuantity(item.id, quantity)}
+              syncQuantity={(quantity) =>
+                updateCartQuantity(item.id, quantity, item.discount ?? 0)
+              }
             />
             <TouchableOpacity
               onPress={() => removeFromCart(item.id)}

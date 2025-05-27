@@ -291,7 +291,21 @@ const ProductDetailScreen: React.FC = () => {
     );
   };
 
-  console.log('Current inventory state:', inventory); // Log para inspeccionar el estado de inventory
+  const getProductDiscount = () => {
+    // Busca promo en product.promo
+    if (product?.promo && typeof product.promo.discount === 'number') {
+      return product.promo.discount;
+    }
+    return 0;
+  };
+
+  const getOriginalPrice = () => product?.price ?? 0;
+  const getDiscount = () => getProductDiscount();
+  const getFinalPrice = () => {
+    const original = getOriginalPrice();
+    const discount = getDiscount();
+    return discount > 0 ? (original * (100 - discount)) / 100 : original;
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -383,10 +397,24 @@ const ProductDetailScreen: React.FC = () => {
           {/* Información del producto */}
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
-              <PoppinsText style={styles.price}>$ {product?.price}</PoppinsText>
-              {/* {discount && ( // Comentado */}
-              {/*   <PoppinsText style={styles.discount}>-{discount}%</PoppinsText> */}
-              {/* )} */}
+              {product ? (
+                getDiscount() > 0 ? (
+                  <>
+                    <PoppinsText style={styles.price}>
+                      ${getFinalPrice()}
+                    </PoppinsText>
+                    <PoppinsText style={styles.discountBadge}>
+                      -{getDiscount()}%
+                    </PoppinsText>
+                  </>
+                ) : (
+                  <PoppinsText style={styles.price}>
+                    ${getOriginalPrice()}
+                  </PoppinsText>
+                )
+              ) : (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              )}
             </View>
             <PoppinsText
               style={[
@@ -583,7 +611,26 @@ const ProductDetailScreen: React.FC = () => {
           <CardButton
             size={10}
             getValue={(quantity) => {
-              if (product?.id) updateCartQuantity(product.id, quantity);
+              if (product?.id && quantity > 0) {
+                const promo = product.promo;
+                const discount =
+                  typeof promo?.discount === 'number' ? promo.discount : 0;
+                addToCart({
+                  id: product.id,
+                  name:
+                    product.product.name +
+                    ' ' +
+                    product.presentation.name +
+                    ' ' +
+                    product.presentation.quantity +
+                    ' ' +
+                    product.presentation.measurementUnit,
+                  price: product.price,
+                  quantity,
+                  image: images?.[0]?.url || 'https://via.placeholder.com/150',
+                  discount,
+                });
+              }
             }}
             initialValue={getQuantity()}
           />
@@ -634,6 +681,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.primary,
+    marginRight: 10,
+  },
+  originalPrice: {
+    fontSize: FontSizes.b1.size,
+    color: Colors.disableText,
+    textDecorationLine: 'line-through',
+    marginRight: 14,
+  },
+  discountBadge: {
+    fontSize: FontSizes.c1.size,
+    backgroundColor: Colors.semanticInfo,
+    borderRadius: 5,
+    padding: 4,
+    color: Colors.textWhite,
     marginRight: 10,
   },
   productName: {
@@ -697,12 +758,6 @@ const styles = StyleSheet.create({
     maxWidth: '65%',
     alignItems: 'flex-end',
     zIndex: 999,
-  },
-  discount: {
-    fontSize: FontSizes.b4.size,
-    backgroundColor: Colors.semanticInfo,
-    borderRadius: 5,
-    padding: 4,
   },
 });
 
