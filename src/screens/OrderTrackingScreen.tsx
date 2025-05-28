@@ -4,7 +4,7 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useLocalSearchParams } from 'expo-router';
 import Alert from '../components/Alerts';
-import { OrderDetailedResponse } from '@pharmatech/sdk';
+import { OrderDetailedResponse, OrderStatus } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { formatDate, truncateString } from '../utils/commons';
 import * as SecureStore from 'expo-secure-store';
@@ -18,8 +18,9 @@ import {
   BuildingStorefrontIcon,
   MapPinIcon,
 } from 'react-native-heroicons/solid';
-import { io } from 'socket.io-client';
+import io from 'socket.io-client';
 import { SOCKET_URL } from '../lib/socketUrl';
+import VerticalStepper from '../components/VerticalStepper';
 
 const OrderTrackingScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,15 +32,13 @@ const OrderTrackingScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  const [isConnected, setIsConnected] = useState(false);
-  const [transport, setTransport] = useState('N/A');
+  const [orderStatus, setOrderStatus] = useState('');
 
   useEffect(() => {
     const fetchOrder = async () => {
       try {
         const order = await UserService.getOrder(id);
-
+        console.log(order);
         if (order.success) {
           setOrder(order.data);
         }
@@ -57,6 +56,8 @@ const OrderTrackingScreen = () => {
       fetchOrder();
 
       const socket = io(SOCKET_URL, {
+        autoConnect: false,
+        transports: ['polling'],
         transportOptions: {
           polling: {
             extraHeaders: {
@@ -64,40 +65,39 @@ const OrderTrackingScreen = () => {
             },
           },
         },
-        transports: ['websocket'],
-        reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
       });
 
-      function onConnect() {
-        setIsConnected(true);
-        console.log('[WS] Conectado con ID:', socket.id);
-        console.log('Connected to socket: ', isConnected);
-        setTransport(socket.io.engine.transport.name);
-
-        socket.on('order', (order) => {
-          console.log(order);
-        });
+      function onOrderUpdated(order: { orderId: string; status: OrderStatus }) {
+        setOrderStatus(order.status);
+        console.log('Estado de la orrrrdennnn: ', order.status);
       }
 
-      function onDisconnect() {
-        setIsConnected(false);
-        console.log(transport);
-        setTransport('N/A');
-      }
+      socket.connect();
+      socket.on('orderUpdated', onOrderUpdated);
 
       socket.on('connect_error', (err) =>
         console.log('[WS] Error en handshake:', err.message),
       );
 
+      socket.on('connect', () =>
+        console.log('[WS] Conectado con ID:', socket.id),
+      );
+      socket.on('disconnect', (reason) =>
+        console.log('[WS] Desconectado por:', reason),
+      );
+
+      return () => {
+        socket.off('orderUpdated', onOrderUpdated);
+        socket.disconnect();
+      };
+
+      /* sss
       socket.on('connect', onConnect);
       socket.on('disconnect', onDisconnect);
       return () => {
         //socket.off('connect', onConnect);
         //socket.off('disconnect', onDisconnect);
-      };
+      }; */
     }
   }, []);
 
@@ -108,6 +108,46 @@ const OrderTrackingScreen = () => {
       </View>
     );
   }
+
+  const dateFormat: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  };
+
+  const steps = [
+    {
+      title: 'Orden Confirmada',
+      description: order?.orderDeliveries
+        ? new Date(order?.orderDeliveries[0]?.createdAt).toLocaleString(
+            'es-ES',
+            dateFormat,
+          )
+        : '',
+    },
+    {
+      title:
+        order?.type === 'delivery' ? 'Repartidor en camino' : 'En preparación',
+      description: order?.orderDeliveries
+        ? new Date(order?.orderDeliveries[0]?.createdAt).toLocaleString(
+            'es-ES',
+            dateFormat,
+          )
+        : '',
+    },
+    {
+      title:
+        order?.type === 'delivery' ? 'Pedido entregado' : 'Listo para recoger',
+      description: order?.orderDeliveries
+        ? new Date(order?.orderDeliveries[0]?.createdAt).toLocaleString(
+            'es-ES',
+            dateFormat,
+          )
+        : '',
+    },
+  ];
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -161,7 +201,7 @@ const OrderTrackingScreen = () => {
                 <PoppinsText style={{ color: Colors.semanticSuccess }}>
                   Entrega estimada:{' '}
                   {new Date(
-                    order?.orderDeliveries[0].estimatedTime,
+                    order?.orderDeliveries[0]?.estimatedTime,
                   ).toLocaleString('es-ES', {
                     day: '2-digit',
                     month: 'long',
@@ -177,7 +217,7 @@ const OrderTrackingScreen = () => {
                 <PoppinsText style={{ color: Colors.semanticSuccess }}>
                   Pickup:{' '}
                   {new Date(
-                    order?.orderDeliveries[0].estimatedTime,
+                    order?.orderDeliveries[0]?.estimatedTime,
                   ).toLocaleString('es-ES', {
                     day: '2-digit',
                     month: 'long',
@@ -189,75 +229,9 @@ const OrderTrackingScreen = () => {
               </>
             )}
           </View>
+          <PoppinsText>{orderStatus}</PoppinsText>
           <View style={{ marginVertical: 20 }}>
-            <View>
-              <PoppinsText>Orden Confirmada</PoppinsText>
-              <PoppinsText
-                style={{
-                  color: Colors.secondaryGray,
-                  fontSize: FontSizes.c3.size,
-                }}
-              >
-                {new Date(order.orderDeliveries[0].createdAt).toLocaleString(
-                  'es-ES',
-                  {
-                    day: '2-digit',
-                    month: 'long',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                  },
-                )}
-              </PoppinsText>
-            </View>
-            <View style={{ marginVertical: 15 }}>
-              <PoppinsText>
-                {order.type === 'delivery'
-                  ? 'Repartidor en camino'
-                  : 'En preparación'}
-              </PoppinsText>
-              <PoppinsText
-                style={{
-                  color: Colors.secondaryGray,
-                  fontSize: FontSizes.c3.size,
-                }}
-              >
-                {new Date(order.orderDeliveries[0].createdAt).toLocaleString(
-                  'es-ES',
-                  {
-                    day: '2-digit',
-                    month: 'long',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                  },
-                )}
-              </PoppinsText>
-            </View>
-            <View>
-              <PoppinsText>
-                {order.type === 'delivery'
-                  ? 'Pedido entregado'
-                  : 'Listo para recoger'}
-              </PoppinsText>
-              <PoppinsText
-                style={{
-                  color: Colors.secondaryGray,
-                  fontSize: FontSizes.c3.size,
-                }}
-              >
-                {new Date(order.orderDeliveries[0].createdAt).toLocaleString(
-                  'es-ES',
-                  {
-                    day: '2-digit',
-                    month: 'long',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                  },
-                )}
-              </PoppinsText>
-            </View>
+            <VerticalStepper steps={steps} currentStep={0} />
           </View>
           <View>
             <View
@@ -327,7 +301,7 @@ const OrderTrackingScreen = () => {
                         Teléfono de Contacto:
                       </PoppinsText>
                       <PoppinsText>
-                        {'+' + order?.orderDeliveries[0].employee?.phoneNumber}
+                        {order?.orderDeliveries[0].employee?.phoneNumber}
                       </PoppinsText>
                     </View>
                   </View>
