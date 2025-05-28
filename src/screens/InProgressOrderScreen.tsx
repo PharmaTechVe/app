@@ -16,61 +16,12 @@ import {
   PharmaTech,
 } from '@pharmatech/sdk';
 import * as SecureStore from 'expo-secure-store';
-import io, { Socket } from 'socket.io-client';
-import { SOCKET_URL } from '../lib/socketUrl';
 import Popup from '../components/Popup';
-import { OrderService } from '../services/order';
-
-// --- SOCKET MANAGEMENT ---
-let socket: Socket | null = null;
-
-export const initializeSocket = async (): Promise<Socket> => {
-  if (socket) return socket;
-
-  const token = await SecureStore.getItemAsync('auth_token');
-  if (!token) {
-    console.error('Token de autenticación no encontrado');
-    throw new Error('Token de autenticación no encontrado');
-  }
-
-  console.log('Inicializando WebSocket con URL:', SOCKET_URL);
-  console.log('Enviando token JWT:', token);
-
-  socket = io(SOCKET_URL, {
-    autoConnect: false,
-    transports: ['polling'],
-    transportOptions: {
-      polling: {
-        extraHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    },
-  });
-
-  socket.on('connect', () => {
-    console.log('WebSocket conectado exitosamente');
-  });
-
-  socket.on('connect_error', (error) => {
-    console.error('Error de conexión al WebSocket:', error);
-  });
-
-  socket.on('disconnect', (reason) => {
-    console.warn('WebSocket desconectado. Razón:', reason);
-  });
-
-  return socket;
-};
-
-export const disconnectSocket = () => {
-  if (socket) {
-    console.log('Desconectando WebSocket');
-    socket.disconnect();
-    socket = null;
-  }
-};
-// --- END SOCKET MANAGEMENT ---
+import {
+  initializeSocket,
+  disconnectSocket,
+} from '../lib/deliverySocket/deliverySocket';
+import { Socket } from 'socket.io-client';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -133,54 +84,34 @@ const InProgressOrderScreen = () => {
   }, [orderNumber]);
 
   useEffect(() => {
-    if (!orderNumber) return;
-    let isMounted = true;
-    let localSocket: Socket | null = null;
+    let socket: Socket;
 
-    (async () => {
+    const setupSocket = async () => {
       try {
-        localSocket = await initializeSocket();
+        socket = await initializeSocket();
+        socket.connect();
 
-        localSocket.on('connect', () => {
-          console.log('[WS] conectado');
-          localSocket?.emit('joinOrder', orderNumber);
-          localSocket?.emit('getOrder', orderNumber);
+        socket.on('orderUpdated', (data: { id: string; status: string }) => {
+          setOrder((prevOrder) =>
+            prevOrder && prevOrder.id === data.id
+              ? { ...prevOrder, status: data.status as OrderStatus }
+              : prevOrder,
+          );
         });
-
-        localSocket.on('order', (data: OrderDetailedResponse) => {
-          if (!isMounted || data.id !== orderNumber) return;
-          setOrder(data);
-        });
-
-        // Escuchar el evento orderUpdated para actualizar el estado de la orden
-        localSocket.on(
-          'orderUpdated',
-          async (payload: { orderId: string; status: OrderStatus }) => {
-            if (!isMounted || payload.orderId !== orderNumber) return;
-            try {
-              const onOrderUpdated = await OrderService.getById(payload.status);
-              setOrder(onOrderUpdated);
-            } catch (e) {
-              console.error('Error refrescando orden:', e);
-            }
-          },
-        );
-
-        localSocket.connect();
-      } catch (err) {
-        console.error('Error inicializando socket:', err);
+      } catch (error) {
+        console.error('Error configurando el WebSocket:', error);
       }
-    })();
+    };
+
+    setupSocket();
 
     return () => {
-      isMounted = false;
-      if (localSocket) {
-        localSocket.off('order');
-        localSocket.off('orderUpdated');
+      if (socket) {
+        socket.off('orderUpdated');
+        disconnectSocket();
       }
-      disconnectSocket();
     };
-  }, [orderNumber]);
+  }, []);
 
   return (
     <>
