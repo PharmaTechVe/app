@@ -64,7 +64,9 @@ export default function HomeScreen() {
       const productsData = await ProductService.getProducts(1, 20);
       if (productsData.success) {
         const pd = productsData.data.results;
-        const carouselProducts = pd.map((p) => {
+        // Filtra solo los que tengan stock > 0
+        const availableProducts = pd.filter((p) => p.stock > 0);
+        const carouselProducts = availableProducts.map((p) => {
           // Usa el descuento real si hay promo, si no, no lo agregues
           // @ts-expect-error: promo puede estar en p o en p.presentation
           const promo: Promo | undefined = p.promo ?? p.presentation.promo;
