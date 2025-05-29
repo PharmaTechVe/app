@@ -78,7 +78,7 @@ const OrderTrackingScreen = () => {
           order.data.orderDeliveries &&
           order.data.orderDeliveries.length > 0 &&
           order.data.orderDeliveries[0].deliveryStatus ===
-            OrderDeliveryStatus.ASSIGNED
+            OrderDeliveryStatus.TO_ASSIGN
         ) {
           const delivery = await DeliveryService.getOrderDetails(
             order.data.orderDeliveries[0].id,
