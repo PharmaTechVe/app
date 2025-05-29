@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import PaymentInfoForm from '../components/PaymentInfoForm';
 import OrderSummary from '../components/OrderSummary';
@@ -50,6 +56,7 @@ const InProgressOrderScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [backendResponse, setBackendResponse] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -113,6 +120,7 @@ const InProgressOrderScreen = () => {
           setOrder((prev) =>
             prev ? { ...prev, status: data.status as OrderStatus } : prev,
           );
+          setIsSubmittingPayment(false); // <-- Oculta el loader cuando llega el update
         }
       });
     };
@@ -207,24 +215,33 @@ const InProgressOrderScreen = () => {
                   Visualización de datos
                 </PoppinsText>
                 <View style={styles.paymentInfoFormContainer}>
-                  <PaymentInfoForm
-                    paymentMethod={
-                      order.paymentMethod
-                        ? (order.paymentMethod.toUpperCase() as
-                            | 'CARD'
-                            | 'CASH'
-                            | 'BANK_TRANSFER'
-                            | 'MOBILE_PAYMENT'
-                            | null)
-                        : null
-                    }
-                    total={order.totalPrice ? String(order.totalPrice) : ''}
-                    onValidationChange={setPaymentFormValid}
-                    onBankChange={setBank}
-                    onReferenceChange={setReference}
-                    onDocumentNumberChange={setDocumentNumber}
-                    onPhoneChange={setPhoneNumber}
-                  />
+                  {isSubmittingPayment ? (
+                    <View style={styles.loaderContainer}>
+                      <ActivityIndicator size="large" color={Colors.primary} />
+                      <PoppinsText style={{ marginTop: 16 }}>
+                        Procesando pago...
+                      </PoppinsText>
+                    </View>
+                  ) : (
+                    <PaymentInfoForm
+                      paymentMethod={
+                        order.paymentMethod
+                          ? (order.paymentMethod.toUpperCase() as
+                              | 'CARD'
+                              | 'CASH'
+                              | 'BANK_TRANSFER'
+                              | 'MOBILE_PAYMENT'
+                              | null)
+                          : null
+                      }
+                      total={order.totalPrice ? String(order.totalPrice) : ''}
+                      onValidationChange={setPaymentFormValid}
+                      onBankChange={setBank}
+                      onReferenceChange={setReference}
+                      onDocumentNumberChange={setDocumentNumber}
+                      onPhoneChange={setPhoneNumber}
+                    />
+                  )}
                 </View>
                 <View style={styles.whiteBackgroundContainer}>
                   <OrderSummary />
@@ -249,12 +266,14 @@ const InProgressOrderScreen = () => {
                           setShowValidationPopup(true);
                           return;
                         }
+                        setIsSubmittingPayment(true); // <-- Muestra loader
                         try {
                           const sdk = PharmaTech.getInstance();
                           const jwt =
                             await SecureStore.getItemAsync('auth_token');
                           if (!jwt) {
                             setBackendResponse('No JWT found en SecureStore');
+                            setIsSubmittingPayment(false);
                             return;
                           }
                           const paymentConfirmation: PaymentConfirmation = {
@@ -268,13 +287,12 @@ const InProgressOrderScreen = () => {
                             paymentConfirmation,
                             jwt,
                           );
-                          // Puedes ajustar el mensaje según la estructura real de la respuesta
                           setBackendResponse(
                             response && response.id
                               ? '¡Pago enviado correctamente!'
                               : 'Respuesta recibida del servidor.',
                           );
-                          setStep(3);
+                          // NO cambies el step aquí, espera al socket
                         } catch (error: unknown) {
                           let errorMessage =
                             'Error enviando confirmación de pago. Intenta nuevamente.';
@@ -293,6 +311,7 @@ const InProgressOrderScreen = () => {
                             errorMessage = error.message;
                           }
                           setBackendResponse(errorMessage);
+                          setIsSubmittingPayment(false); // Oculta loader si hay error
                         }
                       }}
                     />
@@ -433,6 +452,11 @@ const styles = StyleSheet.create({
   checkoutButton: {
     marginTop: 24,
     width: '100%',
+  },
+  loaderContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
 });
 
