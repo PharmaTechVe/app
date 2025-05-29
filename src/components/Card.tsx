@@ -7,6 +7,7 @@ import { truncateString } from '../utils/commons';
 import { useCart } from '../hooks/useCart';
 import { Product } from '../types/Product';
 import { useRouter } from 'expo-router';
+import { formatPrice } from '../utils/formatPrice';
 
 const ProductCard: React.FC<Product> = ({
   id,
@@ -15,13 +16,17 @@ const ProductCard: React.FC<Product> = ({
   imageUrl,
   name,
   category,
-  //originalPrice,
-  //discount,
+  originalPrice,
+  discount,
   finalPrice,
   getQuantity,
 }) => {
-  const { getItemQuantity, updateCartQuantity } = useCart();
+  const { getItemQuantity, addToCart } = useCart();
   const router = useRouter();
+  const computedFinalPrice = discount
+    ? (finalPrice * (100 - discount)) / 100
+    : finalPrice;
+
   return (
     <TouchableOpacity
       onPress={() =>
@@ -57,7 +62,15 @@ const ProductCard: React.FC<Product> = ({
               <CardButton
                 getValue={(quantity) => {
                   if (getQuantity) getQuantity(quantity);
-                  updateCartQuantity(id, quantity);
+                  // Asegura que price siempre sea number
+                  addToCart({
+                    id,
+                    name,
+                    price: originalPrice ?? 0,
+                    quantity,
+                    image: imageUrl,
+                    discount: discount ?? 0,
+                  });
                 }}
                 initialValue={getItemQuantity(id)}
               />
@@ -66,22 +79,18 @@ const ProductCard: React.FC<Product> = ({
         </View>
         <View style={styles.description}>
           <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
-          {/** 
           {discount && (
             <View style={styles.priceContainer}>
               <PoppinsText style={styles.originalPrice}>
-                ${originalPrice}
+                ${formatPrice(originalPrice ?? 0)}
               </PoppinsText>
-              <PoppinsText style={styles.discount}>{discount}%</PoppinsText> // Comentado 
+              <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
             </View>
-          )}*/}
+          )}
           <PoppinsText
-            style={[
-              styles.finalPrice,
-              //!discount && { color: Colors.semanticInfo },
-            ]}
+            style={[styles.finalPrice, !discount && { color: Colors.textMain }]}
           >
-            ${finalPrice}
+            ${formatPrice(computedFinalPrice)}
           </PoppinsText>
         </View>
       </View>

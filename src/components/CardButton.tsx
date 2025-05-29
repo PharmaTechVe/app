@@ -19,15 +19,16 @@ const CardButton: React.FC<CardButtonProps> = ({
 }) => {
   const [count, setCount] = useState(initialValue);
   const [showCounter, setShowCounter] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const toggleCounter = () => setShowCounter(count > 0);
   useEffect(toggleCounter, [count]);
 
   useEffect(() => {
-    if (getValue) {
+    if (hasInteracted && getValue) {
       getValue(count);
     }
-    if (syncQuantity) {
+    if (hasInteracted && syncQuantity) {
       syncQuantity(count);
     }
   }, [count]);
@@ -37,11 +38,13 @@ const CardButton: React.FC<CardButtonProps> = ({
   }, [initialValue]);
 
   const incrementCount = () => {
+    setHasInteracted(true);
     setCount((prev) => prev + 1);
   };
 
   const decrementCount = () => {
     if (count > 0) {
+      setHasInteracted(true);
       setCount((prev) => prev - 1);
     }
   };
