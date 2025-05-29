@@ -201,6 +201,7 @@ export interface PaymentConfirmation {
   reference: string;
   documentId: string;
   phoneNumber: string;
+  orderId: string;
 }
 
 export interface PaymentConfirmationResponse extends BaseModel {

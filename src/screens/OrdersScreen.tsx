@@ -16,6 +16,7 @@ import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
 import OrderBadge from '../components/OrderBadge';
 import { useCart } from '../hooks/useCart';
+import { formatPrice } from '../utils/formatPrice';
 
 const OrdersScreen = () => {
   const [ordersList, setOrdersList] = useState<OrderResponse[] | undefined>(
@@ -159,7 +160,7 @@ const OrdersScreen = () => {
                       {/* Formatear fecha */}
                     </PoppinsText>
                   </View>
-                  <PoppinsText>${order.totalPrice.toFixed(2)}</PoppinsText>
+                  <PoppinsText>${formatPrice(order.totalPrice)}</PoppinsText>
                 </View>
                 <View
                   style={{

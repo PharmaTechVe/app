@@ -6,6 +6,7 @@ export type CartItem = {
   price: number;
   quantity: number;
   image: string;
+  discount?: number;
 };
 
 type CartState = {
@@ -35,13 +36,16 @@ const cartSlice = createSlice({
       }
     },
     addItem: (state, action: PayloadAction<CartItem>) => {
-      const existingItem = state.items.find(
+      const existing = state.items.find(
         (item) => item.id === action.payload.id,
       );
-      if (existingItem) {
-        existingItem.quantity = action.payload.quantity;
+      if (existing) {
+        // Si ya existe, actualiza cantidad y descuento correctamente
+        existing.quantity = action.payload.quantity;
+        existing.price = action.payload.price;
+        existing.discount = action.payload.discount; // <-- ¡Asegúrate de actualizar el descuento!
       } else {
-        state.items.push(action.payload);
+        state.items.push({ ...action.payload });
       }
       state.total = calculateTotal(state.items);
     },
@@ -51,11 +55,22 @@ const cartSlice = createSlice({
     },
     updateQuantity: (
       state,
-      action: PayloadAction<{ id: string; quantity: number }>,
+      action: PayloadAction<{
+        id: string;
+        quantity: number;
+        discount?: number;
+        price?: number;
+      }>,
     ) => {
       const item = state.items.find((item) => item.id === action.payload.id);
       if (item) {
         item.quantity = action.payload.quantity;
+        if (typeof action.payload.discount === 'number') {
+          item.discount = action.payload.discount;
+        }
+        if (typeof action.payload.price === 'number') {
+          item.price = action.payload.price;
+        }
       }
       state.total = calculateTotal(state.items);
     },

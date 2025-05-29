@@ -14,6 +14,7 @@ import type { CartItem } from '../redux/slices/cartSlice';
 import Button from '../components/Button';
 import { TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
+import { formatPrice } from '../utils/formatPrice';
 
 const CartListScreen = () => {
   const router = useRouter();
@@ -22,28 +23,34 @@ const CartListScreen = () => {
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
-  ); // Total price sum
-  // const totalDiscount = cartItems.reduce(
-  //   (sum, item) => sum + item.price * (item.quantity * 0.1), // Comentado
-  //   0,
-  // ); // Discount sum
-  const total = subtotal; // Subtotal without discount
+  );
+  // Total price sum
+  const totalDiscount = cartItems.reduce(
+    (sum, item) =>
+      sum + item.price * item.quantity * ((item.discount ?? 0) / 100),
+    0,
+  ); // Discount sum
+  const total = subtotal - totalDiscount; // Subtotal with discount
 
   const renderItem = ({ item }: { item: CartItem }) => {
-    // const discount = 10; // Comentado
-    // const discountedPrice = item.price * (1 - discount / 100); // Comentado
-    // const totalDiscountedPrice = discountedPrice * item.quantity; // Comentado
-    const totalOriginalPrice = item.price * item.quantity; // Original total price
+    console.log('[CartListScreen] Renderizando item:', item); // <-- LOG
+    // Usar el descuento del item, si existe, si no 0
+    const discount = item.discount ?? 0;
+    const discountedPrice = item.price * (1 - discount / 100);
+    const totalDiscountedPrice = discountedPrice * item.quantity;
+    const totalOriginalPrice = item.price * item.quantity;
 
     return (
       <View style={styles.card}>
         <View style={styles.imageContainer}>
           {/* Discount badge */}
-          {/* <View style={styles.discountBadge}>
-            <PoppinsText style={styles.discountBadgeText}>
-              -{discount}%
-            </PoppinsText>
-          </View> */}
+          {discount > 0 && (
+            <View style={styles.discountBadge}>
+              <PoppinsText style={styles.discountBadgeText}>
+                -{discount}%
+              </PoppinsText>
+            </View>
+          )}
           <Image
             source={{ uri: item.image }}
             style={styles.productImage}
@@ -53,19 +60,29 @@ const CartListScreen = () => {
         <View style={styles.detailsContainer}>
           <View style={styles.row}>
             <PoppinsText style={styles.productName}>{item.name}</PoppinsText>
-            <PoppinsText style={styles.productTotalPrice}>
-              ${totalOriginalPrice.toFixed(2)}
-              {/* Original total price */}
-            </PoppinsText>
+            <View style={{ alignItems: 'flex-end' }}>
+              <PoppinsText style={styles.productTotalPrice}>
+                ${formatPrice(totalDiscountedPrice)}
+              </PoppinsText>
+              {discount > 0 && (
+                <PoppinsText style={styles.productOriginalPrice}>
+                  ${formatPrice(totalOriginalPrice)}
+                </PoppinsText>
+              )}
+            </View>
           </View>
           <PoppinsText style={styles.productPrice}>
-            (${item.price} c/u)
+            (${formatPrice(discountedPrice)} c/u)
           </PoppinsText>
           <View style={styles.quantityContainer}>
             <CardButton
-              getValue={(quantity) => updateCartQuantity(item.id, quantity)}
+              getValue={(quantity) =>
+                updateCartQuantity(item.id, quantity, item.discount ?? 0)
+              }
               initialValue={item.quantity > 0 ? item.quantity : 0}
-              syncQuantity={(quantity) => updateCartQuantity(item.id, quantity)}
+              syncQuantity={(quantity) =>
+                updateCartQuantity(item.id, quantity, item.discount ?? 0)
+              }
             />
             <TouchableOpacity
               onPress={() => removeFromCart(item.id)}
@@ -118,19 +135,19 @@ const CartListScreen = () => {
             <View style={styles.row}>
               <PoppinsText style={styles.subtotalText}>Subtotal</PoppinsText>
               <PoppinsText style={styles.subtotalText}>
-                ${subtotal.toFixed(2)}
+                ${formatPrice(subtotal)}
               </PoppinsText>
             </View>
-            {/* <View style={styles.row}>
+            <View style={styles.row}>
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
               <PoppinsText style={styles.discountText}>
-                -${totalDiscount.toFixed(2)}
+                -${formatPrice(totalDiscount)}
               </PoppinsText>
-            </View> */}
+            </View>
             <View style={styles.row}>
               <PoppinsText style={styles.totalText}>Total</PoppinsText>
               <PoppinsText style={styles.totalText}>
-                ${total.toFixed(2)}
+                ${formatPrice(total)}
               </PoppinsText>
             </View>
             <Button
@@ -144,6 +161,7 @@ const CartListScreen = () => {
           </View>
         </>
       )}
+      <View style={styles.height} />
     </View>
   );
 };
@@ -263,6 +281,9 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.b1.lineHeight,
     color: Colors.textMain,
     marginBottom: 20,
+  },
+  height: {
+    height: 64,
   },
   row: {
     flexDirection: 'row',
