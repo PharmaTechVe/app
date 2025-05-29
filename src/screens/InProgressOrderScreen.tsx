@@ -14,6 +14,7 @@ import {
   OrderStatus,
   OrderDetailedResponse,
   PharmaTech,
+  PaymentConfirmation,
 } from '@pharmatech/sdk';
 import * as SecureStore from 'expo-secure-store';
 import Popup from '../components/Popup';
@@ -22,6 +23,11 @@ import {
   disconnectSocket,
 } from '../lib/deliverySocket/deliverySocket';
 import { Socket } from 'socket.io-client';
+import Alert from '../components/Alerts';
+import { useRouter } from 'expo-router';
+import { useDispatch } from 'react-redux';
+import { clearCart } from '../redux/slices/cartSlice';
+import { resetCheckout } from '../redux/slices/checkoutSlice';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -38,6 +44,13 @@ const InProgressOrderScreen = () => {
   const [order, setOrder] = useState<OrderDetailedResponse | null>(null);
   const [showValidationPopup, setShowValidationPopup] = useState(false);
   const [paymentFormValid, setPaymentFormValid] = useState(false);
+  const [bank, setBank] = useState('');
+  const [reference, setReference] = useState('');
+  const [documentNumber, setDocumentNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [backendResponse, setBackendResponse] = useState<string | null>(null);
+  const router = useRouter();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -73,7 +86,7 @@ const InProgressOrderScreen = () => {
           )
         ) {
           setStep(2);
-          return; // Salir para evitar setStep(3) abajo
+          return;
         }
         setStep(3);
       } catch (error) {
@@ -83,51 +96,76 @@ const InProgressOrderScreen = () => {
     fetchOrder();
   }, [orderNumber]);
 
+  // 1) socket-only: actualiza order.status
   useEffect(() => {
     let socket: Socket;
-
     const setupSocket = async () => {
-      try {
-        socket = await initializeSocket();
-        socket.connect();
-
-        socket.on('orderUpdated', (data: { id: string; status: string }) => {
-          setOrder((prevOrder) =>
-            prevOrder && prevOrder.id === data.id
-              ? { ...prevOrder, status: data.status as OrderStatus }
-              : prevOrder,
+      socket = await initializeSocket();
+      socket.connect();
+      socket.on('orderUpdated', (data: { orderId: string; status: string }) => {
+        console.log('[Socket] orderUpdated received →', data);
+        if (orderNumber && data.orderId === orderNumber) {
+          setOrder((prev) =>
+            prev ? { ...prev, status: data.status as OrderStatus } : prev,
           );
-        });
-      } catch (error) {
-        console.error('Error configurando el WebSocket:', error);
-      }
+        }
+      });
     };
-
     setupSocket();
-
     return () => {
-      if (socket) {
-        socket.off('orderUpdated');
-        disconnectSocket();
-      }
+      socket?.off('orderUpdated');
+      disconnectSocket();
     };
-  }, []);
+  }, []); // solo al montar
+
+  // 2) efecto separado: cada vez que 'order' cambia, recalcula el step
+  useEffect(() => {
+    if (!order) return;
+    const normalized = order.status.toLowerCase();
+    const pm = order.paymentMethod?.toLowerCase();
+    if (
+      normalized === 'approved' &&
+      (pm === 'bank_transfer' || pm === 'mobile_payment')
+    ) {
+      setStep(2);
+    } else {
+      setStep(3);
+    }
+  }, [order]);
+
+  const handleContinue = () => {
+    // Limpiar el carrito al salir del flujo de checkout
+    dispatch(clearCart());
+    dispatch(resetCheckout());
+    router.dismissAll();
+    router.replace({
+      pathname: '/(tabs)',
+    });
+  };
 
   return (
     <>
+      {/* Alerta para mostrar la respuesta del backend */}
+      {backendResponse && (
+        <Alert
+          title="Respuesta"
+          message={backendResponse}
+          type={
+            backendResponse.includes('error') ||
+            backendResponse.includes('Error')
+              ? 'error'
+              : 'success'
+          }
+          alertStyle="regular"
+          borderColor={true}
+          onClose={() => setBackendResponse(null)}
+        />
+      )}
       <ScrollView
-        contentContainerStyle={
-          step === 3
-            ? { flexGrow: 1, justifyContent: 'flex-end' }
-            : styles.scrollContainer
-        }
+        contentContainerStyle={styles.scrollContainer}
+        // Elimina cualquier lógica condicional de justifyContent aquí
       >
-        <View
-          style={[
-            styles.container,
-            step === 3 && { flex: 1, justifyContent: 'flex-end' },
-          ]}
-        >
+        <View style={styles.container}>
           <View style={styles.steps}>
             <Steps
               totalSteps={stepsLabels.length}
@@ -165,10 +203,10 @@ const InProgressOrderScreen = () => {
                     }
                     total={order.totalPrice ? String(order.totalPrice) : ''}
                     onValidationChange={setPaymentFormValid}
-                    onBankChange={() => {}}
-                    onReferenceChange={() => {}}
-                    onDocumentNumberChange={() => {}}
-                    onPhoneChange={() => {}}
+                    onBankChange={setBank}
+                    onReferenceChange={setReference}
+                    onDocumentNumberChange={setDocumentNumber}
+                    onPhoneChange={setPhoneNumber}
                   />
                 </View>
                 <View style={styles.whiteBackgroundContainer}>
@@ -189,12 +227,56 @@ const InProgressOrderScreen = () => {
                       size="medium"
                       style={styles.nextButton}
                       variant="primary"
-                      onPress={() => {
+                      onPress={async () => {
                         if (!paymentFormValid) {
                           setShowValidationPopup(true);
                           return;
                         }
-                        setStep(3);
+                        try {
+                          const sdk = PharmaTech.getInstance();
+                          const jwt =
+                            await SecureStore.getItemAsync('auth_token');
+                          if (!jwt) {
+                            setBackendResponse('No JWT found en SecureStore');
+                            return;
+                          }
+                          const paymentConfirmation: PaymentConfirmation = {
+                            bank,
+                            reference,
+                            documentId: documentNumber,
+                            phoneNumber,
+                            orderId: order.id,
+                          };
+                          const response = await sdk.paymentConfirmation.create(
+                            paymentConfirmation,
+                            jwt,
+                          );
+                          // Puedes ajustar el mensaje según la estructura real de la respuesta
+                          setBackendResponse(
+                            response && response.id
+                              ? '¡Pago enviado correctamente!'
+                              : 'Respuesta recibida del servidor.',
+                          );
+                          setStep(3);
+                        } catch (error: unknown) {
+                          let errorMessage =
+                            'Error enviando confirmación de pago. Intenta nuevamente.';
+                          function hasMessage(
+                            e: unknown,
+                          ): e is { message: string } {
+                            return (
+                              typeof e === 'object' &&
+                              e !== null &&
+                              'message' in e &&
+                              typeof (e as { message?: unknown }).message ===
+                                'string'
+                            );
+                          }
+                          if (hasMessage(error)) {
+                            errorMessage = error.message;
+                          }
+                          setBackendResponse(errorMessage);
+                        }
                       }}
                     />
                   </View>
@@ -211,6 +293,17 @@ const InProgressOrderScreen = () => {
                 orderNumber={truncateString(order.id as string, 8, '')}
                 userName={userName || ''}
               />
+              {/* Botón Volver al Home en un View con padding 20 */}
+              <View style={{ padding: 20 }}>
+                <Button
+                  title="Volver al Home"
+                  size="medium"
+                  style={[styles.checkoutButton]}
+                  variant="secondaryLight"
+                  textStyle={{ color: Colors.textMain }}
+                  onPress={handleContinue}
+                />
+              </View>
               <View style={{ flex: 1, justifyContent: 'flex-end' }}>
                 <View style={styles.whiteBackgroundContainer}>
                   <OrderSummary />
@@ -247,6 +340,7 @@ const InProgressOrderScreen = () => {
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
+    justifyContent: 'flex-start', // Fuerza el contenido arriba SIEMPRE
   },
   container: {
     flex: 1,
@@ -255,6 +349,7 @@ const styles = StyleSheet.create({
   steps: {
     marginTop: 30,
     padding: 20,
+    // No uses flex ni justifyContent aquí
   },
   stepLabel: {
     fontSize: FontSizes.h5.size,
@@ -317,6 +412,10 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.h5.size,
     lineHeight: FontSizes.h5.lineHeight,
     color: Colors.primary,
+  },
+  checkoutButton: {
+    marginTop: 24,
+    width: '100%',
   },
 });
 
