@@ -3,15 +3,11 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Animated,
   BackHandler,
+  RefreshControl,
 } from 'react-native';
-import {
-  ShoppingBagIcon,
-  TruckIcon,
-  ChevronLeftIcon,
-} from 'react-native-heroicons/outline';
+import { ShoppingBagIcon, TruckIcon } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import RadioCard from '../components/RadioCard';
 import OrderSummary from '../components/OrderSummary';
@@ -32,7 +28,6 @@ import Popup from '../components/Popup';
 import EmailVerificationModal from './tab/EmailVerificationModal';
 import { RootState, AppDispatch } from '../redux/store';
 import {
-  setStep,
   setOption,
   setPayment,
   setLocationId,
@@ -208,19 +203,6 @@ const CheckoutScreen = () => {
     }
   };
 
-  const handleGoBack = () => {
-    if (step === stepsLabels.length) {
-      // Si estamos en el último paso, no permitir retroceder
-      return;
-    }
-
-    if (step === 1) {
-      router.back();
-    } else if (step > 1) {
-      dispatch(setStep(step - 1));
-    }
-  };
-
   //const handleOpenMapModal = () => {
   //if (selectedBranch) {
   //  setModalVisible(true); // Open the modal only if a branch is selected
@@ -243,6 +225,17 @@ const CheckoutScreen = () => {
     dispatch(setCouponDiscount(discountAmount));
     dispatch(setCouponApplied(true));
   };
+
+  const [refreshing, setRefreshing] = useState(false); // <-- Agregado
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Aquí puedes recargar datos del carrito, usuario, etc.
+    // Simulación de recarga:
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
   return (
     <>
@@ -269,12 +262,14 @@ const CheckoutScreen = () => {
         visible={emailVerificationModalVisible}
         onClose={() => setEmailVerificationModalVisible(false)} // Close the modal
       />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.container}>
           {/* Solo mostrar el step 1 */}
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.textMain} />
-          </TouchableOpacity>
           <View style={styles.steps}>
             <Animated.View style={{ opacity: 1 }}>
               <Steps

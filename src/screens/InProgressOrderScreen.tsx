@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import PaymentStatusMessage from '../components/PaymentStatusMessage';
 import PaymentInfoForm from '../components/PaymentInfoForm';
 import OrderSummary from '../components/OrderSummary';
@@ -49,8 +49,43 @@ const InProgressOrderScreen = () => {
   const [documentNumber, setDocumentNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [backendResponse, setBackendResponse] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const router = useRouter();
   const dispatch = useDispatch();
+
+  // Extrae la lógica de obtención de la orden
+  const fetchOrder = async () => {
+    if (!orderNumber) return;
+    try {
+      const sdk = PharmaTech.getInstance();
+      const jwt = await SecureStore.getItemAsync('auth_token');
+      if (!jwt) {
+        console.error('No JWT found in SecureStore');
+        return;
+      }
+      const orderData = await sdk.order.getById(orderNumber as string, jwt);
+      setOrder(orderData);
+
+      // Solo cambia a step 2 si status es 'approved' y paymentMethod es BANK_TRANSFER o MOBILE_PAYMENT
+      if (
+        orderData &&
+        orderData.status &&
+        orderData.status.toLowerCase() === 'approved' &&
+        orderData.paymentMethod &&
+        ['BANK_TRANSFER', 'MOBILE_PAYMENT'].includes(
+          orderData.paymentMethod.toUpperCase(),
+        )
+      ) {
+        setStep(2);
+        return;
+      }
+      setStep(3);
+    } catch (error) {
+      console.error('Error fetching order:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -63,36 +98,6 @@ const InProgressOrderScreen = () => {
   }, []);
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      if (!orderNumber) return;
-      try {
-        const sdk = PharmaTech.getInstance();
-        const jwt = await SecureStore.getItemAsync('auth_token');
-        if (!jwt) {
-          console.error('No JWT found in SecureStore');
-          return;
-        }
-        const orderData = await sdk.order.getById(orderNumber as string, jwt);
-        setOrder(orderData);
-
-        // Solo cambia a step 2 si status es 'approved' y paymentMethod es BANK_TRANSFER o MOBILE_PAYMENT
-        if (
-          orderData &&
-          orderData.status &&
-          orderData.status.toLowerCase() === 'approved' &&
-          orderData.paymentMethod &&
-          ['BANK_TRANSFER', 'MOBILE_PAYMENT'].includes(
-            orderData.paymentMethod.toUpperCase(),
-          )
-        ) {
-          setStep(2);
-          return;
-        }
-        setStep(3);
-      } catch (error) {
-        console.error('Error fetching order:', error);
-      }
-    };
     fetchOrder();
   }, [orderNumber]);
 
@@ -143,6 +148,12 @@ const InProgressOrderScreen = () => {
     });
   };
 
+  // Handler para pull-to-refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrder();
+  };
+
   return (
     <>
       {/* Alerta para mostrar la respuesta del backend */}
@@ -163,7 +174,13 @@ const InProgressOrderScreen = () => {
       )}
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
-        // Elimina cualquier lógica condicional de justifyContent aquí
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+          />
+        }
       >
         <View style={styles.container}>
           <View style={styles.steps}>
