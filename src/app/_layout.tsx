@@ -172,6 +172,27 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="checkout"
+            options={({ navigation }) => ({
+              headerTitle: '',
+              headerTransparent: true,
+              headerShown: true,
+              headerLeft: () => (
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={{
+                    padding: 12,
+                    marginLeft: -12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <ChevronLeftIcon width={28} height={28} color="#000" />
+                </TouchableOpacity>
+              ),
+            })}
+          />
+          <Stack.Screen
+            name="in-progress-order"
             options={{
               headerTitle: '',
               headerTransparent: true,

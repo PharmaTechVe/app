@@ -7,12 +7,7 @@ import Dropdown from './Dropdown';
 import { PharmaTech } from '@pharmatech/sdk';
 
 interface Props {
-  paymentMethod:
-    | 'punto_de_venta'
-    | 'efectivo'
-    | 'transferencia'
-    | 'pago_movil'
-    | null;
+  paymentMethod: 'CARD' | 'CASH' | 'BANK_TRANSFER' | 'MOBILE_PAYMENT' | null;
   total: string;
   onValidationChange: (isValid: boolean) => void;
   onBankChange: (value: string) => void;
@@ -90,11 +85,14 @@ const PaymentInfoForm: React.FC<Props> = ({
   useEffect(() => {
     const isValid =
       paymentMethod !== null &&
-      (paymentMethod === 'pago_movil' || paymentMethod === 'transferencia')
+      (paymentMethod === 'MOBILE_PAYMENT' || paymentMethod === 'BANK_TRANSFER')
         ? bank.trim() !== '' &&
-          /^\d+$/.test(reference) &&
+          /^\d{4,}$/.test(reference) &&
           reference.trim() !== '' &&
-          /^\d{1,8}$/.test(documentNumber) &&
+          !/^0+$/.test(reference) &&
+          /^\d{7,8}$/.test(documentNumber) &&
+          !/^0+$/.test(documentNumber) &&
+          !/^0/.test(documentNumber) &&
           /^\d{11}$/.test(phone)
         : true;
 
@@ -129,8 +127,8 @@ const PaymentInfoForm: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      {(paymentMethod === 'pago_movil' ||
-        paymentMethod === 'transferencia') && (
+      {(paymentMethod === 'MOBILE_PAYMENT' ||
+        paymentMethod === 'BANK_TRANSFER') && (
         <>
           <PoppinsText style={styles.label}>
             Realiza el pago en la siguiente cuenta de Pharmatech
@@ -155,7 +153,7 @@ const PaymentInfoForm: React.FC<Props> = ({
 
           <View style={styles.row}>
             <View style={[styles.inputWrapper, styles.largeInput]}>
-              {paymentMethod === 'pago_movil' ? (
+              {paymentMethod === 'MOBILE_PAYMENT' ? (
                 <Input
                   label="Teléfono"
                   value="0414-1234567"
@@ -208,9 +206,11 @@ const PaymentInfoForm: React.FC<Props> = ({
             placeholder="Ingrese la referencia"
             getValue={handleReferenceChange}
             fieldType="number"
-            errorText="Debe ser un número válido"
-            validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
-            showIcon
+            errorText="Debe ser un número valido"
+            validation={(val) =>
+              /^\d{4,}$/.test(val) && val.trim() !== '' && !/^0+$/.test(val)
+            }
+            showIcon={reference.length > 0}
             useDefaultValidation={false}
             {...editableInputProps}
           />
@@ -220,9 +220,14 @@ const PaymentInfoForm: React.FC<Props> = ({
             value={documentNumber}
             getValue={handleDocumentNumberChange}
             fieldType="number"
-            errorText="El campo no debe estar vacío"
-            validation={(val) => /^\d+$/.test(val) && val.trim() !== ''}
-            showIcon
+            errorText="Debe ser un número de documento valido"
+            validation={(val) =>
+              /^\d{7,8}$/.test(val) &&
+              val.trim() !== '' &&
+              !/^0+$/.test(val) &&
+              !/^0/.test(val)
+            }
+            showIcon={documentNumber.length > 0}
             useDefaultValidation={false}
             {...editableInputProps}
           />
@@ -233,13 +238,14 @@ const PaymentInfoForm: React.FC<Props> = ({
             getValue={handlePhoneChange}
             fieldType="number"
             errorText="Debe tener exactamente 11 dígitos"
-            validation={(val) => /^\d{11}$/.test(val)}
-            showIcon
+            validation={(val) => /^\d{11}$/.test(val) && !/^0+$/.test(val)}
+            showIcon={phone.length > 0}
             useDefaultValidation={false}
             {...editableInputProps}
           />
         </>
       )}
+      {/* Si se requiere mostrar algo para CASH o CARD, agregar aquí */}
     </View>
   );
 };
