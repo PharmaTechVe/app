@@ -10,11 +10,7 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useLocalSearchParams } from 'expo-router';
 import Alert from '../components/Alerts';
-import {
-  OrderDeliveryStatus,
-  OrderDetailedResponse,
-  OrderStatus,
-} from '@pharmatech/sdk';
+import { OrderDetailedResponse, OrderStatus } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { formatDate, truncateString } from '../utils/commons';
 import * as SecureStore from 'expo-secure-store';
@@ -76,9 +72,7 @@ const OrderTrackingScreen = () => {
       if (order.success) {
         if (
           order.data.orderDeliveries &&
-          order.data.orderDeliveries.length > 0 &&
-          order.data.orderDeliveries[0].deliveryStatus ===
-            OrderDeliveryStatus.TO_ASSIGN
+          order.data.orderDeliveries.length > 0
         ) {
           const delivery = await DeliveryService.getOrderDetails(
             order.data.orderDeliveries[0].id,
