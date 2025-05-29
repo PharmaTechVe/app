@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useCart } from '../../hooks/useCart';
@@ -10,6 +16,7 @@ import { ProductService } from '../../services/products';
 import { Product } from '../../types/Product';
 import EmailVerificationModal from './EmailVerificationModal';
 import { decodeJWT } from '../../helper/jwtHelper';
+import { useNotifications } from '../../hooks/useNotifications';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,10 +24,12 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingRecommendations, setLoadingRecommendations] = useState(true);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const { showEmailVerification: showEmailVerificationParam } =
     useLocalSearchParams();
   const { cartItems, addToCart, updateCartQuantity, setCartUserId } = useCart();
+  const { refreshNotifications } = useNotifications();
 
   const getItemQuantity = (productId: string) => {
     const cartItem = cartItems.find((item) => item.id === productId.toString());
@@ -162,9 +171,27 @@ export default function HomeScreen() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      obtainProducts(),
+      obtainRecommendedProducts(),
+      refreshNotifications(), // <-- refresca notificaciones también
+    ]);
+    setRefreshing(false);
+  };
+
   return (
     <View testID="home-screen" style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.primary]}
+          />
+        }
+      >
         <View>
           <PoppinsText weight="medium" style={styles.title}>
             Ofertas especiales
