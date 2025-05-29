@@ -10,7 +10,11 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useLocalSearchParams } from 'expo-router';
 import Alert from '../components/Alerts';
-import { OrderDetailedResponse, OrderStatus } from '@pharmatech/sdk';
+import {
+  OrderDeliveryStatus,
+  OrderDetailedResponse,
+  OrderStatus,
+} from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { formatDate, truncateString } from '../utils/commons';
 import * as SecureStore from 'expo-secure-store';
@@ -27,6 +31,7 @@ import {
 import io from 'socket.io-client';
 import { SOCKET_URL } from '../lib/socketUrl';
 import VerticalStepper from '../components/VerticalStepper';
+import { DeliveryService } from '../services/delivery';
 
 const OrderTrackingScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,6 +45,7 @@ const OrderTrackingScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [step, setStep] = useState(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [userAddress, setUserAddress] = useState('');
 
   const changeTrackingStatus = (status: OrderStatus) => {
     switch (status) {
@@ -68,6 +74,19 @@ const OrderTrackingScreen = () => {
       const order = await UserService.getOrder(id);
       console.log(order);
       if (order.success) {
+        if (
+          order.data.orderDeliveries &&
+          order.data.orderDeliveries.length > 0 &&
+          order.data.orderDeliveries[0].deliveryStatus ===
+            OrderDeliveryStatus.ASSIGNED
+        ) {
+          const delivery = await DeliveryService.getOrderDetails(
+            order.data.orderDeliveries[0].id,
+          );
+          setUserAddress(
+            delivery.address.adress + '. \n' + delivery.address.referencePoint,
+          );
+        }
         setOrder(order.data);
         changeTrackingStatus(order.data.status);
       }
@@ -149,30 +168,21 @@ const OrderTrackingScreen = () => {
     {
       title: 'Orden Confirmada',
       description: order?.orderDeliveries
-        ? new Date(order?.orderDeliveries[0]?.createdAt).toLocaleString(
-            'es-ES',
-            dateFormat,
-          )
+        ? new Date(order?.updatedAt).toLocaleString('es-ES', dateFormat)
         : '',
     },
     {
       title:
         order?.type === 'delivery' ? 'Repartidor en camino' : 'En preparación',
       description: order?.orderDeliveries
-        ? new Date(order?.orderDeliveries[0]?.createdAt).toLocaleString(
-            'es-ES',
-            dateFormat,
-          )
+        ? new Date(order?.updatedAt).toLocaleString('es-ES', dateFormat)
         : '',
     },
     {
       title:
         order?.type === 'delivery' ? 'Pedido entregado' : 'Listo para recoger',
       description: order?.orderDeliveries
-        ? new Date(order?.orderDeliveries[0]?.createdAt).toLocaleString(
-            'es-ES',
-            dateFormat,
-          )
+        ? new Date(order?.updatedAt).toLocaleString('es-ES', dateFormat)
         : '',
     },
   ];
@@ -253,9 +263,7 @@ const OrderTrackingScreen = () => {
                 <CubeIcon color={Colors.semanticSuccess} />
                 <PoppinsText style={{ color: Colors.semanticSuccess }}>
                   Pickup:{' '}
-                  {new Date(
-                    order?.orderDeliveries[0]?.estimatedTime,
-                  ).toLocaleString('es-ES', {
+                  {new Date(order?.updatedAt).toLocaleString('es-ES', {
                     day: '2-digit',
                     month: 'long',
                     hour: '2-digit',
@@ -302,8 +310,7 @@ const OrderTrackingScreen = () => {
                       <PoppinsText style={{ marginBottom: 10 }}>
                         Dirección de Entrega:
                       </PoppinsText>
-                      <PoppinsText>{order?.branch?.address}.</PoppinsText>
-                      <PoppinsText>{order?.branch?.city.name}</PoppinsText>
+                      <PoppinsText>{userAddress}</PoppinsText>
                     </View>
                   </View>
                   <View

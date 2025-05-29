@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useRouter } from 'expo-router';
@@ -30,37 +36,52 @@ const ActiveOrdersScreen = () => {
   const [showInfoAlert, setShowInfoAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const fetchActiveOrders = async () => {
+    try {
+      const order = await UserService.getUserOrders();
+      if (order.success) {
+        const activeOrders = order.data.results.filter(
+          (o) =>
+            o.status === 'requested' ||
+            o.status === 'approved' ||
+            o.status === 'ready_for_pickup' ||
+            o.status === 'in_progress',
+        );
+        if (activeOrders.length > 0) {
+          setActiveOrdersList(activeOrders);
+        } else {
+          setShowInfoAlert(true);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      setErrorMessage('Ha ocurrido un error');
+      setShowErrorAlert(true);
+    }
+  };
 
   useEffect(() => {
-    const fetchActiveOrders = async () => {
-      try {
-        const order = await UserService.getUserOrders();
-        if (order.success) {
-          const activeOrders = order.data.results.filter(
-            (o) =>
-              o.status === 'requested' ||
-              o.status === 'approved' ||
-              o.status === 'ready_for_pickup' ||
-              o.status === 'in_progress',
-          );
-          if (activeOrders.length > 0) {
-            setActiveOrdersList(activeOrders);
-          } else {
-            setShowInfoAlert(true);
-          }
-        }
-      } catch (error) {
-        console.log(error);
-        setErrorMessage('Ha ocurrido un error');
-        setShowErrorAlert(true);
-      }
-    };
-
     fetchActiveOrders();
   }, []);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchActiveOrders();
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[Colors.primary]}
+        />
+      }
+    >
       <View style={styles.alertContainer}>
         {showErrorAlert && (
           <Alert
