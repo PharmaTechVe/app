@@ -41,6 +41,7 @@ import {
   CreateOrderDetail,
   PaymentMethod,
 } from '@pharmatech/sdk';
+import { formatPrice } from '../utils/formatPrice';
 
 const CheckoutScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -90,16 +91,22 @@ const CheckoutScreen = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  {
-    /** const totalDiscount = cartItems.reduce(
-    (sum, item) => sum + item.price * (item.quantity * 0.1),
+
+  // Calcula el descuento total de los productos (igual que OrderSummary)
+  const totalDiscount = cartItems.reduce(
+    (sum, item) =>
+      sum + item.price * item.quantity * ((item.discount ?? 0) / 100),
     0,
-  );*/
-  }
-  const subtotalAfterDiscount = subtotal; // - totalDiscount;
+  );
+
+  // Subtotal después de descuentos de productos
+  const subtotalAfterDiscount = subtotal - totalDiscount;
+
+  // Aplica el cupón sobre el subtotal ya descontado
   const subtotalAfterCoupon = couponApplied
     ? subtotalAfterDiscount * (1 - couponDiscount / 100)
     : subtotalAfterDiscount;
+
   const total = subtotalAfterCoupon;
 
   const renderFooterMessage = () => {
@@ -352,7 +359,7 @@ const CheckoutScreen = () => {
               <View style={styles.totalRow}>
                 <PoppinsText style={styles.totalLabel}>Total:</PoppinsText>
                 <PoppinsText style={styles.totalAmount}>
-                  ${total.toFixed(2)}
+                  ${formatPrice(total)}
                 </PoppinsText>
               </View>
             </View>

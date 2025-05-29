@@ -5,6 +5,7 @@ import PoppinsText from './PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
 import type { CartItem } from '../redux/slices/cartSlice';
 import { ChevronDownIcon, ChevronUpIcon } from 'react-native-heroicons/outline';
+import { formatPrice } from '../utils/formatPrice';
 
 const OrderSummary = () => {
   const { cartItems } = useCart();
@@ -47,14 +48,14 @@ const OrderSummary = () => {
           <View style={styles.row}>
             <PoppinsText style={styles.productName}>{item.name}</PoppinsText>
             <PoppinsText style={styles.productTotalPrice}>
-              ${totalDiscountedPrice.toFixed(2)}
+              ${formatPrice(totalDiscountedPrice)}
             </PoppinsText>
           </View>
           <PoppinsText style={styles.productOriginalPrice}>
-            ${totalOriginalPrice.toFixed(2)}
+            ${formatPrice(totalOriginalPrice)}
           </PoppinsText>
           <PoppinsText style={styles.productPrice}>
-            (${discountedPrice.toFixed(2)} c/u)
+            (${formatPrice(discountedPrice)} c/u)
           </PoppinsText>
           <PoppinsText style={styles.productQuantity}>
             Cantidad: {item.quantity}
@@ -104,19 +105,19 @@ const OrderSummary = () => {
             <View style={styles.row}>
               <PoppinsText style={styles.subtotalText}>Subtotal</PoppinsText>
               <PoppinsText style={styles.subtotalText}>
-                ${subtotal.toFixed(2)}
+                ${formatPrice(subtotal)}
               </PoppinsText>
             </View>
             <View style={styles.row}>
               <PoppinsText style={styles.discountText}>Descuentos</PoppinsText>
               <PoppinsText style={styles.discountText}>
-                -${totalDiscount.toFixed(2)}
+                -${formatPrice(totalDiscount)}
               </PoppinsText>
             </View>
             <View style={styles.row}>
               <PoppinsText style={styles.subtotalText}>Total</PoppinsText>
               <PoppinsText style={styles.subtotalText}>
-                ${total.toFixed(2)}
+                ${formatPrice(total)}
               </PoppinsText>
             </View>
           </View>
