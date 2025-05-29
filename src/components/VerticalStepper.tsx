@@ -18,8 +18,8 @@ const VerticalStepper: React.FC<VerticalStepperProps> = ({
   return (
     <View style={styles.container}>
       {steps.map((step, index) => {
-        const isCompleted = index < currentStep;
-        const isActive = index === currentStep;
+        const isCompleted = index < currentStep - 1;
+        const isActive = index === currentStep - 1;
 
         return (
           <View key={index} style={styles.stepContainer}>

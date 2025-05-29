@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useLocalSearchParams } from 'expo-router';
@@ -32,26 +38,50 @@ const OrderTrackingScreen = () => {
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [orderStatus, setOrderStatus] = useState('');
+  const [step, setStep] = useState(0);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const changeTrackingStatus = (status: OrderStatus) => {
+    switch (status) {
+      case OrderStatus.REQUESTED:
+      case OrderStatus.CANCELED:
+        setStep(0);
+        break;
+      case OrderStatus.APPROVED:
+        setStep(1);
+        break;
+      case OrderStatus.IN_PROGRESS:
+      case OrderStatus.READY_FOR_PICKUP:
+        setStep(2);
+        break;
+      case OrderStatus.COMPLETED:
+        setStep(3);
+        break;
+      default:
+        setStep(0);
+        break;
+    }
+  };
+
+  const fetchOrder = async () => {
+    try {
+      const order = await UserService.getOrder(id);
+      console.log(order);
+      if (order.success) {
+        setOrder(order.data);
+        changeTrackingStatus(order.data.status);
+      }
+    } catch (error) {
+      console.log(error);
+      setErrorMessage('Ocurrió un error');
+      setShowErrorAlert(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        const order = await UserService.getOrder(id);
-        console.log(order);
-        if (order.success) {
-          setOrder(order.data);
-        }
-      } catch (error) {
-        console.log(error);
-        setErrorMessage('Ocurrió un error');
-        setShowErrorAlert(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrder();
-
     if (id) {
       fetchOrder();
 
@@ -68,8 +98,9 @@ const OrderTrackingScreen = () => {
       });
 
       function onOrderUpdated(order: { orderId: string; status: OrderStatus }) {
-        setOrderStatus(order.status);
-        console.log('Estado de la orrrrdennnn: ', order.status);
+        if (order.orderId === id) {
+          changeTrackingStatus(order.status);
+        }
       }
 
       socket.connect();
@@ -90,14 +121,6 @@ const OrderTrackingScreen = () => {
         socket.off('orderUpdated', onOrderUpdated);
         socket.disconnect();
       };
-
-      /* sss
-      socket.on('connect', onConnect);
-      socket.on('disconnect', onDisconnect);
-      return () => {
-        //socket.off('connect', onConnect);
-        //socket.off('disconnect', onDisconnect);
-      }; */
     }
   }, []);
 
@@ -108,6 +131,11 @@ const OrderTrackingScreen = () => {
       </View>
     );
   }
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrder();
+  };
 
   const dateFormat: Intl.DateTimeFormatOptions = {
     day: '2-digit',
@@ -150,7 +178,16 @@ const OrderTrackingScreen = () => {
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[Colors.primary]}
+        />
+      }
+    >
       <View style={styles.alertContainer}>
         {showErrorAlert && (
           <Alert
@@ -229,9 +266,8 @@ const OrderTrackingScreen = () => {
               </>
             )}
           </View>
-          <PoppinsText>{orderStatus}</PoppinsText>
           <View style={{ marginVertical: 20 }}>
-            <VerticalStepper steps={steps} currentStep={0} />
+            <VerticalStepper steps={steps} currentStep={step} />
           </View>
           <View>
             <View
