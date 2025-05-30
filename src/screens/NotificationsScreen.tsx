@@ -21,7 +21,6 @@ import PoppinsText from '../components/PoppinsText';
 import Alert from '../components/Alerts';
 import { Colors, FontSizes } from '../styles/theme';
 import { NotificationService } from '../services/notifications';
-import { getUserIdFromSecureStore } from '../helper/jwtHelper';
 import { SvgProps } from 'react-native-svg';
 
 // Importa tus SVG como componentes React
@@ -79,9 +78,6 @@ export default function NotificationsScreen() {
       setLoading(true);
       setShowErrorAlert(false);
       try {
-        const token = await getUserIdFromSecureStore();
-        if (!token) throw new Error('No se pudo obtener el token de usuario.');
-
         const res = await NotificationService.getNotifications();
         if (!res.success || !Array.isArray(res.data)) {
           const errorMsg =
@@ -123,14 +119,11 @@ export default function NotificationsScreen() {
     useCallback(() => {
       const markAllRead = async () => {
         try {
-          const token = await getUserIdFromSecureStore();
-          if (!token) return;
-
           const toMark = notificationsList.filter((n) => !n.isRead);
           if (toMark.length === 0) return;
 
           await Promise.all(
-            toMark.map((n) => NotificationService.markAsRead(n.orderId, token)),
+            toMark.map((n) => NotificationService.markAsRead(n.orderId)),
           );
           setNotificationsList((prev) =>
             prev.map((n) => ({ ...n, isRead: true })),
