@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import { StyleSheet, View, Alert } from 'react-native';
+import { StyleSheet, View, Alert, ViewStyle } from 'react-native';
 import { Config } from '../config';
 
 interface HistoryMapProps {
   deliveryLocation: { latitude: number; longitude: number };
   branchLocation: { latitude: number; longitude: number };
   customerLocation: { latitude: number; longitude: number };
+  style?: ViewStyle; // Permitir estilos personalizados
 }
 
 const HistoryMap: React.FC<HistoryMapProps> = ({
   deliveryLocation,
   branchLocation,
   customerLocation,
+  style, // Recibir el estilo como prop
 }) => {
   const [routeToBranch, setRouteToBranch] = useState<
     { latitude: number; longitude: number }[]
@@ -118,9 +120,9 @@ const HistoryMap: React.FC<HistoryMapProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <MapView
-        style={styles.map}
+        style={StyleSheet.absoluteFillObject} // Asegura que el mapa ocupe todo el contenedor
         initialRegion={{
           latitude: branchLocation.latitude,
           longitude: branchLocation.longitude,
@@ -173,13 +175,7 @@ const HistoryMap: React.FC<HistoryMapProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    height: 300,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
-  map: {
-    flex: 1,
+    flex: 1, // Permitir que el mapa ocupe todo el espacio disponible
   },
 });
 

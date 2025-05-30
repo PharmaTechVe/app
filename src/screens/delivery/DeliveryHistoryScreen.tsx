@@ -119,10 +119,15 @@ const DeliveryHistoryScreen: React.FC = () => {
               orderType="pedido"
               address={order.address?.adress || 'Dirección no disponible'}
               branch={branchNames[order.branchId] || 'Sucursal no disponible'}
-              estimatedTime={calculateElapsedTime(
-                order.createdAt,
-                order.updatedAt,
-              )} // Tiempo transcurrido entre creación y última actualización
+              estimatedTime={new Date(order.updatedAt).toLocaleDateString(
+                'es-VE',
+                {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                },
+              )} // Fecha de la última actualización
               elapsedTime={calculateElapsedTime(order.createdAt)}
               completionTime={new Date(order.updatedAt).toLocaleTimeString(
                 'es-VE',
@@ -139,6 +144,7 @@ const DeliveryHistoryScreen: React.FC = () => {
             />
           ))
         )}
+        <View style={styles.height} />
       </ScrollView>
     </View>
   );
@@ -171,6 +177,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     padding: 16,
     marginHorizontal: 4,
+  },
+  height: {
+    height: 64,
   },
   title: {
     fontSize: FontSizes.h5.size,

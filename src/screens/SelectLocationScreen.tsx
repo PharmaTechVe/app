@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, TextInput, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps'; // Importa el tipo Region
 import * as Location from 'expo-location';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,11 +14,14 @@ import { MapPinIcon } from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { Config } from '../config';
+import { ChevronLeftIcon } from 'react-native-heroicons/outline';
+import { useNavigation } from '@react-navigation/native';
 
 const SelectLocationScreen = () => {
   console.log('Clave de API utilizada:', Config.googleMapsApiKey);
 
   const { fromCheckout } = useLocalSearchParams();
+  const navigation = useNavigation();
 
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
@@ -131,6 +140,15 @@ const SelectLocationScreen = () => {
     <View style={styles.container}>
       {/* Header con input para mostrar la dirección */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={navigation.goBack}
+          style={{
+            marginTop: 4,
+            marginLeft: 4,
+          }}
+        >
+          <ChevronLeftIcon width={28} height={28} color="#000" />
+        </TouchableOpacity>
         <TextInput
           style={styles.addressInput}
           value={address}
@@ -179,6 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.textWhite,
     padding: 10,
     zIndex: 1000,
+    flexDirection: 'row',
   },
   addressInput: {
     backgroundColor: Colors.menuWhite,
@@ -190,7 +209,8 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.label.lineHeight,
     fontFamily: 'Poppins_400Regular',
     color: Colors.textMain,
-    marginLeft: 48,
+    marginLeft: 14,
+    flex: 1,
   },
   map: {
     ...StyleSheet.absoluteFillObject,

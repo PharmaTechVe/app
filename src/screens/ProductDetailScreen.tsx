@@ -41,6 +41,7 @@ import {
 import Button from '../components/Button';
 import { BranchService } from '../services/branches';
 import { formatPrice } from '../utils/formatPrice';
+import Alert from '../components/Alerts';
 
 const ProductDetailScreen: React.FC = () => {
   const { id, productId } = useLocalSearchParams<{
@@ -62,6 +63,7 @@ const ProductDetailScreen: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+  const [showNoStockAlert, setShowNoStockAlert] = useState(false);
   const imagesScrollRef = useRef<ScrollView>(null);
   //const discount = 10;
   const router = useRouter();
@@ -308,6 +310,8 @@ const ProductDetailScreen: React.FC = () => {
     return discount > 0 ? (original * (100 - discount)) / 100 : original;
   };
 
+  console.log('Stock actual:', product?.stock);
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
       <TopBar />
@@ -339,6 +343,18 @@ const ProductDetailScreen: React.FC = () => {
         </PoppinsText>
       </TouchableOpacity>
       <SafeAreaView style={styles.container}>
+        {/* ALERTA EN LA PARTE SUPERIOR */}
+        {showNoStockAlert && (
+          <View style={styles.alertContainer}>
+            <Alert
+              title="Sin disponibilidad"
+              message="No hay disponibilidad para este producto en este momento."
+              type="warning"
+              onClose={() => setShowNoStockAlert(false)}
+            />
+          </View>
+        )}
+
         <ScrollView>
           {/* Carrusel de imágenes */}
           <ScrollView
@@ -611,11 +627,27 @@ const ProductDetailScreen: React.FC = () => {
         <View style={styles.cardButtonContainer}>
           <CardButton
             size={10}
+            initialValue={getQuantity()}
+            disabled={product ? !product.stock || product.stock === 0 : true}
+            showNoStockAlert={() => setShowNoStockAlert(true)}
             getValue={(quantity) => {
+              const stock = product?.stock ?? 0;
+              // Si no hay stock o la cantidad supera el stock, muestra alerta y no actualices
+              if (stock === 0 || quantity > stock) {
+                setShowNoStockAlert(true);
+                return;
+              }
+              // Si la cantidad es 0, elimina del carrito
+              if (product?.id && quantity === 0) {
+                updateCartQuantity(product.id, 0);
+                return;
+              }
+              // Si hay stock y cantidad válida, agrega o actualiza en el carrito
               if (product?.id && quantity > 0) {
                 const promo = product.promo;
                 const discount =
                   typeof promo?.discount === 'number' ? promo.discount : 0;
+                updateCartQuantity(product.id, quantity);
                 addToCart({
                   id: product.id,
                   name:
@@ -633,7 +665,6 @@ const ProductDetailScreen: React.FC = () => {
                 });
               }
             }}
-            initialValue={getQuantity()}
           />
         </View>
       </SafeAreaView>
@@ -652,6 +683,14 @@ const styles = StyleSheet.create({
   productImage: {
     width: width,
     height: 200,
+  },
+  alertContainer: {
+    position: 'absolute',
+    width: 326,
+    left: '50%',
+    marginLeft: -163,
+    top: 20,
+    zIndex: 1000,
   },
   imageIndicators: {
     flexDirection: 'row',

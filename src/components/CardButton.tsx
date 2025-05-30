@@ -9,6 +9,8 @@ interface CardButtonProps {
   initialValue: number;
   size?: number;
   syncQuantity?: (count: number) => void;
+  disabled?: boolean;
+  showNoStockAlert?: () => void; // <-- nuevo prop opcional
 }
 
 const CardButton: React.FC<CardButtonProps> = ({
@@ -16,6 +18,8 @@ const CardButton: React.FC<CardButtonProps> = ({
   initialValue = 0,
   size = 4,
   syncQuantity,
+  disabled = false, // <-- Valor por defecto
+  showNoStockAlert, // <-- Add this line
 }) => {
   const [count, setCount] = useState(initialValue);
   const [showCounter, setShowCounter] = useState(false);
@@ -38,11 +42,19 @@ const CardButton: React.FC<CardButtonProps> = ({
   }, [initialValue]);
 
   const incrementCount = () => {
+    if (disabled) {
+      if (showNoStockAlert) showNoStockAlert();
+      return;
+    }
     setHasInteracted(true);
     setCount((prev) => prev + 1);
   };
 
   const decrementCount = () => {
+    if (disabled) {
+      if (showNoStockAlert) showNoStockAlert();
+      return;
+    }
     if (count > 0) {
       setHasInteracted(true);
       setCount((prev) => prev - 1);
@@ -50,6 +62,7 @@ const CardButton: React.FC<CardButtonProps> = ({
   };
 
   const showCounterIncrement = () => {
+    if (disabled) return; // <-- No permitir si está deshabilitado
     setShowCounter(true);
     incrementCount();
   };
@@ -58,18 +71,34 @@ const CardButton: React.FC<CardButtonProps> = ({
     <View style={styles.container}>
       {!showCounter ? (
         <TouchableOpacity
-          style={[styles.mainButton, { padding: size }]}
-          onPress={showCounterIncrement}
+          style={[
+            styles.mainButton,
+            { padding: size },
+            disabled && { backgroundColor: Colors.stroke }, // <-- más opaco
+          ]}
+          onPress={() => {
+            if (disabled && showNoStockAlert) showNoStockAlert();
+            else showCounterIncrement();
+          }}
         >
           <PoppinsText style={styles.buttonText}>
             <PlusIcon size={20} color={Colors.textWhite} />
           </PoppinsText>
         </TouchableOpacity>
       ) : (
-        <View style={[styles.counterContainer, { padding: size }]}>
+        <View
+          style={[
+            styles.counterContainer,
+            { padding: size },
+            disabled && { backgroundColor: Colors.stroke },
+          ]}
+        >
           <TouchableOpacity
             style={[styles.counterButton]}
-            onPress={decrementCount}
+            onPress={() => {
+              if (disabled && showNoStockAlert) showNoStockAlert();
+              else decrementCount();
+            }}
           >
             <PoppinsText style={[styles.buttonText]}>
               <MinusIcon size={20} color={Colors.textWhite} />
@@ -80,7 +109,10 @@ const CardButton: React.FC<CardButtonProps> = ({
 
           <TouchableOpacity
             style={[styles.counterButton]}
-            onPress={incrementCount}
+            onPress={() => {
+              if (disabled && showNoStockAlert) showNoStockAlert();
+              else incrementCount();
+            }}
           >
             <PoppinsText style={styles.buttonText}>
               <PlusIcon size={20} color={Colors.textWhite} />

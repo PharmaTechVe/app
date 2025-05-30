@@ -136,6 +136,7 @@ export default function OffersScreen() {
         onRefresh={loadOffers}
         refreshing={loading}
       />
+      <View style={styles.height} />
     </View>
   );
 }
@@ -164,5 +165,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.bgColor,
+  },
+  height: {
+    height: 64,
   },
 });
