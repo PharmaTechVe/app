@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import { StyleSheet, View, Alert, ViewStyle } from 'react-native';
 import { Config } from '../config';
+import { Colors } from '../styles/theme';
+
+import { MapPinIcon, UserIcon } from 'react-native-heroicons/solid';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 interface HistoryMapProps {
   deliveryLocation: { latitude: number; longitude: number };
@@ -131,25 +135,19 @@ const HistoryMap: React.FC<HistoryMapProps> = ({
         }}
       >
         {/* Mostrar la ubicación del delivery */}
-        <Marker
-          coordinate={deliveryLocation}
-          title="Ubicación inicial del delivery"
-          pinColor="red"
-        />
+        <Marker coordinate={deliveryLocation} title="Repartidor">
+          <FontAwesome5 name="motorcycle" size={26} color={Colors.primary} />
+        </Marker>
 
         {/* Mostrar la ubicación de la sucursal */}
-        <Marker
-          coordinate={branchLocation}
-          title="Sucursal de origen"
-          pinColor="blue"
-        />
+        <Marker coordinate={branchLocation} title="Sucursal de origen">
+          <MapPinIcon size={32} color={Colors.primary} />
+        </Marker>
 
         {/* Mostrar la ubicación del cliente */}
-        <Marker
-          coordinate={customerLocation}
-          title="Ubicación del cliente"
-          pinColor="green"
-        />
+        <Marker coordinate={customerLocation} title="Ubicación del cliente">
+          <UserIcon size={32} color={Colors.primary} />
+        </Marker>
 
         {/* Mostrar la ruta hacia la sucursal */}
         {routeToBranch.length > 0 && (

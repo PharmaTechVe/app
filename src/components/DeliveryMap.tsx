@@ -4,6 +4,8 @@ import { StyleSheet, View, ActivityIndicator, ViewStyle } from 'react-native';
 import { Config } from '../config';
 import { Colors } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
+import { MapPinIcon, UserIcon } from 'react-native-heroicons/solid';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 interface DeliveryMapProps {
   deliveryState: number;
@@ -173,30 +175,24 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
       >
         {/* Mostrar la ubicación del delivery si existe */}
         {deliveryLocation && (
-          <Marker
-            coordinate={deliveryLocation}
-            title="Repartidor"
-            pinColor="red"
-          />
+          <Marker coordinate={deliveryLocation} title="Repartidor">
+            <FontAwesome5 name="motorcycle" size={26} color={Colors.primary} />
+          </Marker>
         )}
 
         {/* Mostrar la ubicación de la sucursal */}
         {branchLocation.latitude !== 0 && branchLocation.longitude !== 0 && (
-          <Marker
-            coordinate={branchLocation}
-            title="Sucursal de origen"
-            pinColor="blue"
-          />
+          <Marker coordinate={branchLocation} title="Sucursal de origen">
+            <MapPinIcon size={32} color={Colors.primary} />
+          </Marker>
         )}
 
         {/* Mostrar la ubicación del cliente */}
         {customerLocation.latitude !== 0 &&
           customerLocation.longitude !== 0 && (
-            <Marker
-              coordinate={customerLocation}
-              title="Ubicación del cliente"
-              pinColor="green"
-            />
+            <Marker coordinate={customerLocation} title="Ubicación del cliente">
+              <UserIcon size={32} color={Colors.primary} />
+            </Marker>
           )}
 
         {/* Mostrar la ruta hacia la sucursal */}
