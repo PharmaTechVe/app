@@ -4,12 +4,10 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Image,
   ActivityIndicator,
-  ImageSourcePropType,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   formatDistanceToNow,
   parseISO,
@@ -21,91 +19,88 @@ import { ChevronLeftIcon } from 'react-native-heroicons/solid';
 import TopBar from '../components/TopBar';
 import PoppinsText from '../components/PoppinsText';
 import Alert from '../components/Alerts';
-// Importamos y casteamos explicitamente el ícono por defecto
-import NotificationIconAsset from '../assets/images/favicon.png';
 import { Colors, FontSizes } from '../styles/theme';
 import { NotificationService } from '../services/notifications';
-import { getUserIdFromSecureStore } from '../helper/jwtHelper';
+import { SvgProps } from 'react-native-svg';
 
-import completedImg from '../assets/images/notifications/f.jpg';
-import inProgressImg from '../assets/images/notifications/r.jpg';
-import approvedImg from '../assets/images/notifications/image.jpg';
-import canceledImg from '../assets/images/notifications/w.jpg';
-import readyForPickupImg from '../assets/images/notifications/e.jpg';
-import deliveryImg from '../assets/images/notifications/m.jpg';
+// Importa tus SVG como componentes React
+import CompletedSvg from '../assets/images/notifications/f.svg';
+import InProgressSvg from '../assets/images/notifications/r.svg';
+import ApprovedSvg from '../assets/images/notifications/image.svg';
+import CanceledSvg from '../assets/images/notifications/w.svg';
+import ReadyForPickupSvg from '../assets/images/notifications/e.svg';
+import DeliverySvg from '../assets/images/notifications/m.svg';
 
-// Mapeo de iconos por estado
-const notificationIcons: Record<string, ImageSourcePropType> = {
-  completed: completedImg as unknown as ImageSourcePropType,
-  in_progress: inProgressImg as unknown as ImageSourcePropType,
-  approved: approvedImg as unknown as ImageSourcePropType,
-  canceled: canceledImg as unknown as ImageSourcePropType,
-  ready_for_pickup: readyForPickupImg as unknown as ImageSourcePropType,
-  delivery: deliveryImg as unknown as ImageSourcePropType,
+type NotificationItem = {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  orderId: string;
+  status: string;
 };
 
-// Ícono por defecto, casteado a ImageSourcePropType
-const NotificationIcon =
-  NotificationIconAsset as unknown as ImageSourcePropType;
+type NotificationResponse = {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  order?: {
+    id: string;
+    status: string;
+  };
+};
 
-// Función auxiliar para extraer orderId del mensaje
-const extractOrderIdFromMessage = (message: string): string | null => {
-  const match = message.match(/The order (\S+) has been updated to/i);
-  return match ? match[1] : null;
+// Mapeo de status → componente SVG
+const notificationIcons: Record<string, React.FC<SvgProps>> = {
+  completed: CompletedSvg,
+  in_progress: InProgressSvg,
+  approved: ApprovedSvg,
+  canceled: CanceledSvg,
+  ready_for_pickup: ReadyForPickupSvg,
+  delivery: DeliverySvg,
 };
 
 export default function NotificationsScreen() {
   const navigation = useNavigation();
   const [notificationsList, setNotificationsList] = useState<
-    Array<{
-      id: string;
-      title: string;
-      message: string;
-      createdAt: string;
-      isRead: boolean;
-      orderId: string;
-    }>
+    NotificationItem[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Carga inicial de notificaciones
   useEffect(() => {
     const fetchNotifications = async () => {
       setLoading(true);
       setShowErrorAlert(false);
       try {
-        const token = await getUserIdFromSecureStore();
-        if (!token) throw new Error('No se pudo obtener el token de usuario.');
-
         const res = await NotificationService.getNotifications();
-        if (res.success && Array.isArray(res.data)) {
-          console.log('Raw notifications payload:', res.data);
-
-          setNotificationsList(
-            res.data.map((nt) => {
-              const rawOrderId =
-                nt.orderId ||
-                (nt as { order_id?: string }).order_id || // Specify type for `order_id`
-                (nt.data &&
-                  ((nt.data as { orderId?: string }).orderId || // Specify type for `data.orderId`
-                    (nt.data as { order_id?: string }).order_id)) || // Specify type for `data.order_id`
-                extractOrderIdFromMessage(nt.message) ||
-                '';
-
-              return {
-                id: nt.id,
-                title: nt.title,
-                message: nt.message,
-                createdAt: nt.createdAt,
-                isRead: !!nt.isRead,
-                orderId: rawOrderId,
-              };
-            }),
-          );
-        } else if (!res.success) {
-          throw new Error(res.error || 'Respuesta inesperada del servidor');
+        if (!res.success || !Array.isArray(res.data)) {
+          const errorMsg =
+            !res.success && 'error' in res && res.error
+              ? res.error
+              : 'Respuesta inesperada del servidor';
+          throw new Error(errorMsg);
         }
+
+        const items = res.data.map((nt: NotificationResponse) => {
+          const order = nt.order || { id: '', status: '' };
+          return {
+            id: nt.id,
+            title: nt.title,
+            message: nt.message.trim(),
+            createdAt: nt.createdAt,
+            isRead: !!nt.isRead,
+            orderId: order.id,
+            status: order.status,
+          };
+        });
+
+        setNotificationsList(items);
       } catch (err: unknown) {
         setErrorMessage(
           err instanceof Error ? err.message : 'Error desconocido',
@@ -115,37 +110,33 @@ export default function NotificationsScreen() {
         setLoading(false);
       }
     };
+
     fetchNotifications();
   }, []);
 
-  const handlePressNotification = useCallback(
-    async (nt: (typeof notificationsList)[0]) => {
-      console.log(`order ID: ${nt.orderId}`, nt);
+  // Marca todas como leídas al entrar o salir de la pantalla
+  useFocusEffect(
+    useCallback(() => {
+      const markAllRead = async () => {
+        try {
+          const toMark = notificationsList.filter((n) => !n.isRead);
+          if (toMark.length === 0) return;
 
-      if (nt.isRead) return;
-
-      try {
-        const token = await getUserIdFromSecureStore();
-        if (!token) throw new Error('No se pudo obtener el token de usuario.');
-        if (nt.orderId) {
-          await NotificationService.markAsRead(nt.orderId, token);
-          setNotificationsList((prev) =>
-            prev.map((n) => (n.id === nt.id ? { ...n, isRead: true } : n)),
+          await Promise.all(
+            toMark.map((n) => NotificationService.markAsRead(n.orderId)),
           );
-        } else {
-          throw new Error('ID de notificación no válido.');
+          setNotificationsList((prev) =>
+            prev.map((n) => ({ ...n, isRead: true })),
+          );
+        } catch (e) {
+          console.warn(
+            'Error al marcar todas las notificaciones como leídas:',
+            e,
+          );
         }
-      } catch (err) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : 'Error desconocido al marcar la notificación como leída.';
-        console.error(`Error marcando notificación ${nt.id}:`, msg);
-        setErrorMessage(msg);
-        setShowErrorAlert(true);
-      }
-    },
-    [],
+      };
+      markAllRead();
+    }, [notificationsList]),
   );
 
   const formatRelativeDate = (dateString: string) => {
@@ -160,48 +151,25 @@ export default function NotificationsScreen() {
     return format(date, 'yyyy-MM-dd', { locale: es });
   };
 
-  const extractStatusKey = (message: string): string | null => {
-    const match = message.match(
-      /The order \S+ has been updated to ([\w_]+)\.?/i,
+  const renderNotification = (nt: NotificationItem) => {
+    const Icon = notificationIcons[nt.status];
+    return (
+      <View
+        key={nt.id}
+        style={[styles.item, !nt.isRead && styles.unreadBackground]}
+      >
+        <Icon width={32} height={32} />
+        <View style={styles.textContainer}>
+          <View style={styles.itemHeader}>
+            <PoppinsText weight="semibold">{nt.title}</PoppinsText>
+            <PoppinsText style={styles.date}>
+              {formatRelativeDate(nt.createdAt)}
+            </PoppinsText>
+          </View>
+          <PoppinsText style={styles.message}>{nt.message}</PoppinsText>
+        </View>
+      </View>
     );
-    return match ? match[1].toLowerCase() : null;
-  };
-
-  const translateMessage = (message: string) => {
-    const match = message.match(
-      /The order (\S+) has been updated to ([\w_]+)\.?/i,
-    );
-    if (!match) return message;
-    const [, orderId, rawStatus] = match;
-    const key = rawStatus.replace(/_/g, ' ').toLowerCase();
-    const map: Record<string, string> = {
-      completed: 'completada',
-      'in progress': 'en progreso',
-      approved: 'aprobada',
-      canceled: 'cancelada',
-      'ready for pickup': 'lista para recoger',
-      delivery: 'en entrega',
-    };
-    return `La orden ${orderId} ha sido actualizada a ${map[key] || key}`;
-  };
-
-  const getTranslatedTitle = (nt: { title: string; message: string }) => {
-    const key = extractStatusKey(nt.message);
-    if (!key) return nt.title;
-    const map: Record<string, string> = {
-      completed: 'Pedido Completado',
-      in_progress: 'Pedido en Progreso',
-      approved: 'Orden Aprobada',
-      canceled: 'Orden Cancelada',
-      ready_for_pickup: 'Pedido Listo para Recoger',
-      delivery: 'Pedido en Entrega',
-    };
-    return map[key] || nt.title;
-  };
-
-  const getNotificationIcon = (message: string): ImageSourcePropType => {
-    const key = extractStatusKey(message);
-    return (key && notificationIcons[key]) || NotificationIcon;
   };
 
   return (
@@ -209,27 +177,15 @@ export default function NotificationsScreen() {
       <TopBar />
       <TouchableOpacity
         onPress={() => navigation.goBack()}
-        style={{
-          paddingHorizontal: 10,
-          marginBottom: -4,
-          flexDirection: 'row',
-          alignSelf: 'flex-start',
-        }}
+        style={styles.backButton}
       >
         <ChevronLeftIcon
           width={20}
           height={20}
           color={Colors.primary}
-          style={{ marginRight: 2, marginLeft: 6 }}
+          style={{ marginRight: 4 }}
         />
-        <PoppinsText
-          weight="medium"
-          style={{
-            fontSize: FontSizes.b1.size,
-            lineHeight: FontSizes.b1.lineHeight,
-            color: Colors.primary,
-          }}
-        >
+        <PoppinsText weight="medium" style={styles.backText}>
           Volver
         </PoppinsText>
       </TouchableOpacity>
@@ -262,35 +218,7 @@ export default function NotificationsScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.listContainer}>
-          {notificationsList.map((nt) => (
-            <TouchableOpacity
-              key={nt.id}
-              onPress={() => handlePressNotification(nt)}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[styles.item, !nt.isRead && styles.unreadBackground]}
-              >
-                <Image
-                  source={getNotificationIcon(nt.message)}
-                  style={styles.icon}
-                />
-                <View style={styles.textContainer}>
-                  <View style={styles.itemHeader}>
-                    <PoppinsText weight="semibold">
-                      {getTranslatedTitle(nt)}
-                    </PoppinsText>
-                    <PoppinsText style={styles.date}>
-                      {formatRelativeDate(nt.createdAt)}
-                    </PoppinsText>
-                  </View>
-                  <PoppinsText style={styles.message}>
-                    {translateMessage(nt.message)}
-                  </PoppinsText>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {notificationsList.map(renderNotification)}
         </ScrollView>
       )}
     </View>
@@ -301,6 +229,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bgColor,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    marginTop: 8,
+    marginBottom: -4,
+  },
+  backText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.primary,
   },
   alertContainer: {
     position: 'absolute',
@@ -313,19 +253,23 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     paddingTop: 16,
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: FontSizes.s1.size,
     color: Colors.primary,
-    marginLeft: 20,
   },
-  loader: { marginTop: 40 },
+  loader: {
+    marginTop: 40,
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  listContainer: { paddingVertical: 10 },
+  listContainer: {
+    paddingVertical: 10,
+  },
   item: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -338,15 +282,9 @@ const styles = StyleSheet.create({
   unreadBackground: {
     backgroundColor: '#FFFFFF',
   },
-  icon: {
-    width: 32,
-    height: 32,
-    marginRight: 12,
-    marginTop: 4,
-    borderRadius: 16,
-  },
   textContainer: {
     flex: 1,
+    marginLeft: 12,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -360,7 +298,6 @@ const styles = StyleSheet.create({
   message: {
     color: Colors.textLowContrast,
     fontSize: FontSizes.c1.size,
-    marginRight: 80,
     flexWrap: 'wrap',
   },
 });

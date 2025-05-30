@@ -23,8 +23,7 @@ const TopBar = () => {
     useState(false);
   const router = useRouter();
   const { cartItems } = useCart();
-  const { notifications } = useNotifications();
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const { unreadCount } = useNotifications();
 
   // Calculate the total quantity of items in the cart
   const totalCartQuantity = cartItems.reduce(

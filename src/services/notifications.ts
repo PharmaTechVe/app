@@ -24,9 +24,14 @@ export const NotificationService = {
       };
     }
   },
-  markAsRead: async (orderId: string, jwt: string): Promise<void> => {
+  markAsRead: async (orderId: string): Promise<void> => {
     try {
-      await api.notification.markAsRead(orderId, jwt);
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) {
+        throw new Error('No se encontró el token de autenticación');
+      }
+
+      await api.notification.markAsRead(orderId, token);
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
