@@ -296,7 +296,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: Colors.bgColor,
     justifyContent: 'flex-start',
-    paddingTop: 56,
     paddingHorizontal: 20,
   },
   stepsWrapper: {

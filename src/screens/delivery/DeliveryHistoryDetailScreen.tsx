@@ -5,9 +5,15 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { PhoneIcon, EnvelopeIcon } from 'react-native-heroicons/solid';
+import {
+  PhoneIcon,
+  EnvelopeIcon,
+  XMarkIcon,
+} from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
 import PoppinsText from '../../components/PoppinsText';
 import CustomerAvatar from '../../components/CustomerAvatar';
@@ -21,6 +27,7 @@ import {
   OrderDetailedResponse,
 } from '@pharmatech/sdk';
 import { UserService } from '../../services/user';
+import Button from '../../components/Button';
 
 const DeliveryHistoryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -30,6 +37,8 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
+
+  const [isMapModalVisible, setIsMapModalVisible] = useState(false);
 
   const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
     undefined,
@@ -111,19 +120,6 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
       minute: '2-digit',
     },
   );
-  const creationTime = new Date(orderDetails.createdAt).toLocaleTimeString(
-    'es-VE',
-    {
-      hour: '2-digit',
-      minute: '2-digit',
-    },
-  );
-  const creationTimePlusOneHour = new Date(
-    new Date(orderDetails.createdAt).getTime() + 60 * 43 * 1000,
-  ).toLocaleTimeString('es-VE', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -211,23 +207,22 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Historial de la entrega 
+
         <PoppinsText weight="medium" style={styles.sectionTitle}>
           Historial de la entrega
         </PoppinsText>
 
         <View style={styles.combinedCardHistory}>
-          {/* Contenedor de la información de la sucursal */}
+
           <View style={styles.info}>
-            {/* Línea vertical punteada */}
+          
             <View style={styles.verticalLineHistory} />
 
-            {/* Línea vertical punteada */}
             <View style={styles.circleTopHistory} />
 
-            {/* Círculo middle */}
             <View style={styles.circleMiddleHistory} />
 
-            {/* Círculo inferior */}
             <View style={styles.circleBottomHistory} />
 
             <View style={styles.sectionContainer}>
@@ -261,7 +256,7 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
               </PoppinsText>
             </View>
           </View>
-        </View>
+        </View>*/}
 
         {/* Recorrido de entrega */}
         <PoppinsText weight="medium" style={styles.sectionTitle}>
@@ -280,6 +275,15 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
             latitude: orderDetails.address.latitude,
             longitude: orderDetails.address.longitude,
           }}
+          style={{ marginBottom: 16, height: 300 }}
+        />
+
+        <Button
+          title={'Ver mapa ampliado'}
+          variant="primary"
+          size="medium"
+          onPress={() => setIsMapModalVisible(true)}
+          style={styles.expandButton}
         />
 
         {/* Pedido */}
@@ -334,6 +338,40 @@ const DeliveryHistoryDetailScreen: React.FC = () => {
 
         <View style={styles.scrollSpacer} />
       </ScrollView>
+
+      {/* Modal para el mapa ampliado */}
+      <Modal
+        visible={isMapModalVisible}
+        animationType="slide"
+        transparent={true} // Hacer el modal transparente para superponer el contenido
+        onRequestClose={() => setIsMapModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Botón de cierre */}
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setIsMapModalVisible(false)}
+          >
+            <XMarkIcon size={24} color={Colors.textMain} />
+          </TouchableOpacity>
+
+          {/* Mapa ampliado */}
+          <HistoryMap
+            deliveryLocation={{
+              latitude: 10.068522,
+              longitude: -69.282318,
+            }}
+            branchLocation={{
+              latitude: branchDetails.latitude,
+              longitude: branchDetails.longitude,
+            }}
+            customerLocation={{
+              latitude: orderDetails.address.latitude,
+              longitude: orderDetails.address.longitude,
+            }}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -609,6 +647,22 @@ const styles = StyleSheet.create({
   },
   scrollSpacer: {
     height: 64,
+  },
+  expandButton: {
+    marginBottom: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.bgColor,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: Colors.textWhite,
+    padding: 8,
+    borderRadius: 16,
   },
 });
 

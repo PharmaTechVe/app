@@ -3,25 +3,17 @@ import { Tabs } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { Colors } from '../../styles/theme';
 import PoppinsText from '../../components/PoppinsText';
-import {
-  HomeIcon,
-  ClockIcon,
-  LifebuoyIcon,
-} from 'react-native-heroicons/outline';
+import { HomeIcon, ClockIcon } from 'react-native-heroicons/outline';
 import TopBarDelivery from '../../components/TopBarDelivery';
 import { AlertProvider } from '../../components/AlertProvider'; // Importar el AlertProvider
+import { TabBar } from '../../components/TabBar';
 
 export default function DeliveryTabLayout() {
   return (
     <AlertProvider>
       <View style={styles.container}>
         <TopBarDelivery />
-        <Tabs
-          screenOptions={{
-            tabBarActiveTintColor: Colors.primary,
-            tabBarStyle: { backgroundColor: Colors.secondaryWhite },
-          }}
-        >
+        <Tabs tabBar={(props) => <TabBar {...props} />}>
           <Tabs.Screen
             name="index"
             options={{
@@ -49,21 +41,6 @@ export default function DeliveryTabLayout() {
               title: 'Historial',
               tabBarIcon: () => (
                 <ClockIcon width={24} height={24} color={Colors.primary} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="deliverySupport"
-            options={{
-              tabBarLabel: ({ color }) => (
-                <PoppinsText style={{ color: color, fontSize: 10 }}>
-                  Soporte
-                </PoppinsText>
-              ),
-              headerShown: false,
-              title: 'Soporte',
-              tabBarIcon: () => (
-                <LifebuoyIcon width={24} height={24} color={Colors.primary} />
               ),
             }}
           />

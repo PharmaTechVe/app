@@ -36,6 +36,10 @@ export const Colors = {
   gray_100: '#E7E7E6',
   gray_500: '#6E6D6C',
 
+  tertiary_600: '#247D74',
+  tertiary_500: '#319B8F',
+  tertiary_400: '#4AB7A8',
+
   secondary_300: '#8BEAB3',
 
   primary_300: '#A2BEEE',

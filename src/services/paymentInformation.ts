@@ -13,11 +13,11 @@ export const PaymentInformationService = {
         throw new Error('Token de autenticación no encontrado');
       }
 
-      // Llamar al método findAll con el argumento directamente
+      // Call the API method
       const response = await api.paymentInformation.findAll(paymentMethod);
 
-      // La respuesta ahora es directamente un array de PaymentInfoResponse
-      return [response];
+      // Devolver la respuesta directamente (se asume que ya es un array)
+      return response;
     } catch (error) {
       console.error('Error en PaymentInformationService.findAll:', error);
       throw new Error(extractErrorMessage(error));

@@ -5,6 +5,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
@@ -12,6 +14,7 @@ import {
   BuildingStorefrontIcon,
   MapPinIcon,
   PhoneIcon,
+  XMarkIcon,
 } from 'react-native-heroicons/solid';
 import Badge from '../../components/Badge';
 import PoppinsText from '../../components/PoppinsText';
@@ -29,8 +32,15 @@ import { RootState } from '../../redux/store';
 import {
   setOrderDetails,
   setDeliveryState,
+  updateDeliveryStatus,
 } from '../../redux/slices/deliverySlice';
 import Popup from '../../components/Popup';
+import {
+  initializeSocket,
+  disconnectSocket,
+} from '../../lib/deliverySocket/deliverySocket';
+import { Socket } from 'socket.io-client';
+import * as Location from 'expo-location';
 
 const DeliveryDetailScreen: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -41,47 +51,28 @@ const DeliveryDetailScreen: React.FC = () => {
   const [order, setOrder] = useState<OrderDetailedResponse | undefined>(
     undefined,
   );
-  useEffect(() => {
-    const fetchOrder = async () => {
-      try {
-        if (!orderDetails) {
-          console.error(
-            'No se encontraron detalles de la orden de tipo delivery.',
-          );
-          return;
-        }
+  const [isOrderDetailsLoading, setIsOrderDetailsLoading] = useState(true);
+  const [isFetchingOrder, setIsFetchingOrder] = useState(false); // Nuevo estado de carga para fetchOrder
+  const [branchNames, setBranchNames] = useState<
+    Record<string, { name: string; latitude: number; longitude: number }>
+  >({});
+  const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
+  const router = useRouter();
+  const [isMapModalVisible, setIsMapModalVisible] = useState(false);
 
-        const orderId = orderDetails.orderId; // Extraer el ID de la orden
-        console.log('ID de la orden:', orderId);
+  const branchLocation = {
+    latitude: branchNames[orderDetails?.branchId ?? '']?.latitude || 0,
+    longitude: branchNames[orderDetails?.branchId ?? '']?.longitude || 0,
+  };
 
-        const order = await UserService.getOrder(orderId); // Usar el ID de la orden
-
-        if (order.success) {
-          console.log('Datos del pedido:', order.data); // Log para verificar los datos
-          setOrder(order.data);
-        } else {
-          console.error('Error al obtener el pedido:', order.error);
-        }
-      } catch (error) {
-        console.error('Error en fetchOrder:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrder();
-  }, [orderDetails]);
+  const customerLocation = {
+    latitude: orderDetails?.address?.latitude || 0,
+    longitude: orderDetails?.address?.longitude || 0,
+  };
 
   const deliveryState = useSelector(
     (state: RootState) => state.delivery.deliveryState[id as string] || 0,
   );
-
-  const [branchNames, setBranchNames] = useState<
-    Record<string, { name: string; latitude: number; longitude: number }>
-  >({});
-  const [loading, setLoading] = useState(true);
-  const [deliveryStateBadge, setDeliveryStateBadge] = useState(0);
-  const router = useRouter();
 
   // Estados para las alertas
   const [showAlert, setShowAlert] = useState(false);
@@ -104,26 +95,31 @@ const DeliveryDetailScreen: React.FC = () => {
   ];
 
   const [showConfirmationPopup, setShowConfirmationPopup] = useState(false);
-
-  const branchLocation = {
-    latitude: branchNames[orderDetails?.branchId ?? '']?.latitude || 0,
-    longitude: branchNames[orderDetails?.branchId ?? '']?.longitude || 0,
-  };
-
-  const customerLocation = {
-    latitude: orderDetails?.address?.latitude || 0,
-    longitude: orderDetails?.address?.longitude || 0,
-  };
+  const [deliveryLocation, setDeliveryLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      if (!orderDetails) {
-        const details = await DeliveryService.getOrderDetails(id as string);
-        dispatch(setOrderDetails({ id: id as string, details }));
-      }
-
       try {
-        // Obtener todas las sucursales y mapear sus nombres y coordenadas
+        if (!orderDetails) {
+          const details = await DeliveryService.getOrderDetails(id as string);
+          dispatch(setOrderDetails({ id: id as string, details }));
+        }
+      } catch (error) {
+        console.error('Error al obtener los detalles del pedido:', error);
+      } finally {
+        setIsOrderDetailsLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [id, orderDetails, dispatch]);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
         const branches = await BranchService.findAll({ page: 1, limit: 100 });
         const branchMap = branches.results.reduce(
           (
@@ -145,14 +141,188 @@ const DeliveryDetailScreen: React.FC = () => {
 
         setBranchNames(branchMap);
       } catch (error) {
-        console.error('Error al obtener los detalles del pedido:', error);
+        console.error('Error al obtener las sucursales:', error);
       } finally {
-        setLoading(false);
+        setIsFetchingOrder(false);
       }
     };
 
-    fetchOrderDetails();
-  }, [id, orderDetails, dispatch]);
+    if (orderDetails) {
+      fetchBranches();
+    }
+  }, [orderDetails]);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      setIsFetchingOrder(true); // Iniciar el indicador de carga
+      let timerId: NodeJS.Timeout | null = null; // Identificador del temporizador
+
+      try {
+        if (!orderDetails) {
+          // Agregar un temporizador de 2 segundos antes de mostrar el error
+          timerId = setTimeout(() => {
+            if (!orderDetails) {
+              console.error(
+                'No se encontraron detalles de la orden de tipo delivery.',
+              );
+            }
+          }, 2000);
+          return;
+        }
+
+        const orderId = orderDetails.orderId;
+
+        const order = await UserService.getOrder(orderId);
+
+        if (order.success) {
+          setOrder(order.data);
+        } else {
+          console.error('Error al obtener el pedido:', order.error);
+        }
+      } catch (error) {
+        console.error('Error en fetchOrder:', error);
+      } finally {
+        setIsFetchingOrder(false); // Finalizar el indicador de carga
+        if (timerId) {
+          clearTimeout(timerId); // Cancelar el temporizador si los datos están disponibles
+        }
+      }
+    };
+
+    fetchOrder();
+  }, [orderDetails]);
+
+  // Configuración del WebSocket para recibir actualizaciones en tiempo real
+  useEffect(() => {
+    let socket: Socket;
+
+    const setupSocket = async () => {
+      try {
+        socket = await initializeSocket();
+        console.log('Conectando al WebSocket...');
+        socket.connect();
+
+        socket.on('connect', () => {
+          console.log('WebSocket conectado en DeliveryDetailScreen');
+        });
+
+        socket.on('connect_error', (error) => {
+          console.error(
+            'Error de conexión al WebSocket en DeliveryDetailScreen:',
+            error,
+          );
+        });
+
+        socket.on('deliveryUpdated', (data: { id: string; status: string }) => {
+          console.log('Evento recibido: deliveryUpdated', data);
+          if (data.id === id) {
+            dispatch(
+              updateDeliveryStatus({
+                id: data.id,
+                status: data.status as OrderDeliveryStatus,
+              }),
+            );
+          }
+        });
+
+        socket.on('disconnect', (reason) => {
+          console.warn(
+            'WebSocket desconectado en DeliveryDetailScreen. Razón:',
+            reason,
+          );
+        });
+      } catch (error) {
+        console.error(
+          'Error configurando el WebSocket en DeliveryDetailScreen:',
+          error,
+        );
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        console.log(
+          'Limpiando listeners y desconectando WebSocket en DeliveryDetailScreen',
+        );
+        socket.off('deliveryUpdated');
+        disconnectSocket();
+      }
+    };
+  }, [id, dispatch]);
+
+  // ...existing code...
+
+  useEffect(() => {
+    let socket: Socket;
+    let locationSubscription: Location.LocationSubscription | null = null;
+
+    const startTracking = async () => {
+      try {
+        socket = await initializeSocket();
+        socket.connect();
+
+        // Permisos de ubicación
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Permiso de ubicación denegado');
+          return;
+        }
+
+        // Suscribirse a cambios de ubicación
+        locationSubscription = await Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 5000, // cada 5 segundos
+            distanceInterval: 10, // o cada 10 metros
+          },
+          (location) => {
+            const { latitude, longitude } = location.coords;
+            setDeliveryLocation({ latitude, longitude });
+
+            // Emitir coordenadas por WebSocket
+            if (orderDetails?.id) {
+              socket.emit('updateCoordinates', {
+                orderId: orderDetails.id,
+                latitude,
+                longitude,
+              });
+            }
+          },
+        );
+      } catch (error) {
+        console.error('Error en el tracking de ubicación:', error);
+      }
+    };
+
+    startTracking();
+
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+      if (socket) {
+        disconnectSocket();
+      }
+    };
+  }, [orderDetails?.id]);
+
+  // Mostrar un indicador de carga mientras se obtienen los detalles del pedido o la orden
+  if (isOrderDetailsLoading || isFetchingOrder) {
+    return <ActivityIndicator size="large" color={Colors.primary} />;
+  }
+
+  if (!orderDetails) {
+    // Mostrar un mensaje de error si no se encuentran los detalles del pedido
+    return (
+      <View style={styles.errorContainer}>
+        <PoppinsText style={styles.errorText}>
+          No se encontraron datos del pedido.
+        </PoppinsText>
+      </View>
+    );
+  }
 
   const handleNextState = async () => {
     try {
@@ -162,29 +332,35 @@ const DeliveryDetailScreen: React.FC = () => {
         return;
       }
 
+      let nextStatus: OrderDeliveryStatus | null = null;
+
       // Lógica para otros estados
       switch (buttonStates[deliveryState]) {
         case 'Comenzar entrega':
-          await DeliveryService.updateOrderStatus(
-            orderDetails!.id,
-            OrderDeliveryStatus.WAITING_CONFIRMATION,
-          );
+          nextStatus = OrderDeliveryStatus.WAITING_CONFIRMATION;
+          await DeliveryService.updateOrderStatus(orderDetails!.id, nextStatus);
           break;
         case 'Ya tengo los productos del pedido':
-          await DeliveryService.updateOrderStatus(
-            orderDetails!.id,
-            OrderDeliveryStatus.PICKED_UP,
-          );
+          nextStatus = OrderDeliveryStatus.PICKED_UP;
+          await DeliveryService.updateOrderStatus(orderDetails!.id, nextStatus);
           break;
         case 'Ir a destino de entrega':
-          await DeliveryService.updateOrderStatus(
-            orderDetails!.id,
-            OrderDeliveryStatus.IN_ROUTE,
-          );
+          nextStatus = OrderDeliveryStatus.IN_ROUTE;
+          await DeliveryService.updateOrderStatus(orderDetails!.id, nextStatus);
           setDeliveryStateBadge(1); // Cambiar a "Haciendo entrega del pedido"
           break;
       }
 
+      if (nextStatus) {
+        // Emitir el evento al WebSocket
+        const socket = await initializeSocket();
+        socket.emit('deliveryUpdated', {
+          id: orderDetails!.id,
+          status: nextStatus,
+        });
+      }
+
+      // Mostrar alerta de éxito
       setAlertType('info');
       setAlertMessage('Se actualizó el estado del pedido.');
       setShowAlert(true);
@@ -193,12 +369,14 @@ const DeliveryDetailScreen: React.FC = () => {
         setShowAlert(false);
       }, 2500);
 
+      // Actualizar el estado local
       dispatch(
         setDeliveryState({ id: id as string, state: deliveryState + 1 }),
       );
     } catch (error) {
       console.error('Error al actualizar el estado del delivery:', error);
 
+      // Mostrar alerta de error
       setAlertType('error');
       setAlertMessage('Hubo un problema al actualizar el estado del pedido.');
       setShowAlert(true);
@@ -241,20 +419,6 @@ const DeliveryDetailScreen: React.FC = () => {
       setShowConfirmationPopup(false); // Cerrar el popup
     }
   };
-
-  if (loading) {
-    return <ActivityIndicator size="large" color={Colors.primary} />;
-  }
-
-  if (!orderDetails) {
-    return (
-      <View style={styles.errorContainer}>
-        <PoppinsText style={styles.errorText}>
-          No se encontraron datos del pedido.
-        </PoppinsText>
-      </View>
-    );
-  }
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -380,6 +544,16 @@ const DeliveryDetailScreen: React.FC = () => {
           deliveryState={deliveryState}
           branchLocation={branchLocation}
           customerLocation={customerLocation}
+          deliveryLocation={deliveryLocation}
+          style={{ height: 300, marginBottom: 16 }}
+        />
+
+        <Button
+          title={'Ver mapa ampliado'}
+          variant="primary"
+          size="medium"
+          onPress={() => setIsMapModalVisible(true)}
+          style={styles.expandButton}
         />
 
         {/* Pedido (contenido comentado) */}
@@ -396,8 +570,7 @@ const DeliveryDetailScreen: React.FC = () => {
             productos
           </PoppinsText>
         </View>
-        {order?.details?.map((detail, index) => {
-          console.log(`Producto ${index + 1}:`, detail); // Log para depuración
+        {order?.details?.map((detail) => {
           return (
             <View
               key={detail.productPresentation.id}
@@ -458,6 +631,41 @@ const DeliveryDetailScreen: React.FC = () => {
         }}
         onClose={() => setShowConfirmationPopup(false)}
       />
+
+      {/* Modal para el mapa ampliado */}
+      <Modal
+        visible={isMapModalVisible}
+        animationType="slide"
+        transparent={true} // Hacer el modal transparente para superponer el contenido
+        onRequestClose={() => setIsMapModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          {/* Botón de cierre */}
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setIsMapModalVisible(false)}
+          >
+            <XMarkIcon size={24} color={Colors.textMain} />
+          </TouchableOpacity>
+
+          {/* Mapa ampliado */}
+          <DeliveryMap
+            deliveryState={deliveryState}
+            branchLocation={branchLocation}
+            customerLocation={customerLocation}
+            deliveryLocation={deliveryLocation}
+          />
+
+          {/* Botón flotante sobre el modal */}
+          <Button
+            title={buttonStates[deliveryState]}
+            variant="primary"
+            size="medium"
+            onPress={handleNextState}
+            style={[styles.floatingButton, styles.modalFloatingButton]}
+          />
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -646,6 +854,35 @@ const styles = StyleSheet.create({
     marginLeft: -163,
     top: 20,
     zIndex: 1000,
+  },
+  expandButton: {
+    marginBottom: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.bgColor,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+    backgroundColor: Colors.textWhite,
+    padding: 8,
+    borderRadius: 16,
+  },
+  fullScreenMapContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalFloatingButton: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    zIndex: 10,
   },
 });
 
