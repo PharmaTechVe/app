@@ -17,7 +17,8 @@ export type ButtonVariant =
   | 'secondaryLight'
   | 'secondaryWhite'
   | 'secondaryGray'
-  | 'disabled';
+  | 'disabled'
+  | 'iconCancel';
 
 export type ButtonMode = 'filled' | 'outline';
 
@@ -67,6 +68,10 @@ const getButtonStyles = (
       backgroundColor = Colors.stroke;
       borderColor = Colors.stroke;
       break;
+    case 'iconCancel': // Nuevo color para el botón "Descartar"
+      backgroundColor = Colors.iconCancel;
+      borderColor = Colors.iconCancel;
+      break;
     default:
       backgroundColor = Colors.primary;
       borderColor = Colors.primary;
@@ -98,19 +103,23 @@ const getTextColor = (variant: ButtonVariant, mode: ButtonMode): string => {
         return Colors.secondaryGray;
       case 'disabled':
         return Colors.disableText;
+      case 'iconCancel': // Color para el texto del botón "Descartar"
+        return Colors.iconCancel;
       default:
         return Colors.primary;
     }
   }
   return variant === 'secondaryWhite'
     ? Colors.textHighContrast
-    : variant === 'secondary'
-      ? Colors.textHighContrast
-      : variant === 'secondaryLight'
+    : variant === 'iconCancel'
+      ? Colors.textWhite
+      : variant === 'disabled'
         ? Colors.textHighContrast
-        : variant === 'disabled'
-          ? Colors.disableText
-          : Colors.textWhite;
+        : variant === 'secondary'
+          ? Colors.textHighContrast
+          : variant === 'secondaryLight'
+            ? Colors.disableText
+            : Colors.textWhite;
 };
 
 const getFontSizeStyle = (size: ButtonSize): TextStyle => {

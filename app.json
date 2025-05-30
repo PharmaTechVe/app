@@ -5,27 +5,36 @@
     "scheme": "pharmatech",
     "version": "0.2.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/icon.png",
+    "icon": "./src/assets/images/PharmaTech-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "src/assets/images/splash-icon.png",
+      "image": "src/assets/images/PharmaTech-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1C2143"
     },
     "ios": {
+      "config": {
+        "googleMapsApiKey": "process.env.GOOGLE_MAPS_API_KEY"
+      },
       "supportsTablet": true
     },
     "android": {
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./src/assets/images/PharmaTech-icon.png",
+        "backgroundColor": "#1C2143"
       },
-      "package": "com.pharmatech.pharmatech"
+      "package": "com.pharmatech.pharmatech",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAoesWK-4-JCtlF5TkHPLn3iInC8tiGNg4"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
-      "favicon": "./src/assets/images/icon.png"
+      "favicon": "./src/assets/images/PharmaTech-icon.png"
     },
     "extra": {
       "router": {
@@ -42,6 +51,16 @@
     "updates": {
       "url": "https://u.expo.dev/3b8bad5d-7426-4881-aebd-cfb1ccf0795d"
     },
-    "plugins": ["expo-font", "expo-router", "expo-secure-store"]
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your camera."
+        }
+      ]
+    ]
   }
 }

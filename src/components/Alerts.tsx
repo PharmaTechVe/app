@@ -22,6 +22,8 @@ interface AlertProps {
   onClose?: () => void;
 }
 
+let activeAlertClose: (() => void) | null = null;
+
 const Alert: React.FC<AlertProps> = ({
   title,
   message,
@@ -62,6 +64,12 @@ const Alert: React.FC<AlertProps> = ({
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Close any active alert before showing a new one
+    if (activeAlertClose) {
+      activeAlertClose();
+    }
+    activeAlertClose = handleClose;
+
     Animated.parallel([
       Animated.timing(translateY, {
         toValue: 0,
@@ -73,6 +81,12 @@ const Alert: React.FC<AlertProps> = ({
         useNativeDriver: true,
       }),
     ]).start();
+
+    return () => {
+      if (activeAlertClose === handleClose) {
+        activeAlertClose = null;
+      }
+    };
   }, []);
 
   const handleClose = () => {
@@ -88,7 +102,7 @@ const Alert: React.FC<AlertProps> = ({
         useNativeDriver: true,
       }),
     ]).start(() => {
-      onClose?.();
+      if (onClose) onClose();
     });
   };
 

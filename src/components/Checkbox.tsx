@@ -6,8 +6,9 @@ import PoppinsText from './PoppinsText';
 
 interface CheckboxProps {
   checked: boolean;
-  onChange: (checked: boolean) => void;
+  onChange: (checked: boolean, value: string) => void;
   label?: string;
+  value: string;
   disabled?: boolean;
   color?: string;
   size?: number;
@@ -18,6 +19,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
   checked,
   onChange,
   label,
+  value,
   disabled = false,
   color = Colors.primary,
   size = 24,
@@ -25,7 +27,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
 }) => {
   const handlePress = () => {
     if (!disabled) {
-      onChange(!checked);
+      onChange(!checked, value);
     }
   };
 

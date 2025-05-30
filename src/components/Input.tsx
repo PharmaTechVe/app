@@ -8,6 +8,7 @@ import {
 } from 'react-native-heroicons/outline';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
+import { validateEmail, validatePassword } from '../utils/validators';
 
 type FieldType = 'text' | 'number' | 'email' | 'password' | 'textarea';
 type BorderType = 'none' | 'default' | 'parcial' | 'double';
@@ -55,17 +56,27 @@ const Input: React.FC<InputProps> = ({
     setIvalue(value);
   }, [value]);
 
+  const handleValidation = (input: string, type: 'email' | 'password') => {
+    if (type === 'email') {
+      return validateEmail(input);
+    }
+    if (type === 'password') {
+      return validatePassword(input);
+    }
+    return false;
+  };
+
   const validateInput = (input: string) => {
     if (useDefaultValidation) {
       switch (fieldType) {
         case 'text':
           return input.length > 0;
         case 'email':
-          return validateEmail(input);
+          return handleValidation(input, 'email');
         case 'number':
           return !isNaN(Number(input));
         case 'password':
-          return validatePassword(input);
+          return handleValidation(input, 'password');
         default:
           return true;
       }
@@ -113,15 +124,6 @@ const Input: React.FC<InputProps> = ({
     }
   };
 
-  const validatePassword = (input: string) => {
-    return input.length >= 8;
-  };
-
-  const validateEmail = (input: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(input);
-  };
-
   const showPass = () => {
     setShowPassword(!showPassword);
   };
@@ -144,7 +146,7 @@ const Input: React.FC<InputProps> = ({
             backgroundColor: backgroundColor
               ? backgroundColor
               : !isEditable
-                ? Colors.disableText
+                ? Colors.gray_100
                 : 'transparent',
           },
         ]}

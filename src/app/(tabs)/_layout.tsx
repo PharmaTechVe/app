@@ -3,22 +3,32 @@ import {
   ListBulletIcon,
   MapPinIcon,
   TagIcon,
-  LifebuoyIcon,
 } from 'react-native-heroicons/outline';
 import { Tabs } from 'expo-router';
 import { Colors } from '../../styles/theme';
 import PoppinsText from '../../components/PoppinsText';
 import { View, StyleSheet } from 'react-native';
 import TopBar from '../../components/TopBar';
+import { TabBar } from '../../components/TabBar';
 
 export default function TabLayout() {
   return (
     <View style={styles.container}>
       <TopBar />
       <Tabs
+        tabBar={(props) => <TabBar {...props} />} // Siempre renderiza la TabBar
         screenOptions={{
-          tabBarActiveTintColor: Colors.primary,
-          tabBarStyle: { backgroundColor: Colors.secondaryWhite },
+          tabBarHideOnKeyboard: true,
+          tabBarVisibilityAnimationConfig: {
+            show: {
+              animation: 'timing',
+              config: { duration: 0 },
+            },
+            hide: {
+              animation: 'timing',
+              config: { duration: 0 },
+            },
+          },
         }}
       >
         <Tabs.Screen
@@ -79,21 +89,6 @@ export default function TabLayout() {
             headerShown: false,
             tabBarIcon: () => (
               <TagIcon width={24} height={24} color={Colors.primary} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="support"
-          options={{
-            tabBarLabel: ({ color }) => (
-              <PoppinsText style={{ color: color, fontSize: 10 }}>
-                Soporte
-              </PoppinsText>
-            ),
-            title: 'Soporte',
-            headerShown: false,
-            tabBarIcon: () => (
-              <LifebuoyIcon width={24} height={24} color={Colors.primary} />
             ),
           }}
         />

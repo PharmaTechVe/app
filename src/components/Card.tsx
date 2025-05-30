@@ -1,21 +1,18 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from './PoppinsText';
 import CardButton from './CardButton';
 import { truncateString } from '../utils/commons';
+import { useCart } from '../hooks/useCart';
+import { Product } from '../types/Product';
+import { useRouter } from 'expo-router';
+import { formatPrice } from '../utils/formatPrice';
 
-interface ProductCardProps {
-  imageUrl?: string;
-  name: string;
-  category?: string;
-  originalPrice: string;
-  discount?: string;
-  finalPrice?: string;
-  getQuantity?: (count: number) => void;
-}
-
-const ProductCard: React.FC<ProductCardProps> = ({
+const ProductCard: React.FC<Product> = ({
+  id,
+  presentationId,
+  productId,
   imageUrl,
   name,
   category,
@@ -24,107 +21,130 @@ const ProductCard: React.FC<ProductCardProps> = ({
   finalPrice,
   getQuantity,
 }) => {
+  const { getItemQuantity, addToCart } = useCart();
+  const router = useRouter();
+  const computedFinalPrice = discount
+    ? (finalPrice * (100 - discount)) / 100
+    : finalPrice;
+
   return (
-    <View style={styles.card}>
-      <View
-        style={{
-          width: '100%',
-          height: 160,
-          marginBottom: 30,
-        }}
-      >
+    <TouchableOpacity
+      onPress={() =>
+        router.push(
+          '/products/' + productId + '/presentation/' + presentationId,
+        )
+      }
+    >
+      <View style={styles.card}>
         <View
           style={{
             width: '100%',
-            flexDirection: 'row-reverse',
+            height: 135,
+            marginBottom: 30,
           }}
         >
-          <PoppinsText style={styles.tag}>{category}</PoppinsText>
-        </View>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: imageUrl }}
-            width={148}
-            height={140}
-            style={{ borderRadius: 15 }}
-          />
-          <View style={styles.cardButtonContainer}>
-            <CardButton getValue={getQuantity} />
+          <View
+            style={{
+              width: '100%',
+              flexDirection: 'row-reverse',
+            }}
+          >
+            <PoppinsText style={styles.tag}>{category}</PoppinsText>
+          </View>
+          <View style={styles.imageContainer}>
+            <Image
+              source={{ uri: imageUrl }}
+              width={114}
+              height={118}
+              style={{ borderRadius: 14 }}
+            />
+            <View style={styles.cardButtonContainer}>
+              <CardButton
+                getValue={(quantity) => {
+                  if (getQuantity) getQuantity(quantity);
+                  // Asegura que price siempre sea number
+                  addToCart({
+                    id,
+                    name,
+                    price: originalPrice ?? 0,
+                    quantity,
+                    image: imageUrl,
+                    discount: discount ?? 0,
+                  });
+                }}
+                initialValue={getItemQuantity(id)}
+              />
+            </View>
           </View>
         </View>
+        <View style={styles.description}>
+          <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
+          {discount && (
+            <View style={styles.priceContainer}>
+              <PoppinsText style={styles.originalPrice}>
+                ${formatPrice(originalPrice ?? 0)}
+              </PoppinsText>
+              <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
+            </View>
+          )}
+          <PoppinsText
+            style={[styles.finalPrice, !discount && { color: Colors.textMain }]}
+          >
+            ${formatPrice(computedFinalPrice)}
+          </PoppinsText>
+        </View>
       </View>
-      <View style={styles.description}>
-        <PoppinsText style={styles.name}>{truncateString(name)}</PoppinsText>
-        {discount && (
-          <View style={styles.priceContainer}>
-            <PoppinsText style={styles.originalPrice}>
-              ${originalPrice}
-            </PoppinsText>
-            <PoppinsText style={styles.discount}>{discount}%</PoppinsText>
-          </View>
-        )}
-        <PoppinsText
-          style={[
-            styles.finalPrice,
-            !discount && { color: Colors.semanticInfo },
-          ]}
-        >
-          ${finalPrice}
-        </PoppinsText>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     margin: 10,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.menuWhite,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: Colors.gray_100,
     borderRadius: 15,
-    padding: 16,
+    padding: 10,
     paddingBottom: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
     marginBottom: 16,
-    maxWidth: 170,
-    minWidth: 170,
-    minHeight: 330,
-    maxHeight: 330,
+    maxWidth: 140,
+    minWidth: 140,
+    minHeight: 315,
+    maxHeight: 315,
   },
   tag: {
     backgroundColor: Colors.semanticInfo,
     borderRadius: 50,
     paddingHorizontal: 9,
     color: Colors.textWhite,
-    fontSize: FontSizes.c2.size,
+    fontSize: FontSizes.c3.size,
     maxWidth: '100%',
   },
   imageContainer: {
-    backgroundColor: Colors.secondaryGray,
-    minHeight: 140,
-    maxHeight: 140,
+    minHeight: 118,
+    maxHeight: 118,
+    maxWidth: 114,
     borderRadius: 15,
     marginVertical: 8,
   },
   cardButtonContainer: {
     position: 'relative',
     top: -30,
-    left: 63,
+    left: 58,
     maxWidth: '65%',
     alignItems: 'flex-end',
     zIndex: 999,
   },
   description: {
-    marginHorizontal: 4,
+    marginHorizontal: 2,
+    justifyContent: 'center',
   },
   name: {
     fontSize: FontSizes.s2.size,
-    marginBottom: 8,
+    marginBottom: 6,
+    minHeight: 70,
+    maxHeight: 70,
   },
   priceContainer: {
     flexDirection: 'row',
@@ -134,16 +154,16 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.b1.size,
     color: Colors.disableText,
     textDecorationLine: 'line-through',
-    marginRight: 18,
+    marginRight: 14,
   },
   discount: {
     fontSize: FontSizes.c1.size,
     backgroundColor: Colors.semanticInfo,
     borderRadius: 5,
-    padding: 5,
+    padding: 4,
   },
   finalPrice: {
-    fontSize: 20,
+    fontSize: FontSizes.s1.size,
   },
 });
 

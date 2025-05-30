@@ -17,6 +17,7 @@ import { Colors, FontSizes } from '../styles/theme';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
 import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 import { AuthService } from '../services/auth';
+import { UserService } from '../services/user';
 import Alert from '../components/Alerts';
 
 export default function LoginScreen() {
@@ -32,18 +33,52 @@ export default function LoginScreen() {
     if (loading) return;
 
     setLoading(true);
-    const result = await AuthService.login(email, password);
-    setLoading(false);
+    try {
+      const result = await AuthService.login(email, password);
+      if (result.success) {
+        const profileResponse = await UserService.getProfile();
+        if (profileResponse.success) {
+          const { role: userRole } = profileResponse.data;
+          const { isValidated } = result.data!;
 
-    if (result.success) {
-      setShowSuccessAlert(true);
-      setTimeout(() => {
-        setShowSuccessAlert(false);
-        router.replace('/(tabs)');
-      }, 2000);
-    } else {
+          // Mostrar alerta de éxito para todos los usuarios
+          setShowSuccessAlert(true);
+
+          setTimeout(() => {
+            setShowSuccessAlert(false);
+
+            if (!isValidated) {
+              // Redirigir al home con el modal de verificación de correo
+              router.replace({
+                pathname: '/(tabs)',
+                params: { showEmailVerification: 'true' },
+              });
+            } else if (userRole === 'delivery') {
+              // Redirigir a (delivery-tabs) si es un usuario de tipo delivery
+              router.replace('/(delivery-tabs)');
+            } else {
+              // Redirigir a (tabs) si es un usuario regular
+              router.replace('/(tabs)');
+            }
+          }, 2000);
+        } else {
+          console.error(
+            'Error al obtener el perfil del usuario:',
+            profileResponse.error,
+          );
+          setShowErrorAlert(true);
+          setErrorMessage('Error al obtener el perfil del usuario.');
+        }
+      } else {
+        setShowErrorAlert(true);
+        setErrorMessage(result.error || 'Error al iniciar sesión.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
       setShowErrorAlert(true);
-      setErrorMessage(result.error);
+      setErrorMessage('Error inesperado al iniciar sesión.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,10 +98,7 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior="height">
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView
-          contentContainerStyle={styles.container}
-          keyboardShouldPersistTaps="handled"
-        >
+        <View style={{ flex: 1 }}>
           {/* Alerts */}
           <View style={styles.alertContainer}>
             {showErrorAlert && (
@@ -88,80 +120,86 @@ export default function LoginScreen() {
               />
             )}
           </View>
-          {/* Logo */}
-          <Logo style={styles.logo} />
-          {/* Titles */}
-          <PoppinsText weight="medium" style={styles.title}>
-            Bienvenido
-          </PoppinsText>
-          <PoppinsText weight="regular" style={styles.subtitle}>
-            Por favor introduce tus datos para iniciar sesión
-          </PoppinsText>
-          {/* Inputs */}
-          <View style={styles.inputsContainer}>
-            <Input
-              label="Correo electrónico"
-              placeholder="Ingresa tu correo electrónico"
-              value={email}
-              fieldType="email"
-              getValue={setEmail}
-              backgroundColor={Colors.menuWhite}
-              errorText="El correo ingresado no es válido"
-            />
-            <Input
-              label="Contraseña"
-              placeholder="Ingresa tu contraseña"
-              value={password}
-              fieldType="password"
-              getValue={setPassword}
-              backgroundColor={Colors.menuWhite}
-              errorText="La contraseña debe tener al menos 8 caracteres"
-            />
-          </View>
-          {/* Forgot my password */}
-          <TouchableOpacity
-            onPress={handleRecoverPassword}
-            style={styles.linkContainer}
+          {/* Scrollable content */}
+          <ScrollView
+            contentContainerStyle={styles.container}
+            keyboardShouldPersistTaps="handled"
           >
-            <PoppinsText weight="regular" style={styles.linkText}>
-              ¿Olvidaste tu contraseña?
+            {/* Logo */}
+            <Logo style={styles.logo} />
+            {/* Titles */}
+            <PoppinsText weight="medium" style={styles.title}>
+              Bienvenido
             </PoppinsText>
-          </TouchableOpacity>
-          {/* Login button */}
-          <Button
-            title="Iniciar sesión"
-            onPress={handleLogin}
-            style={styles.loginButton}
-            size="medium"
-            loading={loading}
-          />
-          {/* Google button */}
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-          >
-            <Image
-              source={GoogleLogo}
-              style={styles.googleIcon}
-              resizeMode="contain"
-            />
-            <PoppinsText weight="medium" style={styles.googleButtonText}>
-              Iniciar sesión con Google
+            <PoppinsText weight="regular" style={styles.subtitle}>
+              Por favor introduce tus datos para iniciar sesión
             </PoppinsText>
-          </TouchableOpacity>
-          {/* Register link */}
-          <TouchableOpacity
-            onPress={handleRegister}
-            style={styles.registerContainer}
-          >
-            <PoppinsText weight="regular" style={styles.registerText}>
-              ¿No tienes cuenta?{' '}
-              <PoppinsText weight="regular" style={styles.registerLink}>
-                Regístrate
+            {/* Inputs */}
+            <View style={styles.inputsContainer}>
+              <Input
+                label="Correo electrónico"
+                placeholder="Ingresa tu correo electrónico"
+                value={email}
+                fieldType="email"
+                getValue={setEmail}
+                backgroundColor={Colors.menuWhite}
+                errorText="El correo ingresado no es válido"
+              />
+              <Input
+                label="Contraseña"
+                placeholder="Ingresa tu contraseña"
+                value={password}
+                fieldType="password"
+                getValue={setPassword}
+                backgroundColor={Colors.menuWhite}
+                errorText="La contraseña debe tener al menos 8 caracteres"
+              />
+            </View>
+            {/* Forgot my password */}
+            <TouchableOpacity
+              onPress={handleRecoverPassword}
+              style={styles.linkContainer}
+            >
+              <PoppinsText weight="regular" style={styles.linkText}>
+                ¿Olvidaste tu contraseña?
               </PoppinsText>
-            </PoppinsText>
-          </TouchableOpacity>
-        </ScrollView>
+            </TouchableOpacity>
+            {/* Login button */}
+            <Button
+              title="Iniciar sesión"
+              onPress={handleLogin}
+              style={styles.loginButton}
+              size="medium"
+              loading={loading}
+            />
+            {/* Google button */}
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={handleGoogleLogin}
+            >
+              <Image
+                source={GoogleLogo}
+                style={styles.googleIcon}
+                resizeMode="contain"
+              />
+              <PoppinsText weight="medium" style={styles.googleButtonText}>
+                Iniciar sesión con Google
+              </PoppinsText>
+            </TouchableOpacity>
+            {/* Register link */}
+            <TouchableOpacity
+              onPress={handleRegister}
+              style={styles.registerContainer}
+            >
+              <PoppinsText weight="regular" style={styles.registerText}>
+                ¿No tienes cuenta?{' '}
+                <PoppinsText weight="regular" style={styles.registerLink}>
+                  Regístrate
+                </PoppinsText>
+              </PoppinsText>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -178,10 +216,11 @@ const styles = StyleSheet.create({
   },
   alertContainer: {
     position: 'absolute',
+    width: 326,
+    left: '50%',
+    marginLeft: -163,
     top: 20,
-    width: '100%',
     zIndex: 1000,
-    alignItems: 'center',
   },
   logo: {
     width: 192,

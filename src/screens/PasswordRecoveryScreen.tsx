@@ -29,16 +29,32 @@ export default function PasswordRecoveryScreen() {
     if (currentStep === 1) {
       navigation.setOptions({
         headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{
+              padding: 12, // Aumentado
+              marginLeft: -12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <ChevronLeftIcon width={28} height={28} color={Colors.primary} />
           </TouchableOpacity>
         ),
       });
     } else {
       navigation.setOptions({
         headerLeft: () => (
-          <TouchableOpacity onPress={() => handleStepChange(currentStep - 1)}>
-            <ChevronLeftIcon width={24} height={24} color={Colors.primary} />
+          <TouchableOpacity
+            onPress={() => handleStepChange(currentStep - 1)}
+            style={{
+              padding: 12, // Aumentado
+              marginLeft: -12,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <ChevronLeftIcon width={28} height={28} color={Colors.primary} />
           </TouchableOpacity>
         ),
       });
@@ -107,15 +123,28 @@ export default function PasswordRecoveryScreen() {
     }
 
     setLoading(true);
-    const result = await AuthService.resetPassword(enteredCode);
-    setLoading(false);
-
-    if (result.success) {
-      setAccessToken(result.data);
-      handleStepChange(3);
-    } else {
-      setErrorMessage(result.error);
+    try {
+      const result = await AuthService.resetPassword(enteredCode);
+      if (result.success) {
+        setAccessToken(result.data);
+        handleStepChange(3); // Avanzar al siguiente paso
+      } else {
+        // Limpiar el estado del código y permitir un nuevo intento
+        setCode(['', '', '', '', '', '']);
+        setErrorMessage(
+          result.error ||
+            'El código ingresado es incorrecto. Inténtalo nuevamente.',
+        );
+        setShowErrorAlert(true);
+      }
+    } catch (error) {
+      console.error('Error al verificar el código:', error);
+      setErrorMessage(
+        'Error inesperado al verificar el código. Inténtalo nuevamente.',
+      );
       setShowErrorAlert(true);
+    } finally {
+      setLoading(false);
     }
   };
 

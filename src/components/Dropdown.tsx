@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import {
   View,
   TouchableOpacity,
-  TouchableHighlight,
   StyleSheet,
+  TouchableWithoutFeedback, // Importa TouchableWithoutFeedback
 } from 'react-native';
 import { ChevronDownIcon } from 'react-native-heroicons/outline';
 import PoppinsText from './PoppinsText';
@@ -16,6 +16,7 @@ interface DropdownProps {
   placeholder?: string;
   options: string[];
   border?: borderType;
+  borderColor?: string;
   onSelect: (option: string) => void;
 }
 
@@ -24,6 +25,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   placeholder,
   options,
   border = 'default',
+  borderColor = Colors.primary,
   onSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +34,9 @@ const Dropdown: React.FC<DropdownProps> = ({
   const handleSelect = (option: string) => {
     setSelectedOption(option);
     onSelect(option);
-    setIsOpen(false);
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 150); // Retraso de 200ms antes de cerrar el menú
   };
 
   const getBorderWidth = () => {
@@ -51,7 +55,10 @@ const Dropdown: React.FC<DropdownProps> = ({
       {label && <PoppinsText style={styles.label}>{label}</PoppinsText>}
       <TouchableOpacity
         onPress={() => setIsOpen(!isOpen)}
-        style={[{ borderWidth: getBorderWidth() }, styles.Selectbtn]}
+        style={[
+          { borderWidth: getBorderWidth(), borderColor: borderColor },
+          styles.Selectbtn,
+        ]}
       >
         <PoppinsText style={[styles.selectedText]}>
           {selectedOption || placeholder}
@@ -61,28 +68,36 @@ const Dropdown: React.FC<DropdownProps> = ({
       {isOpen && (
         <View style={[styles.optionsContainer]}>
           {options.map((option, index) => (
-            <TouchableHighlight
+            <TouchableWithoutFeedback
               key={index}
-              onPress={() => handleSelect(option)}
-              style={[
-                {
-                  backgroundColor:
-                    option === selectedOption ? Colors.primary : '',
-                },
-                styles.option,
-              ]}
-              activeOpacity={1}
-              underlayColor={Colors.primary}
+              onPress={() => handleSelect(option)} // Selecciona la opción al presionar
             >
-              <PoppinsText
+              <View
                 style={[
-                  { color: option === selectedOption ? Colors.textWhite : '' },
-                  styles.optionText,
+                  {
+                    backgroundColor:
+                      option === selectedOption
+                        ? Colors.primary
+                        : Colors.textWhite, // Solo cambia el fondo si está seleccionado
+                  },
+                  styles.option,
                 ]}
               >
-                {option}
-              </PoppinsText>
-            </TouchableHighlight>
+                <PoppinsText
+                  style={[
+                    {
+                      color:
+                        option === selectedOption
+                          ? Colors.textWhite
+                          : Colors.textLowContrast, // Cambia el color del texto solo si está seleccionado
+                    },
+                    styles.optionText,
+                  ]}
+                >
+                  {option}
+                </PoppinsText>
+              </View>
+            </TouchableWithoutFeedback>
           ))}
         </View>
       )}
@@ -93,7 +108,6 @@ const Dropdown: React.FC<DropdownProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingHorizontal: 24,
     paddingVertical: 12,
   },
   label: {
@@ -103,11 +117,11 @@ const styles = StyleSheet.create({
   Selectbtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: Colors.primary,
     borderRadius: 10,
     padding: 10,
     paddingHorizontal: 15,
     fontSize: FontSizes.label.size,
+    backgroundColor: Colors.textWhite,
   },
   selectedText: {
     fontSize: 16,
@@ -116,9 +130,10 @@ const styles = StyleSheet.create({
   },
   optionsContainer: {
     marginTop: 15,
-    borderColor: '#ccc',
+    borderColor: Colors.gray_100,
     borderRadius: 5,
     borderWidth: 1,
+    backgroundColor: Colors.textWhite,
   },
   option: {
     padding: 10,
