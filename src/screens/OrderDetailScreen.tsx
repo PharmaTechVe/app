@@ -70,7 +70,10 @@ const OrderDetailScreen = () => {
             ),
           );
           setDiscount(
-            order.data.details.reduce((acc, t) => acc + t.discount, 0),
+            order.data.details.reduce(
+              (acc, t) => acc + ((t.price * t.discount) / 100) * t.quantity,
+              0,
+            ),
           );
           console.log(order);
         }
