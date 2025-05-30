@@ -1,5 +1,3 @@
-// src/context/NotificationsContext.ts
-
 import React, {
   createContext,
   useContext,
@@ -7,16 +5,21 @@ import React, {
   useState,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
 import { NotificationService } from '../services/notifications';
 import { NotificationResponse } from '@pharmatech/sdk';
 import { ServiceResponse } from '../types/api';
-import { getUserIdFromSecureStore } from '../helper/jwtHelper';
+import EventSource from 'react-native-sse';
+import * as SecureStore from 'expo-secure-store';
+import { api } from '../lib/sdkConfig';
 
 export type Notification = NotificationResponse & { isRead: boolean };
 
 export type NotificationsContextType = {
   notifications: Notification[];
+  totalCount: number;
+  unreadCount: number;
   markAsRead: (notificationId: string) => Promise<void>;
   markAsUnread: (notificationId: string) => Promise<void>;
   refreshNotifications: () => Promise<void>;
@@ -31,10 +34,6 @@ export function NotificationsProvider(props: { children: ReactNode }) {
 
   const refreshNotifications = useCallback(async (): Promise<void> => {
     try {
-      const token = await getUserIdFromSecureStore();
-      if (!token)
-        throw new Error('No se pudo obtener el token de autenticación.');
-
       const response: ServiceResponse<
         NotificationResponse | NotificationResponse[]
       > = await NotificationService.getNotifications();
@@ -44,12 +43,12 @@ export function NotificationsProvider(props: { children: ReactNode }) {
           ? response.data
           : [response.data];
 
-        setNotifications(
-          rawArray.map((n: NotificationResponse) => ({
-            ...n,
-            isRead: Boolean(n.isRead),
-          })),
-        );
+        const mapped = rawArray.map((n) => ({
+          ...n,
+          isRead: Boolean(n.isRead),
+        }));
+        console.log('Notificaciones recibidas:', mapped);
+        setNotifications(mapped);
       } else {
         console.error('Error cargando notificaciones:', response);
       }
@@ -58,27 +57,10 @@ export function NotificationsProvider(props: { children: ReactNode }) {
     }
   }, []);
 
-  // carga inicial
-  useEffect(() => {
-    void refreshNotifications();
-  }, [refreshNotifications]);
-
-  // polling automático cada 30 segundos
-  useEffect(() => {
-    const interval = setInterval(() => {
-      void refreshNotifications();
-    }, 1200_000); // ajusta intervalo según necesidad
-
-    return () => clearInterval(interval);
-  }, [refreshNotifications]);
-
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const token = await getUserIdFromSecureStore();
-      if (!token)
-        throw new Error('No se pudo obtener el token de autenticación.');
-
-      await NotificationService.markAsRead(notificationId, token);
+      await NotificationService.markAsRead(notificationId);
+      // optimismo: actualizamos localmente
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
       );
@@ -91,25 +73,75 @@ export function NotificationsProvider(props: { children: ReactNode }) {
   }, []);
 
   const markAsUnread = useCallback(async (notificationId: string) => {
-    try {
-      // Si la API soporta 'unread', aquí iría NotificationService.markAsUnread(...)
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, isRead: false } : n,
-        ),
-      );
-    } catch (err) {
-      console.error(
-        `Error marcando notificación ${notificationId} como no leída:`,
-        err,
-      );
-    }
+    // si tu API no ofrece un endpoint "unread", lo simulamos localmente
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, isRead: false } : n)),
+    );
   }, []);
+
+  // Conteos derivados
+  const totalCount = notifications.length;
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.isRead).length,
+    [notifications],
+  );
+
+  useEffect(() => {
+    let es: EventSource | null = null;
+
+    async function setupSSE() {
+      // 1) carga inicial
+      await refreshNotifications();
+
+      // 2) stream SSE
+      const token = await SecureStore.getItemAsync('auth_token');
+      if (!token) return;
+
+      const axiosClient = api.client['client'];
+      const baseURL: string | undefined = axiosClient.getUri
+        ? axiosClient.getUri({ url: '' })
+        : axiosClient.defaults.baseURL;
+      if (!baseURL) return;
+
+      const url = `${baseURL.replace(/\/$/, '')}/notification/stream`;
+
+      es = new EventSource(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        lineEndingCharacter: '\n',
+      });
+
+      // Cada vez que llegue un mensaje, recargamos TODO el listado:
+      es.addEventListener('message', () => {
+        console.log('[SSE] mensaje recibido → refrescando notificaciones');
+        void refreshNotifications();
+      });
+
+      es.addEventListener('error', (err) => {
+        console.error('[SSE] error:', err);
+      });
+    }
+
+    setupSSE();
+
+    return () => {
+      if (es) {
+        es.removeAllEventListeners();
+        es.close();
+      }
+    };
+  }, [refreshNotifications]);
 
   return React.createElement(
     NotificationsContext.Provider,
     {
-      value: { notifications, markAsRead, markAsUnread, refreshNotifications },
+      value: {
+        notifications,
+        totalCount,
+        unreadCount,
+        markAsRead,
+        markAsUnread,
+        refreshNotifications,
+      },
     },
     props.children,
   );
