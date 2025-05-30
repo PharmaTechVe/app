@@ -174,7 +174,13 @@ const OrderDetailScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <PoppinsText>
-                  {detail.productPresentation.presentation.name}
+                  {detail.productPresentation.product.name +
+                    ' ' +
+                    detail.productPresentation.presentation.name +
+                    ' ' +
+                    detail.productPresentation.presentation.quantity +
+                    ' ' +
+                    detail.productPresentation.presentation.measurementUnit}
                 </PoppinsText>
                 <View
                   style={{
@@ -190,7 +196,9 @@ const OrderDetailScreen = () => {
                   <StarIcon color={Colors.gray_100} />
                   <TouchableOpacity
                     onPress={() =>
-                      router.push(`products/${detail.productPresentation.id}`)
+                      router.push(
+                        `products/${detail.productPresentation.product.id}/presentation/${detail.productPresentation.presentation.id}`,
+                      )
                     }
                   >
                     <PoppinsText>Ir al producto</PoppinsText>
