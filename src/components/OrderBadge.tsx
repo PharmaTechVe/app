@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   requested: 'Pendiente',
-  ready_for_pickup: 'A Enviar',
+  ready_for_pickup: 'A Retirar',
   completed: 'Entregado',
   canceled: 'Cancelado',
   in_progress: 'En Proceso',

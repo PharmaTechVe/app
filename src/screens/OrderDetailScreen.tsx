@@ -10,13 +10,13 @@ import {
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Button from '../components/Button';
-import { StarIcon } from 'react-native-heroicons/solid';
 import Alert from '../components/Alerts';
 import { UserService } from '../services/user';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { OrderDetailedResponse } from '@pharmatech/sdk';
 import { truncateString } from '../utils/commons';
 import { useCart } from '../hooks/useCart';
+import { formatPrice } from '../utils/formatPrice';
 
 const OrderDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,6 +30,8 @@ const OrderDetailScreen = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const { addToCart, getItemQuantity, updateCartQuantity } = useCart();
   const router = useRouter();
+  const [subTotal, setSubTotal] = useState(0);
+  const [discount, setDiscount] = useState(0);
 
   const handleReorder = () => {
     order?.details.forEach((detail) => {
@@ -60,6 +62,20 @@ const OrderDetailScreen = () => {
 
         if (order.success) {
           setOrder(order.data);
+
+          setSubTotal(
+            order.data.details.reduce(
+              (acc, t) => acc + t.price * t.quantity,
+              0,
+            ),
+          );
+          setDiscount(
+            order.data.details.reduce(
+              (acc, t) => acc + ((t.price * t.discount) / 100) * t.quantity,
+              0,
+            ),
+          );
+          console.log(order);
         }
       } catch (error) {
         console.log(error);
@@ -158,7 +174,13 @@ const OrderDetailScreen = () => {
               </View>
               <View style={{ flex: 1 }}>
                 <PoppinsText>
-                  {detail.productPresentation.presentation.name}
+                  {detail.productPresentation.product.name +
+                    ' ' +
+                    detail.productPresentation.presentation.name +
+                    ' ' +
+                    detail.productPresentation.presentation.quantity +
+                    ' ' +
+                    detail.productPresentation.presentation.measurementUnit}
                 </PoppinsText>
                 <View
                   style={{
@@ -167,14 +189,16 @@ const OrderDetailScreen = () => {
                     margin: 10,
                   }}
                 >
-                  <PoppinsText>${detail.subtotal}</PoppinsText>
+                  <PoppinsText>${formatPrice(detail.subtotal)}</PoppinsText>
                   <PoppinsText>Cantidad: {detail.quantity}</PoppinsText>
                 </View>
                 <View style={{ flexDirection: 'row', alignContent: 'center' }}>
-                  <StarIcon color={Colors.gray_100} />
+                  {/* <StarIcon color={Colors.gray_100} /> */}
                   <TouchableOpacity
                     onPress={() =>
-                      router.push(`products/${detail.productPresentation.id}`)
+                      router.push(
+                        `products/${detail.productPresentation.product.id}/presentation/${detail.productPresentation.presentation.id}`,
+                      )
                     }
                   >
                     <PoppinsText>Ir al producto</PoppinsText>
@@ -196,17 +220,17 @@ const OrderDetailScreen = () => {
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>Subtotal</PoppinsText>
-            <PoppinsText>${order?.totalPrice}</PoppinsText>
+            <PoppinsText>${formatPrice(subTotal)}</PoppinsText>
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
-            {/*  <PoppinsText style={{ color: Colors.semanticSuccess }}>
+            <PoppinsText style={{ color: Colors.semanticSuccess }}>
               Descuentos
             </PoppinsText>
-            <PoppinsText style={{ color: Colors.semanticSuccess }}> // Comentado */}
-            {/*   -${order?.totalPrice} */}
-            {/* </PoppinsText> */}
+            <PoppinsText style={{ color: Colors.semanticSuccess }}>
+              -${formatPrice(discount)}
+            </PoppinsText>
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
@@ -218,7 +242,7 @@ const OrderDetailScreen = () => {
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>Total</PoppinsText>
-            <PoppinsText>${order?.totalPrice}</PoppinsText>
+            <PoppinsText>${formatPrice(subTotal - discount)}</PoppinsText>
           </View>
         </View>
         <View style={{ marginTop: 20 }}>

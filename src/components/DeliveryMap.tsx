@@ -3,6 +3,9 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import { StyleSheet, View, ActivityIndicator, ViewStyle } from 'react-native';
 import { Config } from '../config';
 import { Colors } from '../styles/theme';
+import PoppinsText from '../components/PoppinsText';
+import { MapPinIcon, UserIcon } from 'react-native-heroicons/solid';
+import { FontAwesome5 } from '@expo/vector-icons';
 
 interface DeliveryMapProps {
   deliveryState: number;
@@ -25,7 +28,7 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
   const [customerRouteCoordinates, setCustomerRouteCoordinates] = useState<
     { latitude: number; longitude: number }[]
   >([]);
-  const [isLoading, setIsLoading] = useState(true); // Estado de carga
+  const [, setIsLoading] = useState(true); // Estado de carga
 
   // Obtener la ruta desde Google Maps Directions API
   const fetchRoute = async (
@@ -144,8 +147,13 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     return points;
   };
 
-  if (isLoading) {
-    // Mostrar un indicador de carga mientras se obtienen los datos
+  if (
+    // Solo espera si faltan datos críticos
+    branchLocation.latitude === 0 ||
+    branchLocation.longitude === 0 ||
+    customerLocation.latitude === 0 ||
+    customerLocation.longitude === 0
+  ) {
     return (
       <View style={[styles.loadingContainer, style]}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -153,10 +161,11 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
     );
   }
 
+  // Mostrar el mapa aunque deliveryLocation sea null
   return (
     <View style={[styles.container, style]}>
       <MapView
-        style={StyleSheet.absoluteFillObject} // Asegura que el mapa ocupe todo el contenedor
+        style={StyleSheet.absoluteFillObject}
         initialRegion={{
           latitude: branchLocation.latitude || 0,
           longitude: branchLocation.longitude || 0,
@@ -164,32 +173,26 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
           longitudeDelta: 0.05,
         }}
       >
-        {/* Mostrar la ubicación del delivery */}
+        {/* Mostrar la ubicación del delivery si existe */}
         {deliveryLocation && (
-          <Marker
-            coordinate={deliveryLocation}
-            title="Tu ubicación"
-            pinColor="red"
-          />
+          <Marker coordinate={deliveryLocation} title="Repartidor">
+            <FontAwesome5 name="motorcycle" size={26} color={Colors.primary} />
+          </Marker>
         )}
 
         {/* Mostrar la ubicación de la sucursal */}
         {branchLocation.latitude !== 0 && branchLocation.longitude !== 0 && (
-          <Marker
-            coordinate={branchLocation}
-            title="Sucursal de origen"
-            pinColor="blue"
-          />
+          <Marker coordinate={branchLocation} title="Sucursal de origen">
+            <MapPinIcon size={32} color={Colors.primary} />
+          </Marker>
         )}
 
         {/* Mostrar la ubicación del cliente */}
         {customerLocation.latitude !== 0 &&
           customerLocation.longitude !== 0 && (
-            <Marker
-              coordinate={customerLocation}
-              title="Ubicación del cliente"
-              pinColor="green"
-            />
+            <Marker coordinate={customerLocation} title="Ubicación del cliente">
+              <UserIcon size={32} color={Colors.primary} />
+            </Marker>
           )}
 
         {/* Mostrar la ruta hacia la sucursal */}
@@ -210,6 +213,30 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
           />
         )}
       </MapView>
+      {!deliveryLocation && (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 32,
+            left: 16,
+            right: 16,
+            alignItems: 'center',
+            backgroundColor: Colors.textWhite,
+            borderRadius: 16,
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 6,
+            elevation: 4,
+          }}
+        >
+          <PoppinsText style={{ color: Colors.primary }}>
+            Esperando ubicación del repartidor...
+          </PoppinsText>
+        </View>
+      )}
     </View>
   );
 };
