@@ -10,7 +10,6 @@ import React, {
 import { NotificationService } from '../services/notifications';
 import { NotificationResponse } from '@pharmatech/sdk';
 import { ServiceResponse } from '../types/api';
-import { getUserIdFromSecureStore } from '../helper/jwtHelper';
 import EventSource from 'react-native-sse';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../lib/sdkConfig';
@@ -35,9 +34,6 @@ export function NotificationsProvider(props: { children: ReactNode }) {
 
   const refreshNotifications = useCallback(async (): Promise<void> => {
     try {
-      const token = await getUserIdFromSecureStore();
-      if (!token) throw new Error('No se pudo obtener el token.');
-
       const response: ServiceResponse<
         NotificationResponse | NotificationResponse[]
       > = await NotificationService.getNotifications();
@@ -63,9 +59,7 @@ export function NotificationsProvider(props: { children: ReactNode }) {
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const token = await getUserIdFromSecureStore();
-      if (!token) throw new Error('No se pudo obtener el token.');
-      await NotificationService.markAsRead(notificationId, token);
+      await NotificationService.markAsRead(notificationId);
       // optimismo: actualizamos localmente
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n)),
