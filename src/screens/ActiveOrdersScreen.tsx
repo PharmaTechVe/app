@@ -16,7 +16,7 @@ import { truncateString } from '../utils/commons';
 
 const STATUS_LABELS: Record<string, string> = {
   requested: 'Pendiente',
-  ready_for_pickup: 'A Enviar',
+  ready_for_pickup: 'A Retirar',
   in_progress: 'En Proceso',
   approved: 'Aprobado',
 };

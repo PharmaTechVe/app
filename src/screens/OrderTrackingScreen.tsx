@@ -10,7 +10,12 @@ import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { useLocalSearchParams } from 'expo-router';
 import Alert from '../components/Alerts';
-import { OrderDetailedResponse, OrderStatus } from '@pharmatech/sdk';
+import {
+  OrderDeliveryDetailedResponse,
+  OrderDeliveryStatus,
+  OrderDetailedResponse,
+  OrderStatus,
+} from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { formatDate, truncateString } from '../utils/commons';
 import * as SecureStore from 'expo-secure-store';
@@ -28,6 +33,10 @@ import io from 'socket.io-client';
 import { SOCKET_URL } from '../lib/socketUrl';
 import VerticalStepper from '../components/VerticalStepper';
 import { DeliveryService } from '../services/delivery';
+import Button from '../components/Button';
+import DeliveryMap from '../components/DeliveryMap';
+import { useSelector } from 'react-redux';
+import { RootState } from '../redux/store';
 
 const OrderTrackingScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,6 +51,14 @@ const OrderTrackingScreen = () => {
   const [step, setStep] = useState(0);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [userAddress, setUserAddress] = useState('');
+  const [delivery, setDelivery] = useState<
+    OrderDeliveryDetailedResponse | undefined
+  >();
+  const [showMap, setShowMap] = useState(false);
+
+  const deliveryState = useSelector(
+    (state: RootState) => state.delivery.deliveryState[id as string] || 0,
+  );
 
   const changeTrackingStatus = (status: OrderStatus) => {
     switch (status) {
@@ -77,6 +94,7 @@ const OrderTrackingScreen = () => {
           const delivery = await DeliveryService.getOrderDetails(
             order.data.orderDeliveries[0].id,
           );
+          setDelivery(delivery);
           setUserAddress(
             delivery.address.adress + '. \n' + delivery.address.referencePoint,
           );
@@ -268,9 +286,37 @@ const OrderTrackingScreen = () => {
               </>
             )}
           </View>
-          <View style={{ marginVertical: 20 }}>
+          <View style={{ marginVertical: 10 }}>
             <VerticalStepper steps={steps} currentStep={step} />
           </View>
+          {order?.type != 'pickup' &&
+            !showMap &&
+            order.status === OrderStatus.READY_FOR_PICKUP &&
+            order.orderDeliveries[0].deliveryStatus ===
+              OrderDeliveryStatus.ASSIGNED && (
+              <View style={{ marginVertical: 15 }}>
+                <Button
+                  title="Ver Mapa"
+                  onPress={() => setShowMap(true)}
+                  variant={'primary'}
+                />
+              </View>
+            )}
+          {showMap && (
+            <View style={{ flex: 1, height: 300 }}>
+              <DeliveryMap
+                deliveryState={deliveryState}
+                branchLocation={
+                  order?.branch as { latitude: number; longitude: number }
+                }
+                customerLocation={
+                  delivery?.address as { latitude: number; longitude: number }
+                }
+                deliveryLocation={null}
+                style={{ height: 300, marginBottom: 16 }}
+              />
+            </View>
+          )}
           <View>
             <View
               style={{
@@ -369,7 +415,6 @@ const styles = StyleSheet.create({
   },
   orderHeader: {
     alignItems: 'center',
-    marginTop: 30,
     marginBottom: 15,
   },
   orderInfo: {
