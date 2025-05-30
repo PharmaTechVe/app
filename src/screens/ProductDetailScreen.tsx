@@ -15,11 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import TopBar from '../components/TopBar';
 import { useCart } from '../hooks/useCart';
 import { Product as CardProduct } from '../types/Product';
-import {
-  CheckCircleIcon,
-  StarIcon,
-  ChevronLeftIcon,
-} from 'react-native-heroicons/solid';
+import { CheckCircleIcon, ChevronLeftIcon } from 'react-native-heroicons/solid';
 import { Colors, FontSizes } from '../styles/theme';
 import Dropdown from '../components/Dropdown';
 import CardButton from '../components/CardButton';
@@ -59,8 +55,6 @@ const ProductDetailScreen: React.FC = () => {
   const [presentations, setPresentations] =
     useState<ProductPresentationResponse[]>();
   const [products, setProducts] = useState<CardProduct[]>([]);
-  const [userRating, setUserRating] = useState<number>(0);
-  const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
   const [showNoStockAlert, setShowNoStockAlert] = useState(false);
@@ -262,37 +256,37 @@ const ProductDetailScreen: React.FC = () => {
     }
   };
 
-  const handleRating = (rating: number) => {
-    setUserRating(rating);
-    // Aquí podrías enviar la calificación a tu API
-    console.log('Calificación enviada:', rating);
-  };
+  // const handleRating = (rating: number) => {
+  //   setUserRating(rating);
+  //   // Aquí podrías enviar la calificación a tu API
+  //   console.log('Calificación enviada:', rating);
+  // };
 
-  const RatingStars = () => {
-    return (
-      <View style={styles.ratingStarsContainer}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <TouchableOpacity
-            key={star}
-            activeOpacity={0.7}
-            onPress={() => handleRating(star)}
-            onPressIn={() => setHoverRating(star)}
-            onPressOut={() => setHoverRating(0)}
-          >
-            <StarIcon
-              size={32}
-              color={
-                star <= (hoverRating || userRating)
-                  ? Colors.semanticWarning
-                  : Colors.gray_100
-              }
-              style={styles.starIcon}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
+  // const RatingStars = () => {
+  //   return (
+  //     <View style={styles.ratingStarsContainer}>
+  //       {[1, 2, 3, 4, 5].map((star) => (
+  //         <TouchableOpacity
+  //           key={star}
+  //           activeOpacity={0.7}
+  //           onPress={() => handleRating(star)}
+  //           onPressIn={() => setHoverRating(star)}
+  //           onPressOut={() => setHoverRating(0)}
+  //         >
+  //           <StarIcon
+  //             size={32}
+  //             color={
+  //               star <= (hoverRating || userRating)
+  //                 ? Colors.semanticWarning
+  //                 : Colors.gray_100
+  //             }
+  //             style={styles.starIcon}
+  //           />
+  //         </TouchableOpacity>
+  //       ))}
+  //     </View>
+  //   );
+  // };
 
   const getProductDiscount = () => {
     // Busca promo en product.promo
@@ -399,13 +393,13 @@ const ProductDetailScreen: React.FC = () => {
             )}
           </PoppinsText>
 
-          <RatingStars />
+          {/* <RatingStars />
           {userRating > 0 && (
             <PoppinsText style={styles.ratingFeedback}>
               ¡Gracias por tu calificación de {userRating} estrella
               {userRating !== 1 ? 's' : ''}!
             </PoppinsText>
-          )}
+          )} */}
 
           <PoppinsText style={styles.description}>
             {product?.presentation.description}

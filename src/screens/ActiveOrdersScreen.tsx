@@ -13,6 +13,7 @@ import Alert from '../components/Alerts';
 import { OrderResponse } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { truncateString } from '../utils/commons';
+import { formatPrice } from '../utils/formatPrice';
 
 const STATUS_LABELS: Record<string, string> = {
   requested: 'Pendiente',
@@ -141,7 +142,7 @@ const ActiveOrdersScreen = () => {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </PoppinsText>
                   </View>
-                  <PoppinsText>${order.totalPrice.toFixed(2)}</PoppinsText>
+                  <PoppinsText>${formatPrice(order.totalPrice)}</PoppinsText>
                 </View>
                 <View
                   style={{

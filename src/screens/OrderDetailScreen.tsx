@@ -10,13 +10,13 @@ import {
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import Button from '../components/Button';
-import { StarIcon } from 'react-native-heroicons/solid';
 import Alert from '../components/Alerts';
 import { UserService } from '../services/user';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { OrderDetailedResponse } from '@pharmatech/sdk';
 import { truncateString } from '../utils/commons';
 import { useCart } from '../hooks/useCart';
+import { formatPrice } from '../utils/formatPrice';
 
 const OrderDetailScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -189,11 +189,11 @@ const OrderDetailScreen = () => {
                     margin: 10,
                   }}
                 >
-                  <PoppinsText>${detail.subtotal}</PoppinsText>
+                  <PoppinsText>${formatPrice(detail.subtotal)}</PoppinsText>
                   <PoppinsText>Cantidad: {detail.quantity}</PoppinsText>
                 </View>
                 <View style={{ flexDirection: 'row', alignContent: 'center' }}>
-                  <StarIcon color={Colors.gray_100} />
+                  {/* <StarIcon color={Colors.gray_100} /> */}
                   <TouchableOpacity
                     onPress={() =>
                       router.push(
@@ -220,7 +220,7 @@ const OrderDetailScreen = () => {
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>Subtotal</PoppinsText>
-            <PoppinsText>${subTotal}</PoppinsText>
+            <PoppinsText>${formatPrice(subTotal)}</PoppinsText>
           </View>
           <View
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
@@ -229,7 +229,7 @@ const OrderDetailScreen = () => {
               Descuentos
             </PoppinsText>
             <PoppinsText style={{ color: Colors.semanticSuccess }}>
-              -${discount}
+              -${formatPrice(discount)}
             </PoppinsText>
           </View>
           <View
@@ -242,7 +242,7 @@ const OrderDetailScreen = () => {
             style={{ flexDirection: 'row', justifyContent: 'space-between' }}
           >
             <PoppinsText>Total</PoppinsText>
-            <PoppinsText>${subTotal - discount}</PoppinsText>
+            <PoppinsText>${formatPrice(subTotal - discount)}</PoppinsText>
           </View>
         </View>
         <View style={{ marginTop: 20 }}>
