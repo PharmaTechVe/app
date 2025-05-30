@@ -311,6 +311,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: Colors.bgColor,
     padding: 20,
+    paddingTop: -20,
   },
   alertContainer: {
     position: 'absolute',
@@ -323,7 +324,6 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     alignItems: 'center',
-    marginTop: 30,
     marginBottom: 15,
   },
   profileImage: {

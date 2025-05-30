@@ -40,6 +40,8 @@ import {
 } from '@pharmatech/sdk';
 import Button from '../components/Button';
 import { BranchService } from '../services/branches';
+import { formatPrice } from '../utils/formatPrice';
+import Alert from '../components/Alerts';
 
 const ProductDetailScreen: React.FC = () => {
   const { id, productId } = useLocalSearchParams<{
@@ -61,6 +63,7 @@ const ProductDetailScreen: React.FC = () => {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [isLoadingInventory, setIsLoadingInventory] = useState(false);
+  const [showNoStockAlert, setShowNoStockAlert] = useState(false);
   const imagesScrollRef = useRef<ScrollView>(null);
   //const discount = 10;
   const router = useRouter();
@@ -291,7 +294,23 @@ const ProductDetailScreen: React.FC = () => {
     );
   };
 
-  console.log('Current inventory state:', inventory); // Log para inspeccionar el estado de inventory
+  const getProductDiscount = () => {
+    // Busca promo en product.promo
+    if (product?.promo && typeof product.promo.discount === 'number') {
+      return product.promo.discount;
+    }
+    return 0;
+  };
+
+  const getOriginalPrice = () => product?.price ?? 0;
+  const getDiscount = () => getProductDiscount();
+  const getFinalPrice = () => {
+    const original = getOriginalPrice();
+    const discount = getDiscount();
+    return discount > 0 ? (original * (100 - discount)) / 100 : original;
+  };
+
+  console.log('Stock actual:', product?.stock);
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
@@ -324,6 +343,18 @@ const ProductDetailScreen: React.FC = () => {
         </PoppinsText>
       </TouchableOpacity>
       <SafeAreaView style={styles.container}>
+        {/* ALERTA EN LA PARTE SUPERIOR */}
+        {showNoStockAlert && (
+          <View style={styles.alertContainer}>
+            <Alert
+              title="Sin disponibilidad"
+              message="No hay disponibilidad para este producto en este momento."
+              type="warning"
+              onClose={() => setShowNoStockAlert(false)}
+            />
+          </View>
+        )}
+
         <ScrollView>
           {/* Carrusel de imágenes */}
           <ScrollView
@@ -383,10 +414,24 @@ const ProductDetailScreen: React.FC = () => {
           {/* Información del producto */}
           <View style={styles.productInfo}>
             <View style={styles.priceRatingContainer}>
-              <PoppinsText style={styles.price}>$ {product?.price}</PoppinsText>
-              {/* {discount && ( // Comentado */}
-              {/*   <PoppinsText style={styles.discount}>-{discount}%</PoppinsText> */}
-              {/* )} */}
+              {product ? (
+                getDiscount() > 0 ? (
+                  <>
+                    <PoppinsText style={styles.price}>
+                      ${formatPrice(getFinalPrice())}
+                    </PoppinsText>
+                    <PoppinsText style={styles.discountBadge}>
+                      -{getDiscount()}%
+                    </PoppinsText>
+                  </>
+                ) : (
+                  <PoppinsText style={styles.price}>
+                    ${formatPrice(getOriginalPrice())}
+                  </PoppinsText>
+                )
+              ) : (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              )}
             </View>
             <PoppinsText
               style={[
@@ -582,10 +627,44 @@ const ProductDetailScreen: React.FC = () => {
         <View style={styles.cardButtonContainer}>
           <CardButton
             size={10}
-            getValue={(quantity) => {
-              if (product?.id) updateCartQuantity(product.id, quantity);
-            }}
             initialValue={getQuantity()}
+            disabled={product ? !product.stock || product.stock === 0 : true}
+            showNoStockAlert={() => setShowNoStockAlert(true)}
+            getValue={(quantity) => {
+              const stock = product?.stock ?? 0;
+              // Si no hay stock o la cantidad supera el stock, muestra alerta y no actualices
+              if (stock === 0 || quantity > stock) {
+                setShowNoStockAlert(true);
+                return;
+              }
+              // Si la cantidad es 0, elimina del carrito
+              if (product?.id && quantity === 0) {
+                updateCartQuantity(product.id, 0);
+                return;
+              }
+              // Si hay stock y cantidad válida, agrega o actualiza en el carrito
+              if (product?.id && quantity > 0) {
+                const promo = product.promo;
+                const discount =
+                  typeof promo?.discount === 'number' ? promo.discount : 0;
+                updateCartQuantity(product.id, quantity);
+                addToCart({
+                  id: product.id,
+                  name:
+                    product.product.name +
+                    ' ' +
+                    product.presentation.name +
+                    ' ' +
+                    product.presentation.quantity +
+                    ' ' +
+                    product.presentation.measurementUnit,
+                  price: product.price,
+                  quantity,
+                  image: images?.[0]?.url || 'https://via.placeholder.com/150',
+                  discount,
+                });
+              }
+            }}
           />
         </View>
       </SafeAreaView>
@@ -604,6 +683,14 @@ const styles = StyleSheet.create({
   productImage: {
     width: width,
     height: 200,
+  },
+  alertContainer: {
+    position: 'absolute',
+    width: 326,
+    left: '50%',
+    marginLeft: -163,
+    top: 20,
+    zIndex: 1000,
   },
   imageIndicators: {
     flexDirection: 'row',
@@ -634,6 +721,20 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.primary,
+    marginRight: 10,
+  },
+  originalPrice: {
+    fontSize: FontSizes.b1.size,
+    color: Colors.disableText,
+    textDecorationLine: 'line-through',
+    marginRight: 14,
+  },
+  discountBadge: {
+    fontSize: FontSizes.c1.size,
+    backgroundColor: Colors.semanticInfo,
+    borderRadius: 5,
+    padding: 4,
+    color: Colors.textWhite,
     marginRight: 10,
   },
   productName: {
@@ -697,12 +798,6 @@ const styles = StyleSheet.create({
     maxWidth: '65%',
     alignItems: 'flex-end',
     zIndex: 999,
-  },
-  discount: {
-    fontSize: FontSizes.b4.size,
-    backgroundColor: Colors.semanticInfo,
-    borderRadius: 5,
-    padding: 4,
   },
 });
 

@@ -214,7 +214,6 @@ const styles = StyleSheet.create({
   },
   menuContent: {
     flex: 1,
-    marginTop: 40,
     paddingHorizontal: 10,
     justifyContent: 'space-between',
   },

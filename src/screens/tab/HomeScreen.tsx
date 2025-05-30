@@ -8,6 +8,7 @@ import { Colors, FontSizes } from '../../styles/theme';
 import Carousel from '../../components/Carousel';
 import { ProductService } from '../../services/products';
 import { Product } from '../../types/Product';
+import type { Promo } from '@pharmatech/sdk';
 import EmailVerificationModal from './EmailVerificationModal';
 import { decodeJWT } from '../../helper/jwtHelper';
 
@@ -20,7 +21,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { showEmailVerification: showEmailVerificationParam } =
     useLocalSearchParams();
-  const { cartItems, addToCart, updateCartQuantity, setCartUserId } = useCart();
+  const { cartItems, updateCartQuantity, setCartUserId } = useCart();
 
   const getItemQuantity = (productId: string) => {
     const cartItem = cartItems.find((item) => item.id === productId.toString());
@@ -63,43 +64,38 @@ export default function HomeScreen() {
       const productsData = await ProductService.getProducts(1, 20);
       if (productsData.success) {
         const pd = productsData.data.results;
-        const carouselProducts = pd.map((p) => ({
-          id: p.id,
-          presentationId: p.presentation.id,
-          productId: p.product.id,
-          imageUrl: p.product.images[0].url,
-          name:
-            p.product.name +
-            ' ' +
-            p.presentation.name +
-            ' ' +
-            p.presentation.quantity +
-            ' ' +
-            p.presentation.measurementUnit,
-          category: p.product.categories[0].name,
-          //originalPrice: p.price,
-          //discount: 10,
-          finalPrice: p.price,
-          quantity: getItemQuantity(p.id),
-          getQuantity: (quantity: number) => {
-            addToCart({
-              id: p.id,
-              name:
-                p.product.name +
-                ' ' +
-                p.presentation.name +
-                ' ' +
-                p.presentation.quantity +
-                ' ' +
-                p.presentation.measurementUnit,
-              price: p.price,
-              quantity,
-              image:
-                p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
-            });
-            updateCartQuantity(p.id, quantity);
-          },
-        }));
+        // Filtra solo los que tengan stock > 0
+        const availableProducts = pd.filter((p) => p.stock > 0);
+        const carouselProducts = availableProducts.map((p) => {
+          // Usa el descuento real si hay promo, si no, no lo agregues
+          // @ts-expect-error: promo puede estar en p o en p.presentation
+          const promo: Promo | undefined = p.promo ?? p.presentation.promo;
+          const discount: Promo['discount'] | undefined = promo?.discount
+            ? Math.round(promo.discount * 100) / 100
+            : undefined;
+          return {
+            id: p.id,
+            presentationId: p.presentation.id,
+            productId: p.product.id,
+            imageUrl: p.product.images[0].url,
+            name:
+              p.product.name +
+              ' ' +
+              p.presentation.name +
+              ' ' +
+              p.presentation.quantity +
+              ' ' +
+              p.presentation.measurementUnit,
+            category: p.product.categories[0].name,
+            originalPrice: p.price,
+            ...(discount !== undefined ? { discount } : {}),
+            finalPrice: p.price,
+            quantity: getItemQuantity(p.id),
+            getQuantity: (quantity: number) => {
+              updateCartQuantity(p.id, quantity);
+            },
+          };
+        });
 
         setProducts(carouselProducts);
       } else {
@@ -116,43 +112,36 @@ export default function HomeScreen() {
     setLoadingRecommendations(true);
     try {
       const recommendations = await ProductService.getRecommendations();
-      const carouselRecommendations = recommendations.results.map((p) => ({
-        id: p.id,
-        presentationId: p.presentation.id,
-        productId: p.product.id,
-        imageUrl: p.product.images[0].url,
-        name:
-          p.product.name +
-          ' ' +
-          p.presentation.name +
-          ' ' +
-          p.presentation.quantity +
-          ' ' +
-          p.presentation.measurementUnit,
-        category: p.product.categories[0]?.name || 'Sin categoría',
-        //originalPrice: p.price,
-        //discount: 10,
-        finalPrice: p.price,
-        quantity: getItemQuantity(p.id),
-        getQuantity: (quantity: number) => {
-          addToCart({
-            id: p.id,
-            name:
-              p.product.name +
-              ' ' +
-              p.presentation.name +
-              ' ' +
-              p.presentation.quantity +
-              ' ' +
-              p.presentation.measurementUnit,
-            price: p.price,
-            quantity,
-            image:
-              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
-          });
-          updateCartQuantity(p.id, quantity);
-        },
-      }));
+      const carouselRecommendations = recommendations.results.map((p) => {
+        // Usa el descuento real si hay promo, si no, no lo agregues
+        // @ts-expect-error: promo puede estar en p o en p.presentation
+        const promo: Promo | undefined = p.promo ?? p.presentation.promo;
+        const discount: Promo['discount'] | undefined = promo?.discount
+          ? Math.round(promo.discount * 100) / 100
+          : undefined;
+        return {
+          id: p.id,
+          presentationId: p.presentation.id,
+          productId: p.product.id,
+          imageUrl: p.product.images[0].url,
+          name:
+            p.product.name +
+            ' ' +
+            p.presentation.name +
+            ' ' +
+            p.presentation.quantity +
+            ' ' +
+            p.presentation.measurementUnit,
+          category: p.product.categories[0]?.name || 'Sin categoría',
+          originalPrice: p.price,
+          ...(discount !== undefined ? { discount } : {}),
+          finalPrice: p.price,
+          quantity: getItemQuantity(p.id),
+          getQuantity: (quantity: number) => {
+            updateCartQuantity(p.id, quantity);
+          },
+        };
+      });
 
       setRecommendedProducts(carouselRecommendations);
     } catch (error) {
@@ -216,6 +205,7 @@ export default function HomeScreen() {
             )}
           </View>
         </View>
+        <View style={styles.height} />
       </ScrollView>
       <EmailVerificationModal
         visible={showEmailVerification}
@@ -230,6 +220,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgColor,
     paddingLeft: 5,
+  },
+  height: {
+    height: 64,
   },
   loadingContainer: {
     flex: 1,

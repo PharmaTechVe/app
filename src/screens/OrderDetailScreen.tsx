@@ -247,6 +247,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: Colors.bgColor,
     padding: 20,
+    paddingTop: -20,
     paddingBottom: 0,
   },
   alertContainer: {
@@ -266,7 +267,6 @@ const styles = StyleSheet.create({
   },
   orderHeader: {
     alignItems: 'center',
-    marginTop: 30,
     marginBottom: 15,
   },
   orderImage: {

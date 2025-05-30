@@ -55,6 +55,10 @@ export default function RootLayout() {
         <Stack
           screenOptions={({ navigation }) => ({
             headerBackVisible: false,
+            headerStyle: {
+              backgroundColor: Colors.bgColor, // Color específico para esta pantalla
+            },
+            headerShadowVisible: false,
             headerLeft: () =>
               navigation.canGoBack() ? (
                 <TouchableOpacity
@@ -80,10 +84,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="products" options={{ headerShown: false }} />
           <Stack.Screen name="search" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="profile"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
+          <Stack.Screen name="profile" options={{ headerTitle: '' }} />
           <Stack.Screen
             name="notifications"
             options={{
@@ -94,32 +95,20 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="menu"
-            options={{ headerTitle: '', headerTransparent: true }}
+            options={{
+              headerTitle: '',
+              headerShadowVisible: false,
+            }}
           />
-          <Stack.Screen
-            name="direction"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
+          <Stack.Screen name="direction" options={{ headerTitle: '' }} />
           <Stack.Screen
             name="selectLocation"
-            options={{ headerTitle: '', headerTransparent: true }}
+            options={{ headerTitle: '', headerShown: false }}
           />
-          <Stack.Screen
-            name="createDirection"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
-          <Stack.Screen
-            name="orders"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
-          <Stack.Screen
-            name="order"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
-          <Stack.Screen
-            name="change-direction"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
+          <Stack.Screen name="createDirection" options={{ headerTitle: '' }} />
+          <Stack.Screen name="orders" options={{ headerTitle: '' }} />
+          <Stack.Screen name="order" options={{ headerTitle: '' }} />
+          <Stack.Screen name="change-direction" options={{ headerTitle: '' }} />
           <Stack.Screen
             name="register"
             options={{ headerTitle: '', headerTransparent: true }}
@@ -130,7 +119,7 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="loggedInPasswordRecovery"
-            options={{ headerTitle: '', headerTransparent: true }}
+            options={{ headerTitle: '' }}
           />
           <Stack.Screen
             name="success"
@@ -140,7 +129,6 @@ export default function RootLayout() {
             name="cart"
             options={({ navigation }) => ({
               headerTitle: '',
-              headerTransparent: true,
               headerLeft: undefined,
               headerRight: () => (
                 <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -149,10 +137,7 @@ export default function RootLayout() {
               ),
             })}
           />
-          <Stack.Screen
-            name="change-password"
-            options={{ headerTitle: '', headerTransparent: true }}
-          />
+          <Stack.Screen name="change-password" options={{ headerTitle: '' }} />
           <Stack.Screen
             name="(delivery-tabs)"
             options={{ headerShown: false }}
@@ -204,7 +189,6 @@ export default function RootLayout() {
             name="active-orders"
             options={{
               headerTitle: '',
-              headerTransparent: true,
             }}
           />
         </Stack>

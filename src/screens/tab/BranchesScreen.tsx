@@ -144,6 +144,7 @@ export default function BranchesScreen() {
           </View>
         </View>
       </Modal>
+      <View style={styles.height} />
     </View>
   );
 }
@@ -154,6 +155,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     padding: 16,
     paddingTop: -16,
+  },
+  height: {
+    height: 64,
   },
   title: {
     fontSize: FontSizes.s1.size,

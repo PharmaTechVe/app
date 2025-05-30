@@ -17,6 +17,7 @@ import PoppinsText from './PoppinsText';
 import { router } from 'expo-router';
 import { ProductService } from '../services/products';
 import { ProductPresentation } from '@pharmatech/sdk';
+import { formatPrice } from '../utils/formatPrice';
 
 interface SearchInputProps {
   placeholder?: string;
@@ -195,7 +196,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
                         color: Colors.primary,
                       }}
                     >
-                      $ {p?.price}
+                      $ {formatPrice(p?.price)}
                     </PoppinsText>
                   </View>
                 </TouchableOpacity>
