@@ -5,6 +5,8 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  TouchableOpacity,
 } from 'react-native';
 import { Colors, FontSizes } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
@@ -12,13 +14,11 @@ import { useLocalSearchParams } from 'expo-router';
 import Alert from '../components/Alerts';
 import {
   OrderDeliveryDetailedResponse,
-  OrderDeliveryStatus,
   OrderDetailedResponse,
   OrderStatus,
 } from '@pharmatech/sdk';
 import { UserService } from '../services/user';
 import { formatDate, truncateString } from '../utils/commons';
-import * as SecureStore from 'expo-secure-store';
 import {
   CubeIcon,
   PhoneIcon,
@@ -28,15 +28,19 @@ import {
 import {
   BuildingStorefrontIcon,
   MapPinIcon,
+  XMarkIcon,
 } from 'react-native-heroicons/solid';
-import io from 'socket.io-client';
-import { SOCKET_URL } from '../lib/socketUrl';
 import VerticalStepper from '../components/VerticalStepper';
 import { DeliveryService } from '../services/delivery';
 import Button from '../components/Button';
 import DeliveryMap from '../components/DeliveryMap';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
+import {
+  initializeSocket,
+  disconnectSocket,
+} from '../lib/deliverySocket/deliverySocket';
+import { Socket } from 'socket.io-client';
 
 const OrderTrackingScreen = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -54,7 +58,13 @@ const OrderTrackingScreen = () => {
   const [delivery, setDelivery] = useState<
     OrderDeliveryDetailedResponse | undefined
   >();
-  const [showMap, setShowMap] = useState(false);
+  const [isMapModalVisible, setIsMapModalVisible] = useState(false);
+
+  // Estado para la ubicación del repartidor
+  const [deliveryLocation, setDeliveryLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const deliveryState = useSelector(
     (state: RootState) => state.delivery.deliveryState[id as string] || 0,
@@ -85,7 +95,6 @@ const OrderTrackingScreen = () => {
   const fetchOrder = async () => {
     try {
       const order = await UserService.getOrder(id);
-      console.log(order);
       if (order.success) {
         if (
           order.data.orderDeliveries &&
@@ -103,7 +112,7 @@ const OrderTrackingScreen = () => {
         changeTrackingStatus(order.data.status);
       }
     } catch (error) {
-      console.log(error);
+      console.error('Error al obtener la orden:', error);
       setErrorMessage('Ocurrió un error');
       setShowErrorAlert(true);
     } finally {
@@ -113,47 +122,64 @@ const OrderTrackingScreen = () => {
   };
 
   useEffect(() => {
+    let socket: Socket;
+
+    const setupSocket = async () => {
+      try {
+        socket = await initializeSocket();
+        socket.connect();
+
+        socket.on('connect', () => {
+          console.log('WebSocket conectado en OrderTrackingScreen');
+        });
+
+        socket.on(
+          'coordinatesUpdated',
+          (data: { latitude: number; longitude: number }) => {
+            setDeliveryLocation({
+              latitude: data.latitude,
+              longitude: data.longitude,
+            });
+          },
+        );
+
+        socket.on('connect_error', (error) => {
+          console.error(
+            'Error de conexión al WebSocket en OrderTrackingScreen:',
+            error,
+          );
+        });
+
+        socket.on('disconnect', (reason) => {
+          console.warn(
+            'WebSocket desconectado en OrderTrackingScreen. Razón:',
+            reason,
+          );
+        });
+      } catch (error) {
+        console.error(
+          'Error configurando el WebSocket en OrderTrackingScreen:',
+          error,
+        );
+      }
+    };
+
+    setupSocket();
+
+    return () => {
+      if (socket) {
+        socket.off('coordinatesUpdated');
+        disconnectSocket();
+      }
+    };
+  }, [id]);
+  // --- FIN INTEGRACIÓN WEBSOCKET ---
+
+  useEffect(() => {
     if (id) {
       fetchOrder();
-
-      const socket = io(SOCKET_URL, {
-        autoConnect: false,
-        transports: ['polling'],
-        transportOptions: {
-          polling: {
-            extraHeaders: {
-              authorization: `Bearer ${SecureStore.getItemAsync('auth_token')}`,
-            },
-          },
-        },
-      });
-
-      function onOrderUpdated(order: { orderId: string; status: OrderStatus }) {
-        if (order.orderId === id) {
-          changeTrackingStatus(order.status);
-        }
-      }
-
-      socket.connect();
-      socket.on('orderUpdated', onOrderUpdated);
-
-      socket.on('connect_error', (err) =>
-        console.log('[WS] Error en handshake:', err.message),
-      );
-
-      socket.on('connect', () =>
-        console.log('[WS] Conectado con ID:', socket.id),
-      );
-      socket.on('disconnect', (reason) =>
-        console.log('[WS] Desconectado por:', reason),
-      );
-
-      return () => {
-        socket.off('orderUpdated', onOrderUpdated);
-        socket.disconnect();
-      };
     }
-  }, []);
+  }, [id]);
 
   if (loading) {
     return (
@@ -289,21 +315,37 @@ const OrderTrackingScreen = () => {
           <View style={{ marginVertical: 10 }}>
             <VerticalStepper steps={steps} currentStep={step} />
           </View>
-          {order?.type != 'pickup' &&
-            !showMap &&
-            order.status === OrderStatus.READY_FOR_PICKUP &&
-            order.orderDeliveries[0].deliveryStatus ===
-              OrderDeliveryStatus.ASSIGNED && (
-              <View style={{ marginVertical: 15 }}>
-                <Button
-                  title="Ver Mapa"
-                  onPress={() => setShowMap(true)}
-                  variant={'primary'}
-                />
-              </View>
-            )}
-          {showMap && (
-            <View style={{ flex: 1, height: 300 }}>
+          {/* Botón para abrir el mapa ampliado */}
+          {order?.type !== 'pickup' && (
+            <Button
+              title="Ver mapa ampliado"
+              onPress={() => setIsMapModalVisible(true)}
+              variant={'primary'}
+              style={{ marginBottom: 12 }}
+            />
+          )}
+          {/* Modal para el mapa ampliado */}
+          <Modal
+            visible={isMapModalVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setIsMapModalVisible(false)}
+          >
+            <View style={{ flex: 1, backgroundColor: Colors.bgColor }}>
+              <TouchableOpacity
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  zIndex: 10,
+                  backgroundColor: Colors.textWhite,
+                  padding: 8,
+                  borderRadius: 16,
+                }}
+                onPress={() => setIsMapModalVisible(false)}
+              >
+                <XMarkIcon size={24} color={Colors.textMain} />
+              </TouchableOpacity>
               <DeliveryMap
                 deliveryState={deliveryState}
                 branchLocation={
@@ -312,11 +354,12 @@ const OrderTrackingScreen = () => {
                 customerLocation={
                   delivery?.address as { latitude: number; longitude: number }
                 }
-                deliveryLocation={null}
-                style={{ height: 300, marginBottom: 16 }}
+                deliveryLocation={deliveryLocation}
+                style={{ flex: 1 }}
               />
             </View>
-          )}
+          </Modal>
+          {/* Información de contacto y otros datos... */}
           <View>
             <View
               style={{
@@ -394,6 +437,7 @@ const OrderTrackingScreen = () => {
           </View>
         </View>
       )}
+      <View style={styles.height} />
     </ScrollView>
   );
 };
@@ -403,6 +447,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: Colors.bgColor,
     padding: 20,
+  },
+  height: {
+    height: 64,
   },
   alertContainer: {
     position: 'absolute',
