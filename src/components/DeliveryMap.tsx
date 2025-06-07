@@ -6,6 +6,7 @@ import { Colors } from '../styles/theme';
 import PoppinsText from '../components/PoppinsText';
 import { MapPinIcon, UserIcon } from 'react-native-heroicons/solid';
 import { FontAwesome5 } from '@expo/vector-icons';
+import polyline from '@mapbox/polyline';
 
 interface DeliveryMapProps {
   deliveryState: number;
@@ -47,7 +48,13 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
       const data = await response.json();
 
       if (data.routes && data.routes.length > 0) {
-        const points = decodePolyline(data.routes[0].overview_polyline.points);
+        const decoded = polyline.decode(
+          data.routes[0].overview_polyline.points,
+        );
+        const points = decoded.map(([latitude, longitude]) => ({
+          latitude,
+          longitude,
+        }));
         setRoute(points);
       } else {
         console.error('No se pudo obtener la ruta.');
@@ -107,45 +114,6 @@ const DeliveryMap: React.FC<DeliveryMapProps> = ({
       setIsLoading(false); // Finalizar la carga cuando todos los datos estén disponibles
     }
   }, [deliveryLocation, branchLocation, customerLocation]);
-
-  // Decodificar la polyline de Google Maps
-  const decodePolyline = (encoded: string) => {
-    const points: { latitude: number; longitude: number }[] = [];
-    let index = 0;
-    const len = encoded.length;
-    let lat = 0,
-      lng = 0;
-
-    while (index < len) {
-      let b,
-        shift = 0,
-        result = 0;
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      const dlat = result & 1 ? ~(result >> 1) : result >> 1;
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-      do {
-        b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      const dlng = result & 1 ? ~(result >> 1) : result >> 1;
-      lng += dlng;
-
-      points.push({
-        latitude: lat / 1e5,
-        longitude: lng / 1e5,
-      });
-    }
-
-    return points;
-  };
 
   if (
     // Solo espera si faltan datos críticos

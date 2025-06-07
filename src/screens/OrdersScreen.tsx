@@ -188,7 +188,6 @@ const OrdersScreen = () => {
               </View>
             </View>
           ))}
-        <View style={styles.height} />
       </View>
     </ScrollView>
   );
@@ -200,9 +199,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     padding: 20,
     paddingTop: -20,
-  },
-  height: {
-    height: 64,
   },
   alertContainer: {
     position: 'absolute',

@@ -161,7 +161,6 @@ const CartListScreen = () => {
           </View>
         </>
       )}
-      <View style={styles.height} />
     </View>
   );
 };
@@ -281,9 +280,6 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.b1.lineHeight,
     color: Colors.textMain,
     marginBottom: 20,
-  },
-  height: {
-    height: 64,
   },
   row: {
     flexDirection: 'row',
