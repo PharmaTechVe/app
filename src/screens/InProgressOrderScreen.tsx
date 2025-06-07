@@ -34,6 +34,7 @@ import { useRouter } from 'expo-router';
 import { useDispatch } from 'react-redux';
 import { clearCart } from '../redux/slices/cartSlice';
 import { resetCheckout } from '../redux/slices/checkoutSlice';
+import { formatPrice } from '../utils/formatPrice';
 
 const stepsLabels = [
   'Opciones de Compra',
@@ -251,7 +252,7 @@ const InProgressOrderScreen = () => {
                         Total:
                       </PoppinsText>
                       <PoppinsText style={styles.totalAmount}>
-                        ${order.totalPrice ? order.totalPrice : ''}
+                        ${order.totalPrice ? formatPrice(order.totalPrice) : ''}
                       </PoppinsText>
                     </View>
                   </View>
@@ -349,7 +350,7 @@ const InProgressOrderScreen = () => {
                         Total:
                       </PoppinsText>
                       <PoppinsText style={styles.totalAmount}>
-                        ${order.totalPrice ? order.totalPrice : ''}
+                        ${order.totalPrice ? formatPrice(order.totalPrice) : ''}
                       </PoppinsText>
                     </View>
                   </View>

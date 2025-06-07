@@ -16,10 +16,12 @@ import { TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import { formatPrice } from '../utils/formatPrice';
 import { isPromoActive } from '../utils/promoUtils';
+import { useDollarPrice } from '../hooks/useDollarPrice';
 
 const CartListScreen = () => {
   const router = useRouter();
   const { cartItems, removeFromCart, updateCartQuantity } = useCart();
+  const dollarPrice = useDollarPrice();
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -151,6 +153,21 @@ const CartListScreen = () => {
                 -${formatPrice(totalDiscount)}
               </PoppinsText>
             </View>
+            {/* Mostrar total en bolívares */}
+            {dollarPrice && (
+              <View style={styles.row}>
+                <PoppinsText style={styles.bolivarText}>
+                  Total en Bs
+                </PoppinsText>
+                <PoppinsText style={styles.bolivarText}>
+                  Bs{' '}
+                  {((total / 100) * dollarPrice).toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </PoppinsText>
+              </View>
+            )}
             <View style={styles.row}>
               <PoppinsText style={styles.totalText}>Total</PoppinsText>
               <PoppinsText style={styles.totalText}>
@@ -338,6 +355,12 @@ const styles = StyleSheet.create({
   },
   emptyCartButton: {
     marginTop: 16,
+  },
+  bolivarText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.primary,
+    marginBottom: 8,
   },
 });
 
