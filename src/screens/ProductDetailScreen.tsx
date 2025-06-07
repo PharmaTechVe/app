@@ -38,6 +38,7 @@ import Button from '../components/Button';
 import { BranchService } from '../services/branches';
 import { formatPrice } from '../utils/formatPrice';
 import Alert from '../components/Alerts';
+import { isPromoActive } from '../utils/promoUtils';
 
 const ProductDetailScreen: React.FC = () => {
   const { id, productId } = useLocalSearchParams<{
@@ -290,7 +291,11 @@ const ProductDetailScreen: React.FC = () => {
 
   const getProductDiscount = () => {
     // Busca promo en product.promo
-    if (product?.promo && typeof product.promo.discount === 'number') {
+    if (
+      product?.promo &&
+      typeof product.promo.discount === 'number' &&
+      isPromoActive(product.promo)
+    ) {
       return product.promo.discount;
     }
     return 0;
@@ -638,10 +643,17 @@ const ProductDetailScreen: React.FC = () => {
               }
               // Si hay stock y cantidad válida, agrega o actualiza en el carrito
               if (product?.id && quantity > 0) {
-                const promo = product.promo;
-                const discount =
-                  typeof promo?.discount === 'number' ? promo.discount : 0;
-                updateCartQuantity(product.id, quantity);
+                const promo =
+                  product.promo && isPromoActive(product.promo)
+                    ? product.promo
+                    : undefined;
+                const discount = promo ? promo.discount : 0;
+                updateCartQuantity(
+                  product.id,
+                  quantity,
+                  discount,
+                  product.price,
+                );
                 addToCart({
                   id: product.id,
                   name:
@@ -656,6 +668,7 @@ const ProductDetailScreen: React.FC = () => {
                   quantity,
                   image: images?.[0]?.url || 'https://via.placeholder.com/150',
                   discount,
+                  promo,
                 });
               }
             }}

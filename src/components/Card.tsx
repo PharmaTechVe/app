@@ -18,6 +18,7 @@ const ProductCard: React.FC<Product> = ({
   category,
   originalPrice,
   discount,
+  promo,
   finalPrice,
   getQuantity,
 }) => {
@@ -70,6 +71,7 @@ const ProductCard: React.FC<Product> = ({
                     quantity,
                     image: imageUrl,
                     discount: discount ?? 0,
+                    promo,
                   });
                 }}
                 initialValue={getItemQuantity(id)}

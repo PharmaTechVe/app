@@ -15,6 +15,7 @@ import Button from '../components/Button';
 import { TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import { formatPrice } from '../utils/formatPrice';
+import { isPromoActive } from '../utils/promoUtils';
 
 const CartListScreen = () => {
   const router = useRouter();
@@ -24,18 +25,24 @@ const CartListScreen = () => {
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  // Total price sum
+
   const totalDiscount = cartItems.reduce(
     (sum, item) =>
-      sum + item.price * item.quantity * ((item.discount ?? 0) / 100),
+      sum +
+      item.price *
+        item.quantity *
+        ((item.promo && isPromoActive(item.promo) ? item.promo.discount : 0) /
+          100),
     0,
-  ); // Discount sum
-  const total = subtotal - totalDiscount; // Subtotal with discount
+  );
+
+  const total = subtotal - totalDiscount;
 
   const renderItem = ({ item }: { item: CartItem }) => {
     console.log('[CartListScreen] Renderizando item:', item); // <-- LOG
     // Usar el descuento del item, si existe, si no 0
-    const discount = item.discount ?? 0;
+    const discount =
+      item.promo && isPromoActive(item.promo) ? item.promo.discount : 0;
     const discountedPrice = item.price * (1 - discount / 100);
     const totalDiscountedPrice = discountedPrice * item.quantity;
     const totalOriginalPrice = item.price * item.quantity;

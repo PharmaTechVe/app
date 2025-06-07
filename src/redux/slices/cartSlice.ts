@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { Promo } from '@pharmatech/sdk';
 
 export type CartItem = {
   id: string;
@@ -7,6 +8,7 @@ export type CartItem = {
   quantity: number;
   image: string;
   discount?: number;
+  promo?: Promo;
 };
 
 type CartState = {
@@ -40,10 +42,10 @@ const cartSlice = createSlice({
         (item) => item.id === action.payload.id,
       );
       if (existing) {
-        // Si ya existe, actualiza cantidad y descuento correctamente
         existing.quantity = action.payload.quantity;
         existing.price = action.payload.price;
-        existing.discount = action.payload.discount; // <-- ¡Asegúrate de actualizar el descuento!
+        existing.discount = action.payload.discount;
+        existing.promo = action.payload.promo;
       } else {
         state.items.push({ ...action.payload });
       }
@@ -60,6 +62,7 @@ const cartSlice = createSlice({
         quantity: number;
         discount?: number;
         price?: number;
+        promo?: Promo;
       }>,
     ) => {
       const item = state.items.find((item) => item.id === action.payload.id);
@@ -70,6 +73,9 @@ const cartSlice = createSlice({
         }
         if (typeof action.payload.price === 'number') {
           item.price = action.payload.price;
+        }
+        if (action.payload.promo) {
+          item.promo = action.payload.promo;
         }
       }
       state.total = calculateTotal(state.items);
