@@ -4,3 +4,4 @@ export const Config = {
 };
 
 console.log('Variables de entorno disponibles:', process.env);
+console.log('Google Maps API Key usada en JS:', Config.googleMapsApiKey);

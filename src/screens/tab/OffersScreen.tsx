@@ -11,8 +11,11 @@ import { Colors, FontSizes } from '../../styles/theme';
 import Card from '../../components/Card';
 import { ProductService } from '../../services/products';
 import type { Promo } from '@pharmatech/sdk';
+import { isPromoActive } from '../../utils/promoUtils';
+import { useCart } from '../../hooks/useCart';
 
 export default function OffersScreen() {
+  const { addToCart, updateCartQuantity, getItemQuantity } = useCart();
   const [offers, setOffers] = useState<
     Array<{
       id: string;
@@ -23,6 +26,7 @@ export default function OffersScreen() {
       category: string;
       originalPrice: number;
       discount: number;
+      promo?: Promo;
       finalPrice: number;
       quantity: number;
       getQuantity: (quantity: number) => void;
@@ -44,32 +48,55 @@ export default function OffersScreen() {
         (item) => hasPromo(item) && Boolean(item.promo?.discount),
       );
 
-      const mappedPromoItems = promoItems.map((p) => {
-        const promo: Promo | undefined = hasPromo(p) ? p.promo : undefined;
-        const discount: Promo['discount'] = promo?.discount ?? 0;
+      const mappedPromoItems = promoItems
+        .filter((p) => hasPromo(p) && isPromoActive(p.promo))
+        .map((p) => {
+          const promo: Promo | undefined = hasPromo(p) ? p.promo : undefined;
+          const discount: Promo['discount'] = promo?.discount ?? 0;
 
-        return {
-          id: p.id,
-          presentationId: p.presentation.id,
-          productId: p.product.id,
-          imageUrl:
-            p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
-          name:
-            p.product.name +
-            ' ' +
-            p.presentation.name +
-            ' ' +
-            p.presentation.quantity +
-            ' ' +
-            p.presentation.measurementUnit,
-          category: p.product.categories?.[0]?.name || 'Sin categoría',
-          originalPrice: p.price,
-          discount,
-          finalPrice: p.price,
-          quantity: 0,
-          getQuantity: () => 0,
-        };
-      });
+          return {
+            id: p.id,
+            presentationId: p.presentation.id,
+            productId: p.product.id,
+            imageUrl:
+              p.product.images?.[0]?.url || 'https://via.placeholder.com/150',
+            name:
+              p.product.name +
+              ' ' +
+              p.presentation.name +
+              ' ' +
+              p.presentation.quantity +
+              ' ' +
+              p.presentation.measurementUnit,
+            category: p.product.categories?.[0]?.name || 'Sin categoría',
+            originalPrice: p.price,
+            discount,
+            promo,
+            finalPrice: p.price,
+            quantity: getItemQuantity(p.id),
+            getQuantity: (quantity: number) => {
+              addToCart({
+                id: p.id,
+                name:
+                  p.product.name +
+                  ' ' +
+                  p.presentation.name +
+                  ' ' +
+                  p.presentation.quantity +
+                  ' ' +
+                  p.presentation.measurementUnit,
+                price: p.price,
+                quantity,
+                image:
+                  p.product.images?.[0]?.url ||
+                  'https://via.placeholder.com/150',
+                discount,
+                promo,
+              });
+              updateCartQuantity(p.id, quantity, discount, p.price);
+            },
+          };
+        });
       setOffers(mappedPromoItems);
     } else {
       console.error('Error al cargar productos:', res.error);
@@ -100,6 +127,7 @@ export default function OffersScreen() {
     category: string;
     originalPrice: number;
     discount: number;
+    promo?: Promo;
     finalPrice: number;
     quantity: number;
     getQuantity: (quantity: number) => void;
@@ -114,6 +142,7 @@ export default function OffersScreen() {
         category={item.category}
         originalPrice={item.originalPrice}
         discount={item.discount}
+        promo={item.promo}
         finalPrice={item.finalPrice}
         quantity={item.quantity}
         getQuantity={item.getQuantity}
@@ -126,16 +155,24 @@ export default function OffersScreen() {
       <PoppinsText weight="medium" style={styles.title}>
         Ofertas especiales
       </PoppinsText>
-      <FlatList
-        data={offers}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.list}
-        renderItem={renderOffer}
-        columnWrapperStyle={styles.columnWrapper}
-        onRefresh={loadOffers}
-        refreshing={loading}
-      />
+      {offers.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <PoppinsText style={styles.emptyText}>
+            No hay ofertas disponibles en este momento.
+          </PoppinsText>
+        </View>
+      ) : (
+        <FlatList
+          data={offers}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.list}
+          renderItem={renderOffer}
+          columnWrapperStyle={styles.columnWrapper}
+          onRefresh={loadOffers}
+          refreshing={loading}
+        />
+      )}
       <View style={styles.height} />
     </View>
   );
@@ -168,5 +205,16 @@ const styles = StyleSheet.create({
   },
   height: {
     height: 64,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: FontSizes.s1.size,
+    color: Colors.textLowContrast,
+    textAlign: 'center',
   },
 });

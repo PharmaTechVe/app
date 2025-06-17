@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "app",
+    "name": "PharmaTech",
     "slug": "pharmatech",
     "scheme": "pharmatech",
     "version": "0.2.0",
     "orientation": "portrait",
-    "icon": "./src/assets/images/PharmaTech-icon.png",
+    "icon": "./src/assets/images/Pharmatech_icon_1024.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -22,7 +22,7 @@
     "android": {
       "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/PharmaTech-icon.png",
+        "foregroundImage": "./src/assets/images/Pharmatech_icon_1024.png",
         "backgroundColor": "#1C2143"
       },
       "package": "com.pharmatech.pharmatech",

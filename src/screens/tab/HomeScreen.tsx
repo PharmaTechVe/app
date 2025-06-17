@@ -18,6 +18,7 @@ import type { Promo } from '@pharmatech/sdk';
 import EmailVerificationModal from './EmailVerificationModal';
 import { decodeJWT } from '../../helper/jwtHelper';
 import { useNotifications } from '../../hooks/useNotifications';
+import { isPromoActive } from '../../utils/promoUtils';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -73,15 +74,10 @@ export default function HomeScreen() {
       const productsData = await ProductService.getProducts(1, 20);
       if (productsData.success) {
         const pd = productsData.data.results;
-        // Filtra solo los que tengan stock > 0
         const availableProducts = pd.filter((p) => p.stock > 0);
         const carouselProducts = availableProducts.map((p) => {
-          // Usa el descuento real si hay promo, si no, no lo agregues
           // @ts-expect-error: promo puede estar en p o en p.presentation
           const promo: Promo | undefined = p.promo ?? p.presentation.promo;
-          const discount: Promo['discount'] | undefined = promo?.discount
-            ? Math.round(promo.discount * 100) / 100
-            : undefined;
           return {
             id: p.id,
             presentationId: p.presentation.id,
@@ -97,7 +93,9 @@ export default function HomeScreen() {
               p.presentation.measurementUnit,
             category: p.product.categories[0].name,
             originalPrice: p.price,
-            ...(discount !== undefined ? { discount } : {}),
+            discount:
+              promo && isPromoActive(promo) ? promo.discount : undefined,
+            promo: promo && isPromoActive(promo) ? promo : undefined,
             finalPrice: p.price,
             quantity: getItemQuantity(p.id),
             getQuantity: (quantity: number) => {
@@ -125,9 +123,8 @@ export default function HomeScreen() {
         // Usa el descuento real si hay promo, si no, no lo agregues
         // @ts-expect-error: promo puede estar en p o en p.presentation
         const promo: Promo | undefined = p.promo ?? p.presentation.promo;
-        const discount: Promo['discount'] | undefined = promo?.discount
-          ? Math.round(promo.discount * 100) / 100
-          : undefined;
+        const discount: Promo['discount'] | undefined =
+          promo && isPromoActive(promo) ? promo.discount : undefined;
         return {
           id: p.id,
           presentationId: p.presentation.id,

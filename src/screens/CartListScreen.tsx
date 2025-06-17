@@ -15,27 +15,36 @@ import Button from '../components/Button';
 import { TrashIcon } from 'react-native-heroicons/outline';
 import { useRouter } from 'expo-router';
 import { formatPrice } from '../utils/formatPrice';
+import { isPromoActive } from '../utils/promoUtils';
+import { useDollarPrice } from '../hooks/useDollarPrice';
 
 const CartListScreen = () => {
   const router = useRouter();
   const { cartItems, removeFromCart, updateCartQuantity } = useCart();
+  const dollarPrice = useDollarPrice();
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  // Total price sum
+
   const totalDiscount = cartItems.reduce(
     (sum, item) =>
-      sum + item.price * item.quantity * ((item.discount ?? 0) / 100),
+      sum +
+      item.price *
+        item.quantity *
+        ((item.promo && isPromoActive(item.promo) ? item.promo.discount : 0) /
+          100),
     0,
-  ); // Discount sum
-  const total = subtotal - totalDiscount; // Subtotal with discount
+  );
+
+  const total = subtotal - totalDiscount;
 
   const renderItem = ({ item }: { item: CartItem }) => {
     console.log('[CartListScreen] Renderizando item:', item); // <-- LOG
     // Usar el descuento del item, si existe, si no 0
-    const discount = item.discount ?? 0;
+    const discount =
+      item.promo && isPromoActive(item.promo) ? item.promo.discount : 0;
     const discountedPrice = item.price * (1 - discount / 100);
     const totalDiscountedPrice = discountedPrice * item.quantity;
     const totalOriginalPrice = item.price * item.quantity;
@@ -144,6 +153,21 @@ const CartListScreen = () => {
                 -${formatPrice(totalDiscount)}
               </PoppinsText>
             </View>
+            {/* Mostrar total en bolívares */}
+            {dollarPrice && (
+              <View style={styles.row}>
+                <PoppinsText style={styles.bolivarText}>
+                  Total en Bs
+                </PoppinsText>
+                <PoppinsText style={styles.bolivarText}>
+                  Bs{' '}
+                  {((total / 100) * dollarPrice).toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </PoppinsText>
+              </View>
+            )}
             <View style={styles.row}>
               <PoppinsText style={styles.totalText}>Total</PoppinsText>
               <PoppinsText style={styles.totalText}>
@@ -161,7 +185,6 @@ const CartListScreen = () => {
           </View>
         </>
       )}
-      <View style={styles.height} />
     </View>
   );
 };
@@ -282,9 +305,6 @@ const styles = StyleSheet.create({
     color: Colors.textMain,
     marginBottom: 20,
   },
-  height: {
-    height: 64,
-  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -335,6 +355,12 @@ const styles = StyleSheet.create({
   },
   emptyCartButton: {
     marginTop: 16,
+  },
+  bolivarText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.primary,
+    marginBottom: 8,
   },
 });
 

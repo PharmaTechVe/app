@@ -28,13 +28,6 @@ import {
 } from '../../lib/deliverySocket/deliverySocket'; // Importar funciones de socket
 import { Socket } from 'socket.io-client'; // Importar el tipo Socket
 
-// Definir el tipo para un leg de la API de Google Maps Directions
-interface GoogleMapsLeg {
-  duration: {
-    value: number; // Duración en segundos
-  };
-}
-
 const calculateTravelTime = async (
   origin: { latitude: number; longitude: number },
   destination: { latitude: number; longitude: number },
@@ -45,17 +38,20 @@ const calculateTravelTime = async (
     );
     const data = await response.json();
 
-    if (data.routes && data.routes.length > 0) {
-      // Extraer el tiempo estimado en segundos
+    if (
+      data.routes &&
+      data.routes.length > 0 &&
+      data.routes[0].legs &&
+      data.routes[0].legs.length > 0
+    ) {
       const durationInSeconds = data.routes[0].legs.reduce(
-        (total: number, leg: GoogleMapsLeg) => total + leg.duration.value,
+        (total: number, leg: { duration: { value: number } }) =>
+          total + (leg.duration?.value || 0),
         0,
       );
-
-      // Convertir a minutos
       return Math.ceil(durationInSeconds / 60);
     } else {
-      console.error('No se pudo calcular el tiempo estimado.');
+      console.error('No se pudo calcular el tiempo estimado.', data);
       return 0;
     }
   } catch (error) {
@@ -87,6 +83,23 @@ export default function DeliveryHomeScreen() {
 
   const fetchAssignedOrders = async () => {
     try {
+      // Solicitar permisos de ubicación antes de obtener la posición
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        const { status: newStatus } =
+          await Location.requestForegroundPermissionsAsync();
+        if (newStatus !== 'granted') {
+          showAlert(
+            'error',
+            'Permiso denegado',
+            'No se pudo obtener la ubicación. No se pueden calcular los tiempos estimados.',
+          );
+          setLoading(false);
+          setRefreshing(false);
+          return;
+        }
+      }
+
       const jwt = await SecureStore.getItemAsync('auth_token');
       if (!jwt) {
         throw new Error('Token de autenticación no encontrado');

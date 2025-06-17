@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Image,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
@@ -15,7 +14,7 @@ import Input from '../components/Input';
 import PoppinsText from '../components/PoppinsText';
 import { Colors, FontSizes } from '../styles/theme';
 import Logo from '../assets/images/logos/PharmaTech_Logo.svg';
-import GoogleLogo from '../assets/images/logos/Google_Logo.png';
+//import GoogleLogo from '../assets/images/logos/Google_Logo.png';
 import { AuthService } from '../services/auth';
 import { UserService } from '../services/user';
 import Alert from '../components/Alerts';
@@ -86,10 +85,10 @@ export default function LoginScreen() {
     router.push('/passwordRecovery');
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Iniciar sesión con Google');
-    // Google login logic
-  };
+  // const handleGoogleLogin = () => {
+  //   console.log('Iniciar sesión con Google');
+  //   // Google login logic
+  // };
 
   const handleRegister = () => {
     router.replace('/register');
@@ -173,7 +172,7 @@ export default function LoginScreen() {
               loading={loading}
             />
             {/* Google button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.googleButton}
               onPress={handleGoogleLogin}
             >
@@ -185,7 +184,7 @@ export default function LoginScreen() {
               <PoppinsText weight="medium" style={styles.googleButtonText}>
                 Iniciar sesión con Google
               </PoppinsText>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             {/* Register link */}
             <TouchableOpacity
               onPress={handleRegister}
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingTop: 56,
+    paddingTop: 56 + 8,
     paddingHorizontal: 20,
   },
   alertContainer: {
@@ -231,13 +230,15 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.h3.size,
     lineHeight: FontSizes.h3.lineHeight,
     marginBottom: 20,
+    marginTop: 8,
     color: Colors.textMain,
   },
   subtitle: {
     fontSize: FontSizes.b1.size,
     lineHeight: FontSizes.b1.lineHeight,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 28,
+    marginTop: 8,
     color: Colors.textLowContrast,
   },
   inputsContainer: {
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   linkContainer: {
-    marginTop: 16,
+    marginTop: 16 + 8,
     alignSelf: 'flex-start',
   },
   linkText: {

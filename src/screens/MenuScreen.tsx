@@ -179,7 +179,6 @@ export default function MenuScreen() {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.height} />
         </SafeAreaView>
       </View>
 
@@ -209,9 +208,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgColor,
     zIndex: 100,
     elevation: 10,
-  },
-  height: {
-    height: 64,
   },
   safeArea: {
     flex: 1,

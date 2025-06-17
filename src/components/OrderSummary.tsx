@@ -6,10 +6,12 @@ import { Colors, FontSizes } from '../styles/theme';
 import type { CartItem } from '../redux/slices/cartSlice';
 import { ChevronDownIcon, ChevronUpIcon } from 'react-native-heroicons/outline';
 import { formatPrice } from '../utils/formatPrice';
+import { useDollarPrice } from '../hooks/useDollarPrice';
 
 const OrderSummary = () => {
   const { cartItems } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const dollarPrice = useDollarPrice();
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -114,12 +116,27 @@ const OrderSummary = () => {
                 -${formatPrice(totalDiscount)}
               </PoppinsText>
             </View>
-            <View style={styles.row}>
+            {/* Mostrar total en bolívares */}
+            {dollarPrice && (
+              <View style={styles.row}>
+                <PoppinsText style={styles.bolivarText}>
+                  Total en Bs
+                </PoppinsText>
+                <PoppinsText style={styles.bolivarText}>
+                  Bs{' '}
+                  {((total / 100) * dollarPrice).toLocaleString('es-VE', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </PoppinsText>
+              </View>
+            )}
+            {/* <View style={styles.row}>
               <PoppinsText style={styles.subtotalText}>Total</PoppinsText>
               <PoppinsText style={styles.subtotalText}>
                 ${formatPrice(total)}
               </PoppinsText>
-            </View>
+            </View> */}
           </View>
         </>
       )}
@@ -248,6 +265,12 @@ const styles = StyleSheet.create({
     lineHeight: FontSizes.label.lineHeight,
     color: Colors.textMain,
     marginTop: 4,
+  },
+  bolivarText: {
+    fontSize: FontSizes.b1.size,
+    lineHeight: FontSizes.b1.lineHeight,
+    color: Colors.primary,
+    marginBottom: 8,
   },
 });
 

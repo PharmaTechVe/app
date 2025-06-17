@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     paddingTop: -20,
   },
   height: {
-    height: 64,
+    height: 32,
   },
   alertContainer: {
     position: 'absolute',
